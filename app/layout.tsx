@@ -9,6 +9,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <header className="container py-6 flex items-center justify-between">
         <Link href="/" className="text-xl font-medium">Neural Hearing Lab</Link>
         <nav className="flex gap-5 text-sm">
+          <Link href="/teams/" className="link">Team</Link>
           <Link href="/projects/" className="link">Projects</Link>
           <Link href="/publications/" className="link">Publications</Link>
           <Link href="/seminars/" className="link">Seminars</Link>
