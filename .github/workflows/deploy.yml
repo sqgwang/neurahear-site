@@ -1,4 +1,4 @@
-name: Deploy to Neurahear
+name: Deploy Neurahear (remote script)
 
 on:
   push:
@@ -8,37 +8,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-
-      - name: Build static site
-        run: |
-          npm ci
-          npm run build
-          test -d out && echo "Out folder exists." || (echo "Out folder missing!" && exit 1)
-
-      # 将 out/ 打包后上传到服务器 再在服务器解包到临时目录
-      - name: Upload artifacts via SSH
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          port: ${{ secrets.SSH_PORT }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "out/*"
-          target: "/home/${{ secrets.SSH_USER }}/deploy_pkg"
-          strip_components: 1
-
-      # 在服务器上执行：同步到发布目录 → git 拉取最新代码到源码目录 → 构建缓存可复用
-      - name: Deploy on server
+      - name: Run remote deploy script
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -46,21 +17,5 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            set -euo pipefail
-
-            # 1) 将前一步上传的 out 文件放入发布目录
-            mkdir -p /home/${USER}/deploy_pkg
-            mkdir -p /var/www/neurahear
-            rsync -a --delete /home/${USER}/deploy_pkg/ /var/www/neurahear/
-
-            # 2) 在源码目录拉最新代码（方便你也从服务器继续开发）
-            if [ -d /var/www/labsite/.git ]; then
-              cd /var/www/labsite
-              git fetch --all
-              git reset --hard origin/main || true
-            fi
-
-            # 3) 重载 Nginx
-            sudo systemctl reload nginx
-
-            echo "Deploy done at $(date)"
+            set -e
+            BRANCH=main /usr/local/bin/update-neurahear.sh
