@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: light; }
+body { @apply bg-white text-neutral-900; }
+.container { @apply mx-auto max-w-5xl px-6; }
+.card { @apply rounded-2xl border p-6; }
+.btn { @apply inline-block rounded-xl px-5 py-3 bg-black text-white no-underline; }
+.link { @apply underline; }
+h1 { @apply text-4xl font-semibold tracking-tight; }
+h2 { @apply text-2xl font-semibold mt-10; }
+p  { @apply text-neutral-600; }
