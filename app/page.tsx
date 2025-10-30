@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function Home() {
   return (
     <div>
-      <h1>Neural Hearing Network</h1>
+      <h1>HK Audiology Group</h1>
       <p className="mt-4">We study hearing and speech in noise with a focus on translational audiology.</p>
       <div className="mt-6 flex gap-4">
         <Link href="/projects/" className="btn">Explore Projects</Link>
