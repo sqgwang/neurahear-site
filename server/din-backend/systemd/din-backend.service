@@ -1,0 +1,16 @@
+[Unit]
+Description=DIN Backend Service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/www/neurahear/server/din-backend
+Environment=PORT=4000
+Environment=JWT_SECRET=__REPLACE_WITH_REAL_SECRET__
+Environment=DATA_DIR=/var/lib/din-backend
+ExecStart=/usr/bin/env node server.js
+Restart=always
+User=www-data
+
+[Install]
+WantedBy=multi-user.target

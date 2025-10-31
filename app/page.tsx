@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <div>
       <h1>HK Audiology Group</h1>
-      <p className="mt-4">We study hearing and speech in noise with a focus on translational audiology.</p>
+      <p className="mt-4">We study hearing and audiology!!!.</p>
       <div className="mt-6 flex gap-4">
         <Link href="/projects/" className="btn">Explore Projects</Link>
         <Link href="/publications/" className="btn bg-white text-black border">Publications</Link>
@@ -17,7 +17,7 @@ export default function Home() {
         </div>
         <div className="card">
           <h2>Focus</h2>
-          <p className="mt-2">Speech-in-noise perception and rigorous methods with open tools for the clinic.</p>
+          <p className="mt-2">Speech-in-noise perception</p>
         </div>
         <div className="card">
           <h2>Join Us</h2>

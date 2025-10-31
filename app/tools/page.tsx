@@ -5,7 +5,16 @@ export default function Tools() {
       <div className="card mt-6">
         <h2 className="text-xl">Digit-in-Noise Test (beta)</h2>
         <p className="mt-2">Volume calibration, device check and adaptive SNR in browser.</p>
-        <p className="mt-2 text-sm text-neutral-500">Route: <a className="link" href="/idin/">/idin/</a></p>
+        <p className="mt-2">
+          <a 
+            className="link-button" 
+            href="/tools/digit-in-noise-test/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+          >
+            Launch Digit-in-Noise Test
+          </a>
+        </p>
       </div>
       <div className="card mt-4">
         <h2 className="text-xl">Online Questionnaire</h2>

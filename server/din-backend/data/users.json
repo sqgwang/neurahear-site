@@ -1,0 +1,11 @@
+{
+  "users": [
+    {
+      "id": "u_1761914699028",
+      "username": "admin",
+      "passHash": "$2a$10$ABzAs7mLPqulTZyznwmETeefH9IMnKBL.pVxQa2JXz7Ocm6eAmQ.O",
+      "role": "admin",
+      "createdAt": "2025-10-31T12:44:59.081Z"
+    }
+  ]
+}

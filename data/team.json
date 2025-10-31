@@ -5,11 +5,11 @@
     "title": "Post-doctoral Fellow",
     "affiliation": "The University of Hong Kong",
     "photo": "shang_wang.jpg",
-    "email": "shang.wang@hku.hk",
+    "email": "sqgw@connect.hku.hk",
     "website": "https://shangwang.example.edu",
     "orcid": "0000-0002-XXXX-XXXX",
     "googleScholar": "https://scholar.google.com/citations?user=xxxxx",
-    "bio": "Shang Wang is an auditory neuroscientist working at the intersection of machine learning and hearing science. His research focuses on modelling auditory perception and developing computational methods to improve hearing assistive technologies.",
+    "bio": "xx",
     "research_interests": [
       "Auditory neuroscience",
       "Computational models of hearing",
@@ -18,16 +18,16 @@
     ],
     "publications": [
       {
-        "title": "Deep models for auditory scene analysis",
-        "authors": "S. Wang, A. Researcher",
+        "title": "Dxxx",
+        "authors": "S. Wang, xr",
         "venue": "NeurIPS",
         "year": 2024,
         "url": "https://doi.org/10.1234/example"
       },
       {
-        "title": "Learning robust features for hearing",
-        "authors": "S. Wang, B. Colleague",
-        "venue": "JASA",
+        "title": "Learesninghearing",
+        "authors": "S. Wang, Be",
+        "venue": "JA",
         "year": 2023
       }
     ],
@@ -46,7 +46,7 @@
     "slug": "dicky-mo",
     "affiliation": "Orka",
     "photo": "dicky_mo.jpg",
-    "bio": "Engineer focusing on signal processing and applied systems for acoustic research.",
+    "bio": "xxx",
     "social": { "github": "https://github.com/dickymo" }
   }
 ]
