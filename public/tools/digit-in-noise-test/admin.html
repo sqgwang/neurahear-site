@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>DIN Admin</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .card { background: var(--surface,#fff); border-radius: 20px; box-shadow: 0 6px 24px rgba(0,0,0,.08); padding: 24px; }
+    .stack > * + * { margin-top: 12px; }
+    .input { width: 100%; max-width: 360px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--hairline,rgba(0,0,0,.12)); }
+    .note { color: var(--text-muted,#667085); }
+    .toolbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    table.table { width: 100%; border-collapse: collapse; }
+    table.table th, table.table td { border-bottom: 1px solid rgba(0,0,0,.08); padding: 8px 10px; text-align: left; vertical-align: top; }
+    .small { font-size: .92rem; }
+    dialog::backdrop { background: rgba(0,0,0,.35); }
+    dialog { border:0; border-radius: 16px; padding: 0; }
+    .modal { padding: 20px; max-width: 920px; }
+    .modal header { display:flex; align-items:center; gap:12px; padding:16px 20px; border-bottom:1px solid rgba(0,0,0,.08); }
+    .modal main { padding: 20px; }
+  </style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">DIN Admin</div>
+  <div id="envBadge" class="mono" style="margin-left:auto; padding:2px 8px; border-radius:999px; background:#eef2ff; color:#4338ca;">same-origin /api</div>
+</header>
+
+<main class="container stack" id="appRoot" style="max-width: 1200px;">
+  <!-- 登录 -->
+  <section id="loginPane" class="card" style="max-width:720px; margin:40px auto;">
+    <h1 class="large-title" style="margin:0 0 8px;">Sign in</h1>
+    <p class="note" id="httpsHint" style="margin:0 0 12px;"></p>
+    <div class="stack">
+      <div>
+        <label for="loginUser">Username</label><br>
+        <input id="loginUser" class="input" type="text" autocomplete="username" placeholder="admin">
+      </div>
+      <div>
+        <label for="loginPass">Password</label><br>
+        <input id="loginPass" class="input" type="password" autocomplete="current-password">
+      </div>
+      <div id="loginMsg" class="note" style="min-height:1.2em;"></div>
+      <div>
+        <button id="btnLogin" class="primary" style="width:140px;">Login</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 仪表盘 -->
+  <section id="dashPane" style="display:none;">
+    <section class="card">
+      <div class="toolbar">
+        <h1 class="large-title" style="margin:0;">Dashboard</h1>
+        <div id="meBadge" class="note mono"></div>
+        <div style="margin-left:auto;"></div>
+        <button id="btnLogout" class="secondary">Logout</button>
+      </div>
+    </section>
+
+    <section class="card" style="margin-top:16px;">
+      <div class="toolbar">
+        <h2 style="margin:0;">Results</h2>
+        <div style="margin-left:auto"></div>
+        <input id="q" class="input" placeholder="Search PID / stimLang / gender / age…" />
+        <button id="btnReload" class="secondary">Reload</button>
+        <div id="count" class="note"></div>
+      </div>
+      <div id="list" style="margin-top:10px;">
+        <p class="note">Loading…</p>
+      </div>
+    </section>
+
+    <!-- 仅管理员可见：用户管理 -->
+    <section id="userAdmin" class="card" style="margin-top:16px; display:none;">
+      <h2 style="margin-top:0;">Users</h2>
+      <div id="userList" class="note" style="margin-bottom:8px;">—</div>
+      <div class="toolbar" style="align-items:flex-end;">
+        <div>
+          <label>New username</label><br>
+          <input id="newUser" class="input" type="text" placeholder="username">
+        </div>
+        <div>
+          <label>Password</label><br>
+          <input id="newPass" class="input" type="text" placeholder="password">
+        </div>
+        <div>
+          <label>Role</label><br>
+          <select id="newRole" class="input" style="width:160px;">
+            <option value="viewer">viewer</option>
+            <option value="admin">admin</option>
+          </select>
+        </div>
+        <button id="btnAddUser" class="primary">Add</button>
+        <div id="userMsg" class="note"></div>
+      </div>
+    </section>
+  </section>
+</main>
+
+<!-- 详情弹窗 -->
+<dialog id="detailDialog">
+  <div class="modal">
+    <header>
+      <h3 id="dlgTitle" style="margin:0;">Result detail</h3>
+      <div style="margin-left:auto;"></div>
+      <button id="dlgClose" class="secondary">Close</button>
+    </header>
+    <main id="dlgMain">
+      <!-- 动态填充 -->
+    </main>
+  </div>
+</dialog>
+
+<script src="admin.js?v=admin-extended-1"></script>
+</body>
+</html>

@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title data-i18n="resultsTitle2">Results</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">integrated Digit-in-Noise Test</div>
+    <div class="lang-switch" style="margin-left:auto;">
+      <label for="uiLang" data-i18n="languageLabel">Language</label>
+      <select id="uiLang">
+        <option value="english">English</option>
+        <option value="mandarin">普通话</option>
+      </select>
+    </div>
+  </header>
+
+  <main class="container stack" style="max-width: 960px;">
+    <h1 id="pageTitle" class="large-title" data-i18n="resultsTitle2">Results</h1>
+    <div id="uploadBadge" class="note" style="margin-top:-4px;"></div>
+
+    <!-- Per-condition metrics -->
+    <section id="condWrap" style="display:none;">
+      <h2 data-i18n="perCondMetrics">Per-condition metrics</h2>
+      <div class="spacer-xs"></div>
+      <table class="table" id="condTable">
+        <thead>
+          <tr>
+            <th data-i18n="thCondition">Condition</th>
+            <th data-i18n="thSRT">SRT (dB)</th>
+            <th data-i18n="thRTAll">RT (all) ms</th>
+            <th data-i18n="thRTCorrect">RT (correct) ms</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <p id="noCondsMsg" class="note" style="display:none;" data-i18n="noCond">
+        No condition results to show.
+      </p>
+    </section>
+
+    <!-- Differences -->
+    <section id="diffWrap" style="display:none;">
+      <h2 data-i18n="diffsTitle">Differences</h2>
+      <div class="spacer-xs"></div>
+      <table class="table" id="diffTable">
+        <thead>
+          <tr><th>Metric</th><th>Value</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <p id="noDiffsMsg" class="note" style="display:none;" data-i18n="noDiff">
+        No differences to show.
+      </p>
+    </section>
+
+    <div class="spacer-md"></div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <button id="downloadJson" class="secondary" data-i18n="dlJson">Download JSON</button>
+      <button id="downloadCsv" class="secondary" data-i18n="dlCsv">Download CSV (trials)</button>
+      <button id="returnHome" class="primary" data-i18n="returnHome">Return Home</button>
+    </div>
+  </main>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    // —— 同域 API 辅助：不依赖 API_BASE，一律发到 /api/... ——
+    function apiUrl(path) {
+      let p = String(path || '').trim().replace(/^\/+/, '').replace(/^api\/+/, '');
+      return '/api/' + p;
+    }
+
+    // —— 从 localStorage / finalizeAndGetResults 组 payload ——
+    function collectResults() {
+      // 优先项目内现成聚合
+      let res = (typeof finalizeAndGetResults === 'function')
+        ? finalizeAndGetResults()
+        : null;
+
+      const din = JSON.parse(localStorage.getItem('din_session') || '{}');
+      const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+      const uiLang = localStorage.getItem('uiLang') || 'english';
+      const fixedNoiseGain = parseFloat(localStorage.getItem('fixedNoiseGain') || '1');
+
+      // per-condition（兼容 res.condResults 或 din.perCondition）
+      let perCondition = [];
+      if (res && res.condResults) {
+        perCondition = Object.entries(res.condResults).map(([condition, r]) => {
+          const def = (window.COND_DEFS && window.COND_DEFS[condition]) || {};
+          return {
+            condition,
+            nDigits: def.nDigits || null,
+            SRT: (r && r.SRT != null) ? r.SRT : null,
+            RT_all_ms: (r && r.RT_all_mean_ms != null) ? r.RT_all_mean_ms : null,
+            RT_correct_ms: (r && r.RT_correct_mean_ms != null) ? r.RT_correct_mean_ms : null
+          };
+        });
+      } else if (Array.isArray(din.perCondition)) {
+        perCondition = din.perCondition;
+      }
+
+      // differences / summary
+      const diffs = (res && res.summary) ? res.summary : (din.diffs || {});
+
+      // trials：优先 din_session.trials，再退 res.trials
+      const trials = Array.isArray(din.trials) ? din.trials : (Array.isArray(res?.trials) ? res.trials : []);
+
+      const meta = {
+        appVersion: window.APP_VERSION || 'v1',
+        uiLang,
+        stimLang: userInfo.stimLang,
+        fixedNoiseGain: isFinite(fixedNoiseGain) ? fixedNoiseGain : null,
+        conditionOrder: din.conditionOrder || userInfo.testConditions || [],
+        phase: din.phase || null,
+        practiceIdx: din.practiceIdx || null,
+        formalIdx: din.formalIdx || null,
+      };
+
+      return {
+        resultsView: res,           // 原样保留（可用于下载 JSON）
+        payload: {
+          sessionId: din.sessionId || din._id || ('s_' + Date.now()),
+          participantId: userInfo.pid || '',
+          userInfo,
+          perCondition,
+          diffs,
+          snrTracks: din.snrTracks || {},   // 若无则空对象
+          trials,                            // 必须是数组
+          meta,
+          createdAt: new Date().toISOString()
+        }
+      };
+    }
+
+    async function upload(payload) {
+      const url = apiUrl('results');
+      console.log('[RESULTS] POST ->', url, { trials: payload.trials?.length ?? 0, perCondition: payload.perCondition?.length ?? 0, meta: payload.meta });
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        // 上传不强制需要登录，但带上 cookie 也不影响
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      });
+      const text = await res.text();
+      console.log('[RESULTS] server response:', res.status, text);
+      if (!res.ok) throw new Error(text || (res.status + ' ' + res.statusText));
+      try { return JSON.parse(text); } catch { return { ok:true, raw:text }; }
+    }
+
+    function renderTables(res) {
+      const condResults = (res && res.condResults) || {};
+      const summary = (res && res.summary) || {};
+
+      // per-condition
+      const rows = [];
+      for (const cond of Object.keys(condResults)) {
+        const r = condResults[cond];
+        const has = r && (r.SRT != null || r.RT_all_mean_ms != null || r.RT_correct_mean_ms != null);
+        if (!has) continue;
+        rows.push(`<tr>
+          <td>${cond}</td>
+          <td>${r.SRT ?? ''}</td>
+          <td>${r.RT_all_mean_ms ?? ''}</td>
+          <td>${r.RT_correct_mean_ms ?? ''}</td>
+        </tr>`);
+      }
+      if (rows.length) {
+        document.querySelector('#condTable tbody').innerHTML = rows.join('');
+        document.getElementById('condWrap').style.display = '';
+      } else {
+        document.getElementById('noCondsMsg').style.display = '';
+      }
+
+      // differences
+      const diffMap = {
+        SRT3b_3: 'SRT(3b) − SRT(3f)',
+        SRT2b_2: 'SRT(2b) − SRT(2f)',
+        SRT5_3:  'SRT(5f) − SRT(3f)',
+        SRT5_2:  'SRT(5f) − SRT(2f)',
+        RT3b_3:  'RT(correct, 3b) − RT(correct, 3f)',
+        RT2b_2:  'RT(correct, 2b) − RT(correct, 2f)',
+        RT5_3:   'RT(correct, 5f) − RT(correct, 3f)',
+        RT5_2:   'RT(correct, 5f) − RT(correct, 2f)'
+      };
+      const drows = [];
+      for (const k of Object.keys(diffMap)) {
+        const v = summary[k];
+        if (v == null) continue;
+        drows.push(`<tr><td>${diffMap[k]}</td><td>${v}</td></tr>`);
+      }
+      if (drows.length) {
+        document.querySelector('#diffTable tbody').innerHTML = drows.join('');
+        document.getElementById('diffWrap').style.display = '';
+      } else {
+        document.getElementById('noDiffsMsg').style.display = '';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // UI 语言初始化
+      const uiLangSel = document.getElementById('uiLang');
+      const savedUILang = localStorage.getItem('uiLang') || 'english';
+      uiLangSel.value = savedUILang;
+      if (typeof setUILanguage === 'function') setUILanguage(savedUILang);
+      uiLangSel.addEventListener('change', () => {
+        localStorage.setItem('uiLang', uiLangSel.value);
+        if (typeof setUILanguage === 'function') setUILanguage(uiLangSel.value);
+      });
+
+      // 收集并渲染
+      const { resultsView, payload } = collectResults();
+      renderTables(resultsView || {});
+
+      // 上传
+      const badge = document.getElementById('uploadBadge');
+      try {
+        badge.textContent = 'Saving…';
+        await upload(payload);
+        badge.textContent = 'Saved to server ✔';
+      } catch (e) {
+        console.warn('Upload failed:', e);
+        badge.textContent = 'Local only (server save failed).';
+      }
+
+      // 下载 JSON
+      document.getElementById('downloadJson').addEventListener('click', () => {
+        const data = resultsView || payload;
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `din_results_${Date.now()}.json`;
+        a.click();
+      });
+
+      // 下载 CSV（trials）
+      document.getElementById('downloadCsv').addEventListener('click', () => {
+        const trials = Array.isArray(payload.trials) ? payload.trials : [];
+        const headers = [
+          'participantId','condition','nDigits','digitsPresented',
+          'presentedSNR','effectiveSNR','response','correct','rt_ms','timestamp'
+        ];
+        const rows = [headers.join(',')].concat(
+          trials.map(t => headers.map(h => JSON.stringify(t[h] ?? '')).join(','))
+        );
+        const blob = new Blob([rows.join('\n')], { type:'text/csv' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `din_trials_${Date.now()}.csv`;
+        a.click();
+      });
+
+      // 返回首页
+      document.getElementById('returnHome').addEventListener('click', () => {
+        location.href = 'index.html';
+      });
+    });
+  </script>
+</body>
+</html>
