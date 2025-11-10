@@ -4,3 +4,7 @@ out/
 npm-debug.log*
 .DS_Store
 .env*
+.venv/
+*.log
+/tmp/
+server/din-backend/data/
