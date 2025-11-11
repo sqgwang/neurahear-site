@@ -27,23 +27,18 @@ mkdir -p "$PUB_DIR" "$BACKUP_DIR"
 log "=== Start deploy to $PUB_DIR from $SRC_DIR (branch: $BRANCH) ==="
 cd "$SRC_DIR"
 
-# === Fix all permissions IMMEDIATELY (before any Git operations) ===
-log "Fixing all permissions..."
-chown -R root:root "$SRC_DIR" 2>&1 | tee -a "$LOG_FILE" || true
-chmod -R u+rwX "$SRC_DIR" 2>&1 | tee -a "$LOG_FILE" || true
-chown -R root:root "$SRC_DIR/.git" 2>&1 | tee -a "$LOG_FILE" || true
-chmod -R 755 "$SRC_DIR/.git" 2>&1 | tee -a "$LOG_FILE" || true
-chmod 666 "$SRC_DIR/.git/FETCH_HEAD" 2>&1 | tee -a "$LOG_FILE" || true
-chmod 666 "$SRC_DIR/.git/HEAD" 2>&1 | tee -a "$LOG_FILE" || true
-chmod 666 "$SRC_DIR/.git/index" 2>&1 | tee -a "$LOG_FILE" || true
-# Clean all lock files
-find "$SRC_DIR/.git" -name "*.lock" -type f -delete 2>&1 | tee -a "$LOG_FILE" || true
-# Verify permissions
-log "FETCH_HEAD permissions: $(ls -la "$SRC_DIR/.git/FETCH_HEAD" 2>&1)"
-log "Permissions fixed"
-# === End permission fixes ===
+log "=== Start deploy to $PUB_DIR from $SRC_DIR (branch: $BRANCH) ==="
+cd "$SRC_DIR"
 
+# === Configure Git to work despite permission issues ===
+log "Configuring Git to ignore file permissions..."
 git config --global --add safe.directory "$SRC_DIR" || true
+git config core.fileMode false || true
+# Clean lock files only (no chown needed)
+find "$SRC_DIR/.git" -name "*.lock" -type f -delete 2>/dev/null || true
+log "Git configured"
+# === End Git config ===
+
 log "Git fetch/reset to origin/$BRANCH ..."
 git fetch origin "$BRANCH" 2>&1 | tee -a "$LOG_FILE"
 git reset --hard "origin/$BRANCH"
