@@ -40,12 +40,13 @@ jobs:
           command_timeout: 10m
           script: |
             set -e
-            echo "=== Preparing deployment directory ==="
+            echo "=== Preparing deployment ==="
             
-            # Remove old static files (but keep nginx readable)
-            rm -rf /var/www/neurahear/*
+            # Create a new temp directory for extraction
+            DEPLOY_TEMP="/tmp/neurahear-deploy-$$"
+            mkdir -p "$DEPLOY_TEMP"
             
-            echo "=== Deployment directory cleaned ==="
+            echo "=== Deployment directory prepared ==="
       
       - name: Transfer site files
         uses: appleboy/scp-action@v0.1.7
@@ -67,13 +68,18 @@ jobs:
           command_timeout: 10m
           script: |
             set -e
-            echo "=== Extracting static files ==="
-            cd /var/www/neurahear
+            DEPLOY_TEMP="/tmp/neurahear-deploy-$$"
+            
+            echo "=== Extracting static files to temp ==="
+            cd "$DEPLOY_TEMP"
             tar -xzf /tmp/site.tar.gz
             rm /tmp/site.tar.gz
             
-            echo "=== Setting permissions ==="
-            chmod -R 755 /var/www/neurahear
+            echo "=== Copying files to public directory (overwriting) ==="
+            cp -rf "$DEPLOY_TEMP"/* /var/www/neurahear/ || true
+            
+            echo "=== Cleaning up temp directory ==="
+            rm -rf "$DEPLOY_TEMP"
             
             echo "=== Updating backend code ==="
             cd /var/www/labsite
