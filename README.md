@@ -95,3 +95,4 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 **Note**: This project is deployed on a self-hosted Alibaba Cloud server, not Vercel.
 
+# Test auto-deploy with safe data
