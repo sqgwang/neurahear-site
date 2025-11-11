@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <div>
       <h1>HK Audiology Group</h1>
-      <p className="mt-4">We study hearing and audiology.</p>
+      <p className="mt-4">We study hearing and audiology！</p>
       <div className="mt-6 flex gap-4">
         <Link href="/projects/" className="btn">Explore Projects</Link>
         <Link href="/publications/" className="btn bg-white text-black border">Publications</Link>
