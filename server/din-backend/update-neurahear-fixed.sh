@@ -27,6 +27,13 @@ mkdir -p "$PUB_DIR" "$BACKUP_DIR"
 log "=== Start deploy to $PUB_DIR from $SRC_DIR (branch: $BRANCH) ==="
 cd "$SRC_DIR"
 
+# Fix all permissions before Git operations
+log "Fixing permissions..."
+chown -R root:root "$SRC_DIR" || true
+chown -R root:root "$SRC_DIR/.git" || true
+chmod -R u+rwX "$SRC_DIR/.git" || true
+rm -f "$SRC_DIR/.git/index.lock" "$SRC_DIR/.git/HEAD.lock" "$SRC_DIR/.git/refs/heads/main.lock" || true
+
 git config --global --add safe.directory "$SRC_DIR" || true
 log "Git fetch/reset to origin/$BRANCH ..."
 git fetch origin "$BRANCH"
@@ -39,12 +46,8 @@ git log -1 --pretty=oneline | tee -a "$LOG_FILE"
 command -v node >/dev/null || die "Node is not installed"
 log "Node: $(node -v)  npm: $(npm -v)"
 
-# Fix permissions before npm install
-log "Fixing permissions..."
-chown -R root:root "$SRC_DIR" || true
-
 log "npm install (clean)..."
-# Use npm install instead of npm ci to avoid permission issues
+# Clean install with proper permissions
 rm -rf node_modules package-lock.json || true
 npm install --production 2>&1 | tee -a "$LOG_FILE"
 
