@@ -34,7 +34,7 @@ jobs:
           source: "out/*"
           target: "/var/www/neurahear/"
           strip_components: 1
-          rm: true
+          overwrite: true
       
       - name: Restart backend
         uses: appleboy/ssh-action@v1.0.3
