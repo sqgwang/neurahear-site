@@ -68,9 +68,10 @@ jobs:
           command_timeout: 10m
           script: |
             set -e
-            DEPLOY_TEMP="/tmp/neurahear-deploy-$$"
             
             echo "=== Extracting static files to temp ==="
+            DEPLOY_TEMP="/tmp/neurahear-deploy-$$"
+            mkdir -p "$DEPLOY_TEMP"
             cd "$DEPLOY_TEMP"
             tar -xzf /tmp/site.tar.gz
             rm /tmp/site.tar.gz
