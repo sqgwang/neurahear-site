@@ -34,10 +34,9 @@ jobs:
             npm install
             npm run build
             
-            # Fix ownership and sync to public directory
+            # Sync to public directory
             echo "Syncing files to public directory..."
-            chown -R www-data:www-data out/
-            rsync -av --delete --chown=www-data:www-data out/ /var/www/neurahear/
+            rsync -av --delete out/ /var/www/neurahear/
             
             # Restart backend
             echo "Updating backend..."
