@@ -27,12 +27,18 @@ mkdir -p "$PUB_DIR" "$BACKUP_DIR"
 log "=== Start deploy to $PUB_DIR from $SRC_DIR (branch: $BRANCH) ==="
 cd "$SRC_DIR"
 
-# Fix all permissions before Git operations
-log "Fixing permissions..."
-chown -R root:root "$SRC_DIR" || true
-chown -R root:root "$SRC_DIR/.git" || true
-chmod -R u+rwX "$SRC_DIR/.git" || true
-rm -f "$SRC_DIR/.git/index.lock" "$SRC_DIR/.git/HEAD.lock" "$SRC_DIR/.git/refs/heads/main.lock" || true
+# === Fix all permissions IMMEDIATELY (before any Git operations) ===
+log "Fixing all permissions..."
+chown -R root:root "$SRC_DIR" 2>/dev/null || true
+chmod -R u+rwX "$SRC_DIR" 2>/dev/null || true
+chown -R root:root "$SRC_DIR/.git" 2>/dev/null || true
+chmod -R 755 "$SRC_DIR/.git" 2>/dev/null || true
+chmod 644 "$SRC_DIR/.git/FETCH_HEAD" 2>/dev/null || true
+chmod 644 "$SRC_DIR/.git/HEAD" 2>/dev/null || true
+# Clean all lock files
+find "$SRC_DIR/.git" -name "*.lock" -type f -delete 2>/dev/null || true
+log "Permissions fixed"
+# === End permission fixes ===
 
 git config --global --add safe.directory "$SRC_DIR" || true
 log "Git fetch/reset to origin/$BRANCH ..."
