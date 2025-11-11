@@ -6,45 +6,40 @@ on:
   workflow_dispatch: {}
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      
-      - name: Install dependencies
-        run: npm ci
-      
-      - name: Build Next.js
-        run: npm run build
-      
-      - name: Deploy to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          port: ${{ secrets.SSH_PORT }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "out/*"
-          target: "/var/www/neurahear/"
-          strip_components: 1
-          overwrite: true
-      
-      - name: Restart backend
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 30m
           script: |
-            cd /var/www/labsite/server/din-backend
+            #!/bin/bash
+            set -e
+            echo "=== Starting deployment ==="
+            
+            # Go to project directory
+            cd /var/www/labsite
+            
+            # Pull latest code
+            git fetch origin main
+            git reset --hard origin/main
+            
+            # Install and build
+            npm install
+            npm run build
+            
+            # Sync to public directory
+            rsync -av --delete out/ /var/www/neurahear/
+            
+            # Restart backend
+            cd server/din-backend
             npm install --production
             pm2 restart din-backend || pm2 start server.js --name din-backend
             pm2 save
+            
+            echo "=== Deployment complete ==="
