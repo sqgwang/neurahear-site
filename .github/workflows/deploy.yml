@@ -18,7 +18,6 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           command_timeout: 30m
           script: |
-            #!/bin/bash
             set -e
             echo "=== Starting deployment ==="
             
@@ -26,17 +25,22 @@ jobs:
             cd /var/www/labsite
             
             # Pull latest code
+            echo "Pulling latest code..."
             git fetch origin main
             git reset --hard origin/main
             
             # Install and build
+            echo "Installing dependencies and building..."
             npm install
             npm run build
             
-            # Sync to public directory
-            rsync -av --delete out/ /var/www/neurahear/
+            # Fix ownership and sync to public directory
+            echo "Syncing files to public directory..."
+            chown -R www-data:www-data out/
+            rsync -av --delete --chown=www-data:www-data out/ /var/www/neurahear/
             
             # Restart backend
+            echo "Updating backend..."
             cd server/din-backend
             npm install --production
             pm2 restart din-backend || pm2 start server.js --name din-backend
