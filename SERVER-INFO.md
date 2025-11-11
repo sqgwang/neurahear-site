@@ -1,6 +1,18 @@
 # 🖥️ 服务器部署信息
 
-## 📍 服务器地址
+## � 紧急：数据保护警告
+
+**⚠️ 发现问题**：自动部署可能会删除测试数据！
+
+**必须立即检查**：
+1. 数据目录是否在项目外：`DATA_DIR=/opt/neurahear/din-data` ✅
+2. 部署脚本是否使用了危险命令（`git reset --hard` 或 `git clean`）❌
+
+**详细修复步骤**：请查看 [URGENT-DATA-PROTECTION.md](./URGENT-DATA-PROTECTION.md)
+
+---
+
+## �📍 服务器地址
 - **域名**：neurahear.com / www.neurahear.com
 - **服务器提供商**：阿里云 ECS (Alibaba Cloud)
 - **操作系统**：Ubuntu + Nginx
@@ -19,10 +31,12 @@
 
 ### 关键文件位置
 - **后端代码**：`/var/www/labsite/server/din-backend/server.js`
-- **测试数据**：`/var/www/labsite/server/din-backend/data/`
-  - 测试结果：`data/results.jsonl`
-  - 用户信息：`data/users.json`
 - **环境配置**：`/var/www/labsite/server/din-backend/.env`
+- **⚠️ 测试数据（应该在项目外！）**：
+  - **推荐位置**：`/opt/neurahear/din-data/` ✅ 安全
+  - **危险位置**：`/var/www/labsite/server/din-backend/data/` ❌ 可能被删除
+  - 测试结果：`results.jsonl`
+  - 用户信息：`users.json`
 - **备份目录**：`/var/www/labsite/backups/din-data/`
 
 ## 🔧 服务管理
