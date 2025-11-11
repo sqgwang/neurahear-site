@@ -9,39 +9,81 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy via SSH
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Build static site
+        run: npm run build
+      
+      - name: Create deployment package
+        run: |
+          cd out
+          tar -czf ../site.tar.gz .
+          cd ..
+      
+      - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          command_timeout: 30m
+          command_timeout: 10m
           script: |
             set -e
-            echo "=== Starting deployment ==="
+            echo "=== Preparing deployment directory ==="
             
-            # Go to project directory
+            # Remove old static files (but keep nginx readable)
+            rm -rf /var/www/neurahear/*
+            
+            echo "=== Deployment directory cleaned ==="
+      
+      - name: Transfer site files
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "site.tar.gz"
+          target: "/tmp/"
+      
+      - name: Extract and update backend
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 10m
+          script: |
+            set -e
+            echo "=== Extracting static files ==="
+            cd /var/www/neurahear
+            tar -xzf /tmp/site.tar.gz
+            rm /tmp/site.tar.gz
+            
+            echo "=== Setting permissions ==="
+            chmod -R 755 /var/www/neurahear
+            
+            echo "=== Updating backend code ==="
             cd /var/www/labsite
-            
-            # Pull latest code
-            echo "Pulling latest code..."
             git fetch origin main
             git reset --hard origin/main
             
-            # Install and build
-            echo "Installing dependencies and building..."
-            npm install
-            npm run build
-            
-            # Sync to public directory
-            echo "Syncing files to public directory..."
-            rsync -av --delete out/ /var/www/neurahear/
-            
-            # Restart backend
-            echo "Updating backend..."
             cd server/din-backend
             npm install --production
+            
+            echo "=== Restarting backend service ==="
             pm2 restart din-backend || pm2 start server.js --name din-backend
             pm2 save
             
