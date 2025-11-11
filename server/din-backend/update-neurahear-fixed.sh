@@ -47,9 +47,9 @@ command -v node >/dev/null || die "Node is not installed"
 log "Node: $(node -v)  npm: $(npm -v)"
 
 log "npm install (clean)..."
-# Clean install with proper permissions
+# Clean install with all dependencies (needed for TypeScript and build)
 rm -rf node_modules package-lock.json || true
-npm install --production 2>&1 | tee -a "$LOG_FILE"
+npm install 2>&1 | tee -a "$LOG_FILE"
 
 log "npm run build ..."
 npm run build
