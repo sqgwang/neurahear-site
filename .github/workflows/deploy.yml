@@ -77,10 +77,10 @@ jobs:
             rm /tmp/site.tar.gz
             
             echo "=== Removing old files ==="
-            rm -rf /var/www/neurahear/*
+            sudo rm -rf /var/www/neurahear/*
             
             echo "=== Copying new files ==="
-            cp -r "$DEPLOY_TEMP"/* /var/www/neurahear/
+            sudo cp -r "$DEPLOY_TEMP"/* /var/www/neurahear/
             
             echo "=== Verifying deployment ==="
             ls -la /var/www/neurahear/ | head -10
