@@ -76,8 +76,14 @@ jobs:
             tar -xzf /tmp/site.tar.gz
             rm /tmp/site.tar.gz
             
-            echo "=== Syncing files to public directory ==="
-            rsync -av --delete "$DEPLOY_TEMP/" /var/www/neurahear/
+            echo "=== Removing old files ==="
+            rm -rf /var/www/neurahear/*
+            
+            echo "=== Copying new files ==="
+            cp -r "$DEPLOY_TEMP"/* /var/www/neurahear/
+            
+            echo "=== Verifying deployment ==="
+            ls -la /var/www/neurahear/ | head -10
             
             echo "=== Cleaning up temp directory ==="
             rm -rf "$DEPLOY_TEMP"
