@@ -69,18 +69,13 @@ jobs:
           script: |
             set -e
             
-            echo "=== Extracting static files to temp ==="
-            DEPLOY_TEMP="/tmp/neurahear-deploy-$$"
-            mkdir -p "$DEPLOY_TEMP"
-            cd "$DEPLOY_TEMP"
+            echo "=== Extracting static files directly to target ==="
+            cd /var/www/neurahear
             tar -xzf /tmp/site.tar.gz
             rm /tmp/site.tar.gz
             
-            echo "=== Copying files to public directory (overwriting) ==="
-            cp -rf "$DEPLOY_TEMP"/* /var/www/neurahear/ || true
-            
-            echo "=== Cleaning up temp directory ==="
-            rm -rf "$DEPLOY_TEMP"
+            echo "=== Files extracted successfully ==="
+            ls -la /var/www/neurahear/ | head -20
             
             echo "=== Updating backend code ==="
             cd /var/www/labsite
