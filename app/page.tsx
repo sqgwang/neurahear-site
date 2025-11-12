@@ -46,7 +46,7 @@ export default function Home() {
             </svg>
           </div>
           <h3 className="mb-2">Research</h3>
-          <p className="text-sm text-gray-600">Advancing hearing cognitive science</p>
+          <p className="text-sm text-gray-600">Advancing hearing cognitive science.</p>
         </div>
 
         <div className="text-center p-6 rounded-xl bg-white border border-gray-200 hover:shadow-lg transition-shadow duration-300">
