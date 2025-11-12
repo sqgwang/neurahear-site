@@ -6,47 +6,15 @@
     "affiliation": "The University of Hong Kong",
     "photo": "shang_wang.jpg",
     "email": "sqgw@connect.hku.hk",
-    "website": "https://shangwang.example.edu",
-    "orcid": "0000-0002-XXXX-XXXX",
     "googleScholar": "https://scholar.google.com/citations?user=xxxxx",
-    "bio": "xx",
-    "research_interests": [
-      "Auditory neuroscience",
-      "Computational models of hearing",
-      "Machine learning for audio",
-      "Hearing aids and perceptual evaluation"
-    ],
-    "publications": [
-      {
-        "title": "Dxxx",
-        "authors": "S. Wang, xr",
-        "venue": "NeurIPS",
-        "year": 2024,
-        "url": "https://doi.org/10.1234/example"
-      },
-      {
-        "title": "Learesninghearing",
-        "authors": "S. Wang, Be",
-        "venue": "JA",
-        "year": 2023
-      }
-    ],
-    "projects": [
-      {
-        "name": "NeuraHear",
-        "url": "https://neurahear.example",
-        "description": "A project to develop ML-driven hearing aids."
-      }
-    ],
-    "cv": "/files/shang_wang_cv.pdf",
-    "social": { "github": "https://github.com/shangwang", "linkedin": "https://www.linkedin.com/in/shangwang" }
+    "linkedin": "https://www.linkedin.com/in/shangqiguo-wang-0595ba109/",
+    "externalLink": null
   },
   {
     "name": "Dicky Mo",
     "slug": "dicky-mo",
     "affiliation": "Orka",
     "photo": "dicky_mo.jpg",
-    "bio": "xxx",
-    "social": { "github": "https://github.com/dickymo" }
+    "externalLink": "https://www.dickymo.com"
   }
 ]

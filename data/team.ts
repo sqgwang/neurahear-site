@@ -17,15 +17,9 @@ export type Member = {
   affiliation?: string
   photo?: string
   email?: string
-  website?: string
-  orcid?: string
   googleScholar?: string
-  bio?: string
-  research_interests?: string[]
-  publications?: Publication[]
-  projects?: Project[]
-  cv?: string
-  social?: Social
+  linkedin?: string
+  externalLink?: string | null  // If set, clicking member goes to external URL
 }
 
 // Load members from JSON to make editing easier for non-developers
