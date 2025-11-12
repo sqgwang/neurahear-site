@@ -69,13 +69,18 @@ jobs:
           script: |
             set -e
             
-            echo "=== Extracting static files directly to target ==="
-            cd /var/www/neurahear
+            echo "=== Extracting static files to temp ==="
+            DEPLOY_TEMP="/tmp/neurahear-deploy-$(date +%s)"
+            mkdir -p "$DEPLOY_TEMP"
+            cd "$DEPLOY_TEMP"
             tar -xzf /tmp/site.tar.gz
             rm /tmp/site.tar.gz
             
-            echo "=== Files extracted successfully ==="
-            ls -la /var/www/neurahear/ | head -20
+            echo "=== Syncing files to public directory ==="
+            rsync -av --delete "$DEPLOY_TEMP/" /var/www/neurahear/
+            
+            echo "=== Cleaning up temp directory ==="
+            rm -rf "$DEPLOY_TEMP"
             
             echo "=== Updating backend code ==="
             cd /var/www/labsite
