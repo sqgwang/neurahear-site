@@ -60,44 +60,54 @@ jobs:
       
       - name: Extract and update backend
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: SUDO_PASSWORD
           command_timeout: 10m
           script: |
             set -e
-            
+
+            if [ -z "$SUDO_PASSWORD" ]; then
+              echo "SUDO_PASSWORD is not configured. Please add it as a repository secret." >&2
+              exit 1
+            fi
+
+            run_sudo() {
+              echo "$SUDO_PASSWORD" | sudo -S "$@"
+            }
+
             echo "=== Extracting static files to temp ==="
             DEPLOY_TEMP="/tmp/neurahear-deploy-$(date +%s)"
             mkdir -p "$DEPLOY_TEMP"
-            cd "$DEPLOY_TEMP"
-            tar -xzf /tmp/site.tar.gz
-            rm /tmp/site.tar.gz
-            
-            echo "=== Removing old files ==="
-            sudo rm -rf /var/www/neurahear/*
-            
+            tar -xzf /tmp/site.tar.gz -C "$DEPLOY_TEMP"
+            rm -f /tmp/site.tar.gz
+
+            echo "=== Refreshing deployment directory ==="
+            run_sudo rm -rf /var/www/neurahear
+            run_sudo mkdir -p /var/www/neurahear
+
             echo "=== Copying new files ==="
-            sudo cp -r "$DEPLOY_TEMP"/* /var/www/neurahear/
-            
+            run_sudo cp -a "$DEPLOY_TEMP"/. /var/www/neurahear/
+
+            echo "=== Setting permissions ==="
+            run_sudo chown -R www-data:www-data /var/www/neurahear/
+
             echo "=== Verifying deployment ==="
-            ls -la /var/www/neurahear/ | head -10
-            
+            run_sudo ls -la /var/www/neurahear/ | head -10
+
             echo "=== Cleaning up temp directory ==="
             rm -rf "$DEPLOY_TEMP"
-            
+
             echo "=== Updating backend code ==="
-            cd /var/www/labsite
-            git fetch origin main
-            git reset --hard origin/main
-            
-            cd server/din-backend
-            npm install --production
-            
+            run_sudo bash -c "cd /var/www/labsite && git fetch origin main && git reset --hard origin/main && cd server/din-backend && npm install --production"
+
             echo "=== Restarting backend service ==="
-            pm2 restart din-backend || pm2 start server.js --name din-backend
-            pm2 save
-            
+            run_sudo bash -c "pm2 restart din-backend || pm2 start server.js --name din-backend"
+            run_sudo pm2 save
+
             echo "=== Deployment complete ==="
