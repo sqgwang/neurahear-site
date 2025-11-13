@@ -51,6 +51,13 @@ jobs:
           script: |
             set -e
 
+            echo "=== DEBUG: Current user info ==="
+            whoami
+            id
+            groups
+            echo "=== DEBUG: Directory permissions ==="
+            ls -ld /var/www/neurahear /var/www/labsite
+
             STATIC_ROOT="/var/www/neurahear"
             LABSITE_ROOT="/var/www/labsite"
             PERSIST_DATA_SUBPATH="tools/digit-in-noise-test/data"
