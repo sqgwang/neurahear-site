@@ -30,24 +30,6 @@ jobs:
           tar -czf ../site.tar.gz .
           cd ..
       
-      - name: Deploy to server
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          port: ${{ secrets.SSH_PORT }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          command_timeout: 10m
-          script: |
-            set -e
-            echo "=== Preparing deployment ==="
-            
-            # Create a new temp directory for extraction
-            DEPLOY_TEMP="/tmp/neurahear-deploy-$$"
-            mkdir -p "$DEPLOY_TEMP"
-            
-            echo "=== Deployment directory prepared ==="
-      
       - name: Transfer site files
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -69,29 +51,31 @@ jobs:
           script: |
             set -e
 
+            STATIC_ROOT="/var/www/neurahear"
+            LABSITE_ROOT="/var/www/labsite"
+            PERSIST_DATA_SUBPATH="tools/digit-in-noise-test/data"
+
             echo "=== Extracting static files to temp ==="
-            DEPLOY_TEMP="/tmp/neurahear-deploy-$(date +%s)"
-            mkdir -p "$DEPLOY_TEMP"
-            tar -xzf /tmp/site.tar.gz -C "$DEPLOY_TEMP"
+            TEMP_DIR=$(mktemp -d /tmp/neurahear-static-XXXX)
+            tar -xzf /tmp/site.tar.gz -C "$TEMP_DIR"
             rm -f /tmp/site.tar.gz
 
-            echo "=== Refreshing deployment directory ==="
-            rm -rf /var/www/neurahear
-            mkdir -p /var/www/neurahear
+            echo "=== Ensuring persistent data directory exists ==="
+            mkdir -p "$STATIC_ROOT/$PERSIST_DATA_SUBPATH"
 
-            echo "=== Copying new files ==="
-            cp -a "$DEPLOY_TEMP"/. /var/www/neurahear/
+            echo "=== Syncing static site (preserving data directory) ==="
+            rsync -av --delete --exclude="$PERSIST_DATA_SUBPATH/**" "$TEMP_DIR"/ "$STATIC_ROOT"/
 
-            echo "=== Verifying deployment ==="
-            ls -la /var/www/neurahear/ | head -10
+            echo "=== Restoring data directory (if needed) ==="
+            mkdir -p "$STATIC_ROOT/$PERSIST_DATA_SUBPATH"
 
             echo "=== Cleaning up temp directory ==="
-            rm -rf "$DEPLOY_TEMP"
+            rm -rf "$TEMP_DIR"
 
             echo "=== Updating backend code ==="
-            cd /var/www/labsite
+            cd "$LABSITE_ROOT"
             git fetch origin main
-            git reset --hard origin/main
+            git pull --ff-only origin main
 
             cd server/din-backend
             npm install --production
