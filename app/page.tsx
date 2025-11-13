@@ -30,7 +30,7 @@ export default function Home() {
           <h2 className="relative z-10">Our Mission</h2>
           <p className="mt-4 text-lg relative z-10">
             To investigate the auditory system and enhance hearing healthcare services for everyone through 
-            <strong className="text-blue-700"> innovative research!</strong>, 
+            <strong className="text-blue-700"> innovative research</strong>, 
             <strong className="text-blue-700"> cutting-edge technology</strong>, and 
             <strong className="text-blue-700"> interdisciplinary collaboration</strong>.
           </p>
