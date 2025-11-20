@@ -25,14 +25,14 @@ export default function Home() {
 
       {/* Mission Card */}
       <div className="grid md:grid-cols-1 gap-6">
-        <div className="card relative overflow-hidden bg-brand-dark border-none text-white group">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-brand-primary/20 to-brand-gold/20 rounded-full -mr-16 -mt-16 blur-3xl group-hover:opacity-75 transition-opacity duration-500"></div>
-          <h2 className="relative z-10 text-white mt-0">Our Mission</h2>
-          <p className="mt-4 text-lg relative z-10 text-slate-300 leading-relaxed">
+        <div className="card relative overflow-hidden border-none group bg-gradient-to-br from-slate-50 to-slate-100">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-brand-primary/10 to-brand-gold/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:opacity-75 transition-opacity duration-500"></div>
+          <h2 className="relative z-10 text-slate-900 mt-0">Our Mission</h2>
+          <p className="mt-4 text-lg relative z-10 text-slate-700 leading-relaxed font-medium">
             To investigate the auditory system and enhance hearing healthcare services for everyone through 
-            <strong className="text-brand-gold font-semibold"> innovative research</strong>, 
-            <strong className="text-brand-gold font-semibold"> cutting-edge technology</strong>, and 
-            <strong className="text-brand-gold font-semibold"> interdisciplinary collaboration</strong>.
+            <strong className="text-amber-600 font-bold"> innovative research</strong>, 
+            <strong className="text-amber-600 font-bold"> cutting-edge technology</strong>, and 
+            <strong className="text-amber-600 font-bold"> interdisciplinary collaboration</strong>.
           </p>
         </div>
       </div>
