@@ -1,24 +1,30 @@
+import Link from 'next/link';
+
 export default function Projects() {
   const projects = [
     {
       title: "Digital Hearing and Cognitive Screening and Assessment",
       icon: "🔬",
-      color: "blue"
+      color: "blue",
+      link: "#"
     },
     {
       title: "Evaluating the Impact of Hearing Loss on Everyday Functioning",
       icon: "👂",
-      color: "purple"
+      color: "purple",
+      link: "#"
     },
     {
       title: "AI and Audiology",
       icon: "🤖",
-      color: "green"
+      color: "green",
+      link: "#"
     },
     {
       title: "Hearing Healthcare and Hearing Care Professionals in China",
       icon: "🏥",
-      color: "amber"
+      color: "amber",
+      link: "/projects/hearing-healthcare-china"
     }
   ];
 
@@ -36,9 +42,10 @@ export default function Projects() {
       
       <div className="grid md:grid-cols-2 gap-6">
         {projects.map((project, index) => (
-          <div 
+          <Link 
+            href={project.link}
             key={index}
-            className={`card border-2 ${colorClasses[project.color as keyof typeof colorClasses]} transition-all duration-300 hover:scale-105 cursor-pointer`}
+            className={`card border-2 ${colorClasses[project.color as keyof typeof colorClasses]} transition-all duration-300 hover:scale-105 cursor-pointer block`}
           >
             <div className="flex items-start gap-4">
               <div className="text-4xl">{project.icon}</div>
@@ -46,7 +53,7 @@ export default function Projects() {
                 <h2 className="text-xl font-bold mb-0 mt-0">{project.title}</h2>
               </div>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>
