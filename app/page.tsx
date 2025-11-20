@@ -3,8 +3,8 @@ export default function Home() {
     <div className="max-w-4xl mx-auto">
       {/* Hero Section */}
       <div className="text-center mb-16">
-        <h1 className="text-6xl mb-6 text-brand-dark">HK Audiology Group</h1>
-        <p className="text-xl text-slate-600 mb-8">
+        <h1 className="text-4xl md:text-6xl mb-6 text-brand-dark">HK Audiology Group</h1>
+        <p className="text-lg md:text-xl text-slate-600 mb-8">
           Welcome to the <strong className="text-brand-primary border-b-2 border-brand-gold/30">HK Audiology Group</strong>
         </p>
         <div className="flex justify-center gap-4">

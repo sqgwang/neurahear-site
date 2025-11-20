@@ -54,7 +54,7 @@ const ChinaGeoMap = ({ activeProvinces, lang }: { activeProvinces: string[], lan
   return (
     <div className="relative w-full bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden flex flex-col md:flex-row">
       {/* Map Visualization Area */}
-      <div className="relative flex-1 h-[500px] md:h-[600px] bg-slate-50 p-4">
+      <div className="relative flex-1 h-[350px] md:h-[600px] bg-slate-50 p-4">
         {/* Background Map Silhouette (Subtle) */}
         <div className="absolute inset-0 opacity-5 pointer-events-none">
            <svg viewBox="0 0 100 100" className="w-full h-full">
@@ -749,31 +749,31 @@ export default function HearingHealthcareChina() {
       </div>
 
       {/* Hero Section - Presentation Mode */}
-      <div className="bg-gradient-to-br from-amber-50 to-white rounded-[2rem] p-12 md:p-16 border border-amber-100 shadow-sm mb-16 text-center relative overflow-hidden">
+      <div className="bg-gradient-to-br from-amber-50 to-white rounded-[2rem] p-6 md:p-16 border border-amber-100 shadow-sm mb-16 text-center relative overflow-hidden">
         <div className="relative z-10">
-          <div className="inline-block px-6 py-2 rounded-full bg-amber-100 text-amber-800 text-base font-bold tracking-wide mb-8 uppercase">
+          <div className="inline-block px-4 py-2 md:px-6 rounded-full bg-amber-100 text-amber-800 text-sm md:text-base font-bold tracking-wide mb-6 md:mb-8 uppercase">
             {content.tag}
           </div>
-          <h1 className="text-5xl md:text-7xl font-extrabold mb-8 text-slate-900 leading-tight whitespace-nowrap overflow-visible">
+          <h1 className="text-3xl md:text-6xl font-extrabold mb-6 md:mb-8 text-slate-900 leading-tight">
             {content.title}
           </h1>
-          <p className="text-xl md:text-2xl text-slate-600 max-w-5xl mx-auto font-light mb-10 leading-relaxed">
+          <p className="text-lg md:text-2xl text-slate-600 max-w-5xl mx-auto font-light mb-8 md:mb-10 leading-relaxed">
             {content.desc}
           </p>
           
           {/* Research Objective */}
-          <div className="bg-white/60 backdrop-blur-sm inline-block rounded-2xl p-6 border border-amber-100 max-w-4xl mx-auto">
-            <span className="font-bold text-amber-800 text-2xl">{content.objLabel} </span>
-            <span className="text-slate-700 text-2xl">{content.objText}</span>
+          <div className="bg-white/60 backdrop-blur-sm inline-block rounded-2xl p-4 md:p-6 border border-amber-100 max-w-4xl mx-auto">
+            <span className="font-bold text-amber-800 text-lg md:text-2xl block md:inline mb-2 md:mb-0">{content.objLabel} </span>
+            <span className="text-slate-700 text-lg md:text-2xl">{content.objText}</span>
           </div>
 
           {/* Authors */}
-          <div className="mt-12 pt-10 border-t border-amber-100/50">
+          <div className="mt-8 md:mt-12 pt-8 md:pt-10 border-t border-amber-100/50">
             <div className="flex flex-col items-center gap-4">
-              <div className="text-slate-700 text-xl md:text-2xl max-w-6xl leading-relaxed font-medium">
+              <div className="text-slate-700 text-base md:text-2xl max-w-6xl leading-relaxed font-medium">
                 {content.authors}
               </div>
-              <div className="flex items-center gap-3 text-slate-600 font-bold text-2xl mt-4">
+              <div className="flex items-center gap-3 text-slate-600 font-bold text-lg md:text-2xl mt-4">
                 <span>The University of Hong Kong</span>
               </div>
             </div>
@@ -782,20 +782,20 @@ export default function HearingHealthcareChina() {
       </div>
 
       {/* Demographics Dashboard - Presentation Mode */}
-      <div className="grid md:grid-cols-12 gap-8 mb-20">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 mb-20">
         {/* Key Stat Card */}
-        <div className="md:col-span-3 bg-slate-900 text-white rounded-3xl p-8 flex flex-col justify-between shadow-xl relative overflow-hidden">
+        <div className="md:col-span-3 bg-slate-900 text-white rounded-3xl p-6 md:p-8 flex flex-col justify-between shadow-xl relative overflow-hidden">
           <div className="relative z-10">
-            <h3 className="text-slate-400 text-xl font-bold uppercase tracking-wider mb-4">{content.totalRespondents}</h3>
-            <div className="text-8xl font-bold text-amber-400">33</div>
-            <div className="text-slate-300 mt-4 text-2xl">{content.respondentsDesc}</div>
+            <h3 className="text-slate-400 text-lg md:text-xl font-bold uppercase tracking-wider mb-4">{content.totalRespondents}</h3>
+            <div className="text-6xl md:text-8xl font-bold text-amber-400">33</div>
+            <div className="text-slate-300 mt-4 text-xl md:text-2xl">{content.respondentsDesc}</div>
           </div>
-          <div className="mt-10 relative z-10">
+          <div className="mt-8 md:mt-10 relative z-10">
             <div className="flex flex-col gap-2 text-slate-400">
-              <span className="text-base uppercase font-bold">{content.avgDuration}</span>
+              <span className="text-sm md:text-base uppercase font-bold">{content.avgDuration}</span>
               <div className="flex items-baseline gap-2">
-                <span className="text-6xl font-bold text-white">40</span>
-                <span className="text-2xl">{content.minutes}</span>
+                <span className="text-4xl md:text-6xl font-bold text-white">40</span>
+                <span className="text-xl md:text-2xl">{content.minutes}</span>
               </div>
             </div>
           </div>
@@ -884,67 +884,67 @@ export default function HearingHealthcareChina() {
       </div>
 
       {/* Detailed Stats Row - Presentation Mode */}
-      <div className="grid md:grid-cols-2 gap-8 mb-20">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-20">
         {/* Age & Experience & Income */}
-        <div className="bg-white border border-slate-100 rounded-3xl p-8 shadow-md">
-          <h3 className="text-slate-500 text-xl font-bold uppercase tracking-wider mb-8">{content.ageExpIncome}</h3>
-          <div className="grid grid-cols-2 gap-8 mb-10">
+        <div className="bg-white border border-slate-100 rounded-3xl p-6 md:p-8 shadow-md">
+          <h3 className="text-slate-500 text-lg md:text-xl font-bold uppercase tracking-wider mb-6 md:mb-8">{content.ageExpIncome}</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8 mb-10">
             <div className="bg-slate-50 p-6 rounded-2xl text-center">
-              <div className="text-lg text-slate-500 mb-2">{content.avgAge}</div>
-              <div className="text-5xl font-bold text-slate-800">35.4 <span className="text-2xl font-normal text-slate-400">{content.ageUnit}</span></div>
-              <div className="text-base text-slate-400 mt-3">{content.range}: 24 - 57</div>
+              <div className="text-base md:text-lg text-slate-500 mb-2">{content.avgAge}</div>
+              <div className="text-4xl md:text-5xl font-bold text-slate-800">35.4 <span className="text-xl md:text-2xl font-normal text-slate-400">{content.ageUnit}</span></div>
+              <div className="text-sm md:text-base text-slate-400 mt-3">{content.range}: 24 - 57</div>
             </div>
             <div className="bg-slate-50 p-6 rounded-2xl text-center">
-              <div className="text-lg text-slate-500 mb-2">{content.avgExp}</div>
-              <div className="text-5xl font-bold text-slate-800">11.2 <span className="text-2xl font-normal text-slate-400">{content.expUnit}</span></div>
-              <div className="text-base text-slate-400 mt-3">{content.range}: 1 - 34</div>
+              <div className="text-base md:text-lg text-slate-500 mb-2">{content.avgExp}</div>
+              <div className="text-4xl md:text-5xl font-bold text-slate-800">11.2 <span className="text-xl md:text-2xl font-normal text-slate-400">{content.expUnit}</span></div>
+              <div className="text-sm md:text-base text-slate-400 mt-3">{content.range}: 1 - 34</div>
             </div>
           </div>
           
-          <h4 className="text-base font-bold text-slate-400 uppercase mb-6">{content.incomeDist}</h4>
-          <div className="space-y-6">
-            <div className="flex items-center text-xl">
-              <span className="w-36 text-slate-600">{content.income1}</span>
-              <div className="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden mx-4">
+          <h4 className="text-sm md:text-base font-bold text-slate-400 uppercase mb-6">{content.incomeDist}</h4>
+          <div className="space-y-6 overflow-x-auto">
+            <div className="flex items-center text-base md:text-xl min-w-[300px]">
+              <span className="w-28 md:w-36 text-slate-600 text-sm md:text-base">{content.income1}</span>
+              <div className="flex-1 h-4 md:h-6 bg-slate-100 rounded-full overflow-hidden mx-2 md:mx-4">
                 <div className="h-full bg-amber-500" style={{width: '30%'}}></div>
               </div>
-              <span className="w-12 text-right font-bold text-slate-700 text-2xl">10</span>
+              <span className="w-8 md:w-12 text-right font-bold text-slate-700 text-lg md:text-2xl">10</span>
             </div>
-            <div className="flex items-center text-xl">
-              <span className="w-36 text-slate-600">{content.income2}</span>
-              <div className="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden mx-4">
+            <div className="flex items-center text-base md:text-xl min-w-[300px]">
+              <span className="w-28 md:w-36 text-slate-600 text-sm md:text-base">{content.income2}</span>
+              <div className="flex-1 h-4 md:h-6 bg-slate-100 rounded-full overflow-hidden mx-2 md:mx-4">
                 <div className="h-full bg-amber-600" style={{width: '27%'}}></div>
               </div>
-              <span className="w-12 text-right font-bold text-slate-700 text-2xl">9</span>
+              <span className="w-8 md:w-12 text-right font-bold text-slate-700 text-lg md:text-2xl">9</span>
             </div>
-            <div className="flex items-center text-xl">
-              <span className="w-36 text-slate-600">{content.income3}</span>
-              <div className="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden mx-4">
+            <div className="flex items-center text-base md:text-xl min-w-[300px]">
+              <span className="w-28 md:w-36 text-slate-600 text-sm md:text-base">{content.income3}</span>
+              <div className="flex-1 h-4 md:h-6 bg-slate-100 rounded-full overflow-hidden mx-2 md:mx-4">
                 <div className="h-full bg-amber-700" style={{width: '30%'}}></div>
               </div>
-              <span className="w-12 text-right font-bold text-slate-700 text-2xl">10</span>
+              <span className="w-8 md:w-12 text-right font-bold text-slate-700 text-lg md:text-2xl">10</span>
             </div>
-            <div className="flex items-center text-xl">
-              <span className="w-36 text-slate-600">{content.income4}</span>
-              <div className="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden mx-4">
+            <div className="flex items-center text-base md:text-xl min-w-[300px]">
+              <span className="w-28 md:w-36 text-slate-600 text-sm md:text-base">{content.income4}</span>
+              <div className="flex-1 h-4 md:h-6 bg-slate-100 rounded-full overflow-hidden mx-2 md:mx-4">
                 <div className="h-full bg-amber-800" style={{width: '3%'}}></div>
               </div>
-              <span className="w-12 text-right font-bold text-slate-700 text-2xl">1</span>
+              <span className="w-8 md:w-12 text-right font-bold text-slate-700 text-lg md:text-2xl">1</span>
             </div>
-            <div className="flex items-center text-xl">
-              <span className="w-36 text-slate-400">{content.income5}</span>
-              <div className="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden mx-4">
+            <div className="flex items-center text-base md:text-xl min-w-[300px]">
+              <span className="w-28 md:w-36 text-slate-400 text-sm md:text-base">{content.income5}</span>
+              <div className="flex-1 h-4 md:h-6 bg-slate-100 rounded-full overflow-hidden mx-2 md:mx-4">
                 <div className="h-full bg-slate-300" style={{width: '9%'}}></div>
               </div>
-              <span className="w-12 text-right font-bold text-slate-400 text-2xl">3</span>
+              <span className="w-8 md:w-12 text-right font-bold text-slate-400 text-lg md:text-2xl">3</span>
             </div>
           </div>
         </div>
 
         {/* Map Visualization */}
         <div className="bg-white border border-slate-100 rounded-3xl p-0 shadow-md relative overflow-hidden">
-          <div className="p-8 pb-0">
-            <h3 className="text-slate-500 text-xl font-bold uppercase tracking-wider">{content.mapTitle}</h3>
+          <div className="p-6 md:p-8 pb-0">
+            <h3 className="text-slate-500 text-lg md:text-xl font-bold uppercase tracking-wider">{content.mapTitle}</h3>
           </div>
           <ChinaGeoMap activeProvinces={activeProvinces} lang={lang} />
         </div>
@@ -952,13 +952,13 @@ export default function HearingHealthcareChina() {
 
       {/* Interactive Findings Section - 3-Column Layout */}
       <div className="mb-32">
-        <h2 className="text-5xl font-bold mb-12 text-slate-900 text-center">{content.findingsTitle}</h2>
+        <h2 className="text-3xl md:text-5xl font-bold mb-8 md:mb-12 text-slate-900 text-center">{content.findingsTitle}</h2>
         
-        <div className="flex gap-6 h-[800px]">
+        <div className="flex flex-col md:flex-row gap-4 md:gap-6 h-[1000px] md:h-[800px]">
           {/* Column 1: Themes (Level 1) */}
           <div 
             className={`flex flex-col gap-4 overflow-y-auto pr-2 transition-all duration-500 ease-in-out ${
-              focusedColumn === 'themes' ? 'flex-[4]' : 'flex-1'
+              focusedColumn === 'themes' ? 'flex-[4] md:flex-[4]' : 'flex-1 md:flex-1'
             }`}
             onClick={() => setFocusedColumn('themes')}
           >
@@ -1007,15 +1007,15 @@ export default function HearingHealthcareChina() {
 
           {/* Column 2: Subthemes (Level 2) */}
           <div 
-            className={`bg-white rounded-[2rem] border border-slate-100 shadow-xl p-6 flex flex-col overflow-hidden transition-all duration-500 ease-in-out ${
-              focusedColumn === 'subthemes' ? 'flex-[4]' : 'flex-1'
+            className={`bg-white rounded-[2rem] border border-slate-100 shadow-xl p-4 md:p-6 flex flex-col overflow-hidden transition-all duration-500 ease-in-out ${
+              focusedColumn === 'subthemes' ? 'flex-[4] md:flex-[4]' : 'flex-1 md:flex-1'
             }`}
             onClick={() => setFocusedColumn('subthemes')}
           >
-            <div className="mb-6 pb-6 border-b border-slate-100">
-              <h3 className="text-2xl font-bold text-slate-900 mb-2 truncate">{currentTheme.fullTitle}</h3>
+            <div className="mb-4 md:mb-6 pb-4 md:pb-6 border-b border-slate-100">
+              <h3 className="text-xl md:text-2xl font-bold text-slate-900 mb-2 truncate">{currentTheme.fullTitle}</h3>
               {focusedColumn === 'subthemes' && (
-                <p className="text-slate-500 text-lg leading-relaxed animate-fade-in">{currentTheme.description}</p>
+                <p className="text-slate-500 text-base md:text-lg leading-relaxed animate-fade-in">{currentTheme.description}</p>
               )}
             </div>
             
@@ -1028,7 +1028,7 @@ export default function HearingHealthcareChina() {
                     setActiveSubtheme(idx);
                     setFocusedColumn('codes');
                   }}
-                  className={`w-full text-left p-5 rounded-xl transition-all duration-200 border-2 ${
+                  className={`w-full text-left p-4 md:p-5 rounded-xl transition-all duration-200 border-2 ${
                     activeSubtheme === idx
                       ? 'border-amber-400 bg-amber-50'
                       : 'border-slate-100 bg-slate-50 hover:border-amber-200'
@@ -1041,7 +1041,7 @@ export default function HearingHealthcareChina() {
                       {idx + 1}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <span className={`font-bold text-lg block mb-2 leading-snug truncate ${
+                      <span className={`font-bold text-base md:text-lg block mb-2 leading-snug truncate ${
                         activeSubtheme === idx ? 'text-slate-900' : 'text-slate-600'
                       }`}>
                         {sub.title}
@@ -1061,21 +1061,21 @@ export default function HearingHealthcareChina() {
 
           {/* Column 3: Codes (Level 3) */}
           <div 
-            className={`bg-slate-800 rounded-[2rem] shadow-2xl p-8 flex flex-col overflow-hidden text-white transition-all duration-500 ease-in-out ${
-              focusedColumn === 'codes' ? 'flex-[4]' : 'flex-1'
+            className={`bg-slate-800 rounded-[2rem] shadow-2xl p-4 md:p-8 flex flex-col overflow-hidden text-white transition-all duration-500 ease-in-out ${
+              focusedColumn === 'codes' ? 'flex-[4] md:flex-[4]' : 'flex-1 md:flex-1'
             }`}
             onClick={() => setFocusedColumn('codes')}
           >
-            <div className="mb-6 flex items-center gap-3">
+            <div className="mb-4 md:mb-6 flex items-center gap-3">
               <div className="w-2 h-8 bg-amber-500 rounded-full"></div>
-              <h4 className="text-xl font-bold text-slate-300 uppercase tracking-wider whitespace-nowrap">{content.codesTitle}</h4>
+              <h4 className="text-lg md:text-xl font-bold text-slate-300 uppercase tracking-wider whitespace-nowrap">{content.codesTitle}</h4>
             </div>
 
             <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar">
               {currentSubtheme ? (
                 currentSubtheme.codes.map((code, cIdx) => (
-                  <div key={cIdx} className="bg-slate-700/50 p-5 rounded-xl border border-slate-600 hover:border-amber-500/50 transition-colors">
-                    <p className={`leading-relaxed font-medium text-slate-100 mb-3 ${focusedColumn === 'codes' ? 'text-xl' : 'text-sm line-clamp-3'}`}>
+                  <div key={cIdx} className="bg-slate-700/50 p-4 md:p-5 rounded-xl border border-slate-600 hover:border-amber-500/50 transition-colors">
+                    <p className={`leading-relaxed font-medium text-slate-100 mb-3 ${focusedColumn === 'codes' ? 'text-base md:text-xl' : 'text-sm line-clamp-3'}`}>
                       "{code.text}"
                     </p>
                     {focusedColumn === 'codes' && (
@@ -1087,7 +1087,7 @@ export default function HearingHealthcareChina() {
                   </div>
                 ))
               ) : (
-                <div className="text-slate-500 text-center mt-20 text-xl">{content.selectPrompt}</div>
+                <div className="text-slate-500 text-center mt-20 text-lg md:text-xl">{content.selectPrompt}</div>
               )}
             </div>
           </div>

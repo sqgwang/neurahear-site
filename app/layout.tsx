@@ -9,8 +9,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-100">
           <div className="container py-4 flex items-center justify-between">
-            <Link href="/" className="text-2xl font-bold text-brand-dark hover:text-brand-primary transition-colors flex items-center gap-2">
-              <span className="w-8 h-8 bg-brand-dark rounded-lg flex items-center justify-center text-white text-lg font-serif">H</span>
+            <Link href="/" className="text-2xl font-bold text-brand-dark hover:text-brand-primary transition-colors flex items-center gap-3 group">
+              <div className="w-10 h-10 bg-brand-dark rounded-xl flex items-center justify-center shadow-lg shadow-brand-primary/20 ring-1 ring-white/10 group-hover:scale-105 transition-transform duration-300">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white">
+                  <path d="M3 12H6L9 5L15 19L18 12H21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="9" cy="5" r="2" className="text-brand-gold fill-current" stroke="none"/>
+                  <circle cx="15" cy="19" r="2" className="text-brand-primary fill-current" stroke="none"/>
+                </svg>
+              </div>
               HK Audiology Group
             </Link>
             <nav className="flex gap-6 text-base">
