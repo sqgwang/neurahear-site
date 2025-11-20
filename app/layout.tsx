@@ -7,9 +7,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm border-b border-gray-200">
+        <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-100">
           <div className="container py-4 flex items-center justify-between">
-            <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-blue-700 to-blue-900 bg-clip-text text-transparent hover:opacity-80 transition-opacity">
+            <Link href="/" className="text-2xl font-bold text-brand-dark hover:text-brand-primary transition-colors flex items-center gap-2">
+              <span className="w-8 h-8 bg-brand-dark rounded-lg flex items-center justify-center text-white text-lg font-serif">H</span>
               HK Audiology Group
             </Link>
             <nav className="flex gap-6 text-base">
