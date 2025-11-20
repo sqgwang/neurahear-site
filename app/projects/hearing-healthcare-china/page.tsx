@@ -4,51 +4,51 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 // Realistic China Map Component (Dot Density / Point Map)
-const ChinaGeoMap = ({ activeProvinces }: { activeProvinces: string[] }) => {
+const ChinaGeoMap = ({ activeProvinces, lang }: { activeProvinces: string[], lang: 'zh' | 'en' }) => {
   // Approximate relative coordinates for major provinces to form a recognizable China shape
   // 0,0 is top-left. x is left-to-right, y is top-to-bottom.
   const allProvinces = [
-    { name: "黑龙江", x: 88, y: 15 },
-    { name: "吉林", x: 88, y: 25 },
-    { name: "辽宁", x: 84, y: 32 },
-    { name: "内蒙古", x: 65, y: 25 },
-    { name: "新疆", x: 20, y: 30 },
-    { name: "甘肃", x: 45, y: 40 },
-    { name: "青海", x: 35, y: 45 },
-    { name: "西藏", x: 25, y: 65 },
-    { name: "四川", x: 50, y: 60 },
-    { name: "云南", x: 45, y: 80 },
-    { name: "宁夏", x: 52, y: 42 },
-    { name: "陕西", x: 58, y: 50 },
-    { name: "山西", x: 65, y: 42 },
-    { name: "河北", x: 72, y: 38 },
-    { name: "北京", x: 74, y: 35 },
-    { name: "天津", x: 76, y: 38 },
-    { name: "山东", x: 78, y: 45 },
-    { name: "河南", x: 68, y: 52 },
-    { name: "湖北", x: 68, y: 60 },
-    { name: "湖南", x: 66, y: 70 },
-    { name: "重庆", x: 58, y: 62 },
-    { name: "贵州", x: 55, y: 72 },
-    { name: "广西", x: 60, y: 82 },
-    { name: "安徽", x: 76, y: 58 },
-    { name: "江苏", x: 82, y: 52 },
-    { name: "上海", x: 85, y: 55 },
-    { name: "浙江", x: 82, y: 62 },
-    { name: "江西", x: 74, y: 68 },
-    { name: "福建", x: 80, y: 75 },
-    { name: "广东", x: 72, y: 82 },
-    { name: "海南", x: 68, y: 92 },
-    { name: "台湾", x: 88, y: 80 },
-    { name: "香港", x: 74, y: 85 },
+    { name: "黑龙江", nameEn: "Heilongjiang", x: 88, y: 15 },
+    { name: "吉林", nameEn: "Jilin", x: 88, y: 25 },
+    { name: "辽宁", nameEn: "Liaoning", x: 84, y: 32 },
+    { name: "内蒙古", nameEn: "Inner Mongolia", x: 65, y: 25 },
+    { name: "新疆", nameEn: "Xinjiang", x: 20, y: 30 },
+    { name: "甘肃", nameEn: "Gansu", x: 45, y: 40 },
+    { name: "青海", nameEn: "Qinghai", x: 35, y: 45 },
+    { name: "西藏", nameEn: "Tibet", x: 25, y: 65 },
+    { name: "四川", nameEn: "Sichuan", x: 50, y: 60 },
+    { name: "云南", nameEn: "Yunnan", x: 45, y: 80 },
+    { name: "宁夏", nameEn: "Ningxia", x: 52, y: 42 },
+    { name: "陕西", nameEn: "Shaanxi", x: 58, y: 50 },
+    { name: "山西", nameEn: "Shanxi", x: 65, y: 42 },
+    { name: "河北", nameEn: "Hebei", x: 72, y: 38 },
+    { name: "北京", nameEn: "Beijing", x: 74, y: 35 },
+    { name: "天津", nameEn: "Tianjin", x: 76, y: 38 },
+    { name: "山东", nameEn: "Shandong", x: 78, y: 45 },
+    { name: "河南", nameEn: "Henan", x: 68, y: 52 },
+    { name: "湖北", nameEn: "Hubei", x: 68, y: 60 },
+    { name: "湖南", nameEn: "Hunan", x: 66, y: 70 },
+    { name: "重庆", nameEn: "Chongqing", x: 58, y: 62 },
+    { name: "贵州", nameEn: "Guizhou", x: 55, y: 72 },
+    { name: "广西", nameEn: "Guangxi", x: 60, y: 82 },
+    { name: "安徽", nameEn: "Anhui", x: 76, y: 58 },
+    { name: "江苏", nameEn: "Jiangsu", x: 82, y: 52 },
+    { name: "上海", nameEn: "Shanghai", x: 85, y: 55 },
+    { name: "浙江", nameEn: "Zhejiang", x: 82, y: 62 },
+    { name: "江西", nameEn: "Jiangxi", x: 74, y: 68 },
+    { name: "福建", nameEn: "Fujian", x: 80, y: 75 },
+    { name: "广东", nameEn: "Guangdong", x: 72, y: 82 },
+    { name: "海南", nameEn: "Hainan", x: 68, y: 92 },
+    { name: "台湾", nameEn: "Taiwan", x: 88, y: 80 },
+    { name: "香港", nameEn: "Hong Kong", x: 74, y: 85 },
   ];
 
   // Group provinces by region for the stats panel
   const regions = [
-    { name: "华北/东北", count: activeProvinces.filter(p => ["北京", "天津", "河北", "山西", "内蒙古", "辽宁", "吉林", "黑龙江"].includes(p)).length },
-    { name: "华东", count: activeProvinces.filter(p => ["上海", "江苏", "浙江", "安徽", "福建", "江西", "山东"].includes(p)).length },
-    { name: "华中/华南", count: activeProvinces.filter(p => ["河南", "湖北", "湖南", "广东", "广西", "海南"].includes(p)).length },
-    { name: "西南/西北", count: activeProvinces.filter(p => ["重庆", "四川", "贵州", "云南", "西藏", "陕西", "甘肃", "青海", "宁夏", "新疆"].includes(p)).length },
+    { name: lang === 'zh' ? "华北/东北" : "North/Northeast", count: activeProvinces.filter(p => ["北京", "天津", "河北", "山西", "内蒙古", "辽宁", "吉林", "黑龙江"].includes(p)).length },
+    { name: lang === 'zh' ? "华东" : "East China", count: activeProvinces.filter(p => ["上海", "江苏", "浙江", "安徽", "福建", "江西", "山东"].includes(p)).length },
+    { name: lang === 'zh' ? "华中/华南" : "Central/South", count: activeProvinces.filter(p => ["河南", "湖北", "湖南", "广东", "广西", "海南"].includes(p)).length },
+    { name: lang === 'zh' ? "西南/西北" : "Southwest/Northwest", count: activeProvinces.filter(p => ["重庆", "四川", "贵州", "云南", "西藏", "陕西", "甘肃", "青海", "宁夏", "新疆"].includes(p)).length },
   ];
 
   return (
@@ -92,7 +92,7 @@ const ChinaGeoMap = ({ activeProvinces }: { activeProvinces: string[] }) => {
                       : 'text-slate-300 opacity-0 group-hover:opacity-100 -translate-y-1'
                     }
                   `}>
-                    {prov.name}
+                    {lang === 'zh' ? prov.name : prov.nameEn}
                   </div>
                 </div>
               </div>
@@ -101,19 +101,21 @@ const ChinaGeoMap = ({ activeProvinces }: { activeProvinces: string[] }) => {
         </div>
         
         <div className="absolute bottom-4 right-4 text-slate-400 text-sm font-medium bg-white/80 px-3 py-1 rounded-lg backdrop-blur-sm">
-          * 点位代表受访者所在省份
+          {lang === 'zh' ? "* 点位代表受访者所在省份" : "* Dots represent respondent locations"}
         </div>
       </div>
 
       {/* Stats Sidebar */}
       <div className="md:w-72 bg-white border-l border-slate-100 p-8 flex flex-col justify-center">
-        <h4 className="text-slate-400 text-sm font-bold uppercase tracking-wider mb-6">区域覆盖省份统计</h4>
+        <h4 className="text-slate-400 text-sm font-bold uppercase tracking-wider mb-6">
+          {lang === 'zh' ? "区域覆盖省份统计" : "Regional Coverage"}
+        </h4>
         <div className="space-y-6">
           {regions.map((region, idx) => (
             <div key={idx}>
               <div className="flex justify-between items-end mb-2">
                 <span className="text-slate-600 font-medium text-lg">{region.name}</span>
-                <span className="text-2xl font-bold text-slate-800">{region.count} <span className="text-sm text-slate-400 font-normal">个省份</span></span>
+                <span className="text-2xl font-bold text-slate-800">{region.count} <span className="text-sm text-slate-400 font-normal">{lang === 'zh' ? "个省份" : "Provs"}</span></span>
               </div>
               <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                 <div 
@@ -125,10 +127,12 @@ const ChinaGeoMap = ({ activeProvinces }: { activeProvinces: string[] }) => {
           ))}
         </div>
         <div className="mt-8 pt-8 border-t border-slate-100">
-          <div className="text-slate-500 text-sm mb-1">覆盖省份数量</div>
-          <div className="text-4xl font-bold text-slate-900">11 <span className="text-lg font-normal text-slate-400">个</span></div>
+          <div className="text-slate-500 text-sm mb-1">{lang === 'zh' ? "覆盖省份数量" : "Total Provinces"}</div>
+          <div className="text-4xl font-bold text-slate-900">11 <span className="text-lg font-normal text-slate-400">{lang === 'zh' ? "个" : ""}</span></div>
           <p className="text-slate-400 text-sm mt-2 leading-relaxed">
-            受访者广泛分布于中国主要经济与医疗中心，具有较强的全国代表性。
+            {lang === 'zh' 
+              ? "受访者广泛分布于中国主要经济与医疗中心，具有较强的全国代表性。" 
+              : "Respondents are widely distributed across China's major economic and medical centers."}
           </p>
         </div>
       </div>
@@ -139,12 +143,102 @@ const ChinaGeoMap = ({ activeProvinces }: { activeProvinces: string[] }) => {
 export default function HearingHealthcareChina() {
   const [activeTheme, setActiveTheme] = useState(1);
   const [activeSubtheme, setActiveSubtheme] = useState<number>(0);
+  const [focusedColumn, setFocusedColumn] = useState<'themes' | 'subthemes' | 'codes'>('themes');
+  const [lang, setLang] = useState<'zh' | 'en'>('en');
 
-  // Updated Data Structure with Files and References counts
-  const themes = [
+  // Static Translations
+  const t = {
+    zh: {
+      back: "返回项目列表",
+      tag: "Qualitative Research Study",
+      title: "中国医院听力师职业现状研究",
+      desc: "通过深度定性访谈，揭示中国听力师的职业认同、面临挑战及未来展望。",
+      objLabel: "研究目的：",
+      objText: "探究中国医院听力师的职业现状。",
+      authors: "王尚齐郭，王静雯，牟珂奇，莫昌耿，赵铖，赵航，郗昕，赵非，左汶奇",
+      totalRespondents: "受访者总数",
+      respondentsDesc: "来自全国各地的听力师",
+      avgDuration: "平均访谈时长",
+      minutes: "分钟",
+      genderDist: "性别分布",
+      female: "女性",
+      male: "男性",
+      people: "人",
+      eduDist: "学历分布",
+      phd: "博士 (PhD)",
+      msc: "硕士 (MSc)",
+      bsc: "本科 (BSc)",
+      associate: "专科 (Associate)",
+      ageExpIncome: "年龄、工龄与收入",
+      avgAge: "平均年龄",
+      ageUnit: "岁",
+      range: "范围",
+      avgExp: "平均工龄",
+      expUnit: "年",
+      incomeDist: "月收入分布 (CNY)",
+      income1: "1.5万 - 2万+",
+      income2: "1万 - 1.5万",
+      income3: "5千 - 1万",
+      income4: "5千以下",
+      income5: "未透露/兼职",
+      mapTitle: "受访者省份分布",
+      findingsTitle: "研究发现：5大核心主题",
+      themeLabel: "Theme",
+      files: "Files",
+      refs: "Refs",
+      selectPrompt: "请选择左侧子主题查看详细 Codes",
+      codesTitle: "Codes & Evidence"
+    },
+    en: {
+      back: "Back to Projects",
+      tag: "Qualitative Research Study",
+      title: "Current Status of Hospital Audiologists in China",
+      desc: "Revealing professional identity, challenges, and future prospects of Chinese audiologists through in-depth qualitative interviews.",
+      objLabel: "Objective:",
+      objText: "To explore the professional status of hospital audiologists in China.",
+      authors: "Shangqiguo Wang, Jingwen Wang, Keqi Mu, Changgeng Mo, Cheng Zhao, Hang Zhao, Xin Xi, Fei Zhao, Wenqi Zuo",
+      totalRespondents: "Total Respondents",
+      respondentsDesc: "Audiologists from across China",
+      avgDuration: "Avg. Interview Duration",
+      minutes: "Minutes",
+      genderDist: "Gender Distribution",
+      female: "Female",
+      male: "Male",
+      people: "",
+      eduDist: "Education Distribution",
+      phd: "PhD",
+      msc: "Master (MSc)",
+      bsc: "Bachelor (BSc)",
+      associate: "Associate Degree",
+      ageExpIncome: "Age, Experience & Income",
+      avgAge: "Avg. Age",
+      ageUnit: "years",
+      range: "Range",
+      avgExp: "Avg. Experience",
+      expUnit: "years",
+      incomeDist: "Monthly Income (CNY)",
+      income1: "15k - 20k+",
+      income2: "10k - 15k",
+      income3: "5k - 10k",
+      income4: "Below 5k",
+      income5: "Undisclosed/Part-time",
+      mapTitle: "Respondent Distribution by Province",
+      findingsTitle: "Findings: 5 Core Themes",
+      themeLabel: "Theme",
+      files: "Files",
+      refs: "Refs",
+      selectPrompt: "Select a subtheme to view Codes",
+      codesTitle: "Codes & Evidence"
+    }
+  };
+
+  const content = t[lang];
+
+  // Chinese Data
+  const themesZh = [
     {
       id: 1,
-      title: "临床角色与权限",
+      title: "临床角色，权限限制与专业成长",
       fullTitle: "临床角色，权限限制与专业成长",
       icon: "🩺",
       description: "涉及执业范围、临床决策权以及知识储备不足的挑战。",
@@ -207,7 +301,7 @@ export default function HearingHealthcareChina() {
     },
     {
       id: 2,
-      title: "职业路径与认证",
+      title: "职业路径与认证瓶颈",
       fullTitle: "职业路径与认证瓶颈",
       icon: "🎓",
       description: "关于晋升机制、行业认证以及职业规范的问题。",
@@ -250,7 +344,7 @@ export default function HearingHealthcareChina() {
     },
     {
       id: 3,
-      title: "认可度与身份",
+      title: "医院与社会认可不足",
       fullTitle: "医院与社会认可不足",
       icon: "👀",
       description: "在医疗体系内部的地位以及公众对听力师职业的认知偏差。",
@@ -294,7 +388,7 @@ export default function HearingHealthcareChina() {
     },
     {
       id: 4,
-      title: "经济与生活平衡",
+      title: "经济与生活回报的现实平衡",
       fullTitle: "经济与生活回报的现实平衡",
       icon: "⚖️",
       description: "薪资待遇、工作强度与职业稳定性之间的权衡。",
@@ -336,7 +430,7 @@ export default function HearingHealthcareChina() {
     },
     {
       id: 5,
-      title: "未来前景",
+      title: "挑战与未来前景",
       fullTitle: "挑战与未来前景",
       icon: "🚀",
       description: "对行业未来发展的预期、区域差异以及供需关系。",
@@ -379,6 +473,247 @@ export default function HearingHealthcareChina() {
     }
   ];
 
+  // English Data (Translated)
+  const themesEn = [
+    {
+      id: 1,
+      title: "Clinical Role, Authority & Growth",
+      fullTitle: "Clinical Role, Authority Limits & Professional Growth",
+      icon: "🩺",
+      description: "Challenges involving scope of practice, clinical decision-making authority, and knowledge gaps.",
+      files: 29,
+      refs: 113,
+      subthemes: [
+        {
+          title: "Narrow scope, mechanical work, limited involvement in hearing care",
+          files: 27,
+          refs: 48,
+          codes: [
+            { text: "Hospital audiologists mainly perform hearing and vestibular tests", files: 22, refs: 26 },
+            { text: "Work is limited to hearing tests, monotonous and boring", files: 5, refs: 5 },
+            { text: "Work feels more like a technician or a tool, not a clinician", files: 1, refs: 1 },
+            { text: "Audiologists only do hearing tests, limited technical content", files: 1, refs: 1 },
+            { text: "Only doing tests is just a part of hearing care, not complete care", files: 3, refs: 3 },
+            { text: "In China, they are hearing technicians, not hearing consultants", files: 1, refs: 2 },
+            { text: "Hope to participate in more steps of hearing care in the future, not just testing", files: 1, refs: 1 },
+            { text: "Some ENT doctors have less audiology knowledge than audiologists", files: 5, refs: 5 },
+            { text: "Currently hospitals don't handle hearing aid fitting, rehabilitation loop is not closed", files: 4, refs: 4 }
+          ]
+        },
+        {
+          title: "Lack of Clinical Decision-making Authority",
+          files: 15,
+          refs: 25,
+          codes: [
+            { text: "Audiologists have no decision-making or diagnostic power clinically", files: 12, refs: 19 },
+            { text: "More authority would mean more responsibility", files: 2, refs: 2 },
+            { text: "Giving audiologists diagnostic power could increase clinical efficiency", files: 3, refs: 3 },
+            { text: "Audiologists have non-medical degrees, are not doctors", files: 1, refs: 1 }
+          ]
+        },
+        {
+          title: "Insufficient Clinical Knowledge",
+          files: 7,
+          refs: 9,
+          codes: [
+            { text: "Should not have more authority (like diagnosis) in current system due to lack of ability/knowledge", files: 2, refs: 2 },
+            { text: "Limited clinical knowledge makes independent diagnosis hard, need more knowledge/results", files: 1, refs: 1 },
+            { text: "Audiology should be a Master's level program for high-quality care", files: 2, refs: 4 },
+            { text: "Audiologists' education level is lower than doctors", files: 1, refs: 1 },
+            { text: "Hospitals have high education requirements, but audiologists generally have lower degrees", files: 1, refs: 1 }
+          ]
+        },
+        {
+          title: "Education-Practice Disconnect & Learning Needs",
+          files: 15,
+          refs: 31,
+          codes: [
+            { text: "Hospitals demand more research output, promotion requires papers", files: 11, refs: 16 },
+            { text: "Continuing education in audiology is poor, few learning opportunities", files: 1, refs: 2 },
+            { text: "Audiologists need continuous learning to develop", files: 1, refs: 1 },
+            { text: "Need constant learning", files: 6, refs: 7 },
+            { text: "School curriculum does not match actual hospital clinical work", files: 4, refs: 4 },
+            { text: "Desire for further study opportunities", files: 1, refs: 1 }
+          ]
+        }
+      ]
+    },
+    {
+      id: 2,
+      title: "Career Path & Certification",
+      fullTitle: "Career Path & Certification Bottlenecks",
+      icon: "🎓",
+      description: "Issues regarding promotion mechanisms, industry certification, and professional standards.",
+      files: 29,
+      refs: 103,
+      subthemes: [
+        {
+          title: "Narrow Promotion Opportunities, Low Career Ceiling",
+          files: 28,
+          refs: 61,
+          codes: [
+            { text: "Few promotion opportunities compared to doctors and other technicians", files: 7, refs: 10 },
+            { text: "Career ceiling is too low", files: 10, refs: 19 },
+            { text: "Colleagues leaving due to pay and promotion issues", files: 1, refs: 1 },
+            { text: "No specific promotion exam for audiologists, have to take rehabilitation therapist exam", files: 22, refs: 31 }
+          ]
+        },
+        {
+          title: "Lack of Regulation & Certification",
+          files: 19,
+          refs: 30,
+          codes: [
+            { text: "Industry needs regulation", files: 3, refs: 4 },
+            { text: "No national qualification exam or certification for audiologists", files: 12, refs: 16 },
+            { text: "Nurses or non-audiology staff currently perform hearing tests in hospitals", files: 9, refs: 9 },
+            { text: "Reluctance to add hearing aid fitting to daily work as it's not covered by insurance (profit issues)", files: 1, refs: 1 }
+          ]
+        },
+        {
+          title: "Need for Policy Advocacy & Unity",
+          files: 7,
+          refs: 12,
+          codes: [
+            { text: "Audiologists need to unite to promote industry development and certification", files: 1, refs: 1 },
+            { text: "Need an association for audiologists, not one led by ENT doctors", files: 1, refs: 1 },
+            { text: "Need industry leaders to push for policy changes and professional development", files: 7, refs: 10 }
+          ]
+        }
+      ]
+    },
+    {
+      id: 3,
+      title: "Recognition & Identity",
+      fullTitle: "Insufficient Hospital & Social Recognition",
+      icon: "👀",
+      description: "Status within the medical system and public misconceptions about the profession.",
+      files: 26,
+      refs: 71,
+      subthemes: [
+        {
+          title: "Internal Identity vs. Low Relative Value",
+          files: 15,
+          refs: 25,
+          codes: [
+            { text: "Feel respected and recognized by patients clinically", files: 2, refs: 3 },
+            { text: "Less sense of achievement compared to doctors", files: 2, refs: 2 },
+            { text: "Clinical tasks and role are considered unimportant in ENT department", files: 1, refs: 4 },
+            { text: "Professional value is less than that of doctors", files: 1, refs: 1 },
+            { text: "Feel a sense of value and identity becoming an audiologist", files: 11, refs: 14 },
+            { text: "Feel no value", files: 1, refs: 1 }
+          ]
+        },
+        {
+          title: "Low Status in Hospital, High Dependence on Leaders",
+          files: 19,
+          refs: 33,
+          codes: [
+            { text: "Not valued by doctors and hospitals", files: 15, refs: 21 },
+            { text: "Lower status in ENT department", files: 6, refs: 7 },
+            { text: "Importance depends on whether the ENT department head values it", files: 4, refs: 5 }
+          ]
+        },
+        {
+          title: "Public Misconception & Blurred Boundaries",
+          files: 8,
+          refs: 13,
+          codes: [
+            { text: "Public and even medical system misunderstand/don't know audiologists", files: 5, refs: 9 },
+            { text: "Family and friends don't understand the job", files: 1, refs: 1 },
+            { text: "Not enough public awareness on hearing protection compared to vision", files: 3, refs: 3 }
+          ]
+        }
+      ]
+    },
+    {
+      id: 4,
+      title: "Economic & Life Balance",
+      fullTitle: "Reality of Economic & Life Balance",
+      icon: "⚖️",
+      description: "Trade-offs between salary, work intensity, and job stability.",
+      files: 29,
+      refs: 112,
+      subthemes: [
+        {
+          title: "Salary vs. Intensity: Value Match",
+          files: 29,
+          refs: 63,
+          codes: [
+            { text: "Hospital audiologist income is average", files: 22, refs: 24 },
+            { text: "Income in large hospitals is higher than classmates in companies", files: 1, refs: 1 },
+            { text: "Overall work intensity is not high", files: 3, refs: 3 },
+            { text: "Overall work pressure is low", files: 8, refs: 8 },
+            { text: "Patient complaints exist but are solvable, not a big issue", files: 4, refs: 4 },
+            { text: "Hearing test fees are low, but some take long time, leading to low performance pay", files: 2, refs: 2 },
+            { text: "Low fees mean less departmental revenue contribution compared to doctors", files: 2, refs: 2 },
+            { text: "Heavy workload in large hospitals, not in general hospitals", files: 11, refs: 12 },
+            { text: "Salary matches workload, ability, and contribution", files: 2, refs: 2 },
+            { text: "Work is easier than doctors in hospitals", files: 4, refs: 5 }
+          ]
+        },
+        {
+          title: "Family & Stability Advantages",
+          files: 22,
+          refs: 49,
+          codes: [
+            { text: "Low intensity allows time for family", files: 4, refs: 4 },
+            { text: "No night shifts", files: 8, refs: 10 },
+            { text: "High social status working in hospital, decent job", files: 3, refs: 3 },
+            { text: "Income feels low when aging and facing family pressure", files: 3, refs: 3 },
+            { text: "Stable position with 'bianzhi' (tenure), stable hospital job", files: 6, refs: 8 },
+            { text: "Job suits females or those with low career expectations", files: 9, refs: 16 },
+            { text: "Suits those without ambition, who want to 'lie flat'", files: 5, refs: 5 }
+          ]
+        }
+      ]
+    },
+    {
+      id: 5,
+      title: "Future Prospects",
+      fullTitle: "Challenges & Future Prospects",
+      icon: "🚀",
+      description: "Expectations for industry development, regional differences, and supply-demand.",
+      files: 22,
+      refs: 41,
+      subthemes: [
+        {
+          title: "Regional Inequality",
+          files: 5,
+          refs: 6,
+          codes: [
+            { text: "Audiology development in small hospitals is weak", files: 2, refs: 2 },
+            { text: "Small city hospitals lack equipment, knowledge, and attention", files: 2, refs: 2 },
+            { text: "Good hospitals currently require a Master's degree", files: 2, refs: 2 }
+          ]
+        },
+        {
+          title: "Supply & Demand Imbalance",
+          files: 8,
+          refs: 11,
+          codes: [
+            { text: "More schools opening audiology programs, more graduates, but hospital positions trending to saturation", files: 8, refs: 11 }
+          ]
+        },
+        {
+          title: "Uncertain Future",
+          files: 13,
+          refs: 24,
+          codes: [
+            { text: "Aging population will increase demand for audiologists", files: 3, refs: 3 },
+            { text: "Number of practitioners increasing, but volume still not large enough", files: 2, refs: 3 },
+            { text: "Optimistic about future development", files: 3, refs: 3 },
+            { text: "Pessimistic about future in hospitals", files: 1, refs: 1 },
+            { text: "More valued than a few years ago", files: 1, refs: 1 },
+            { text: "Clinical and research audiology growing in recent years", files: 7, refs: 10 },
+            { text: "Considered changing careers", files: 1, refs: 3 }
+          ]
+        }
+      ]
+    }
+  ];
+
+  const themes = lang === 'zh' ? themesZh : themesEn;
+
   // Active provinces for map
   const activeProvinces = ["北京", "上海", "重庆", "浙江", "山东", "河南", "陕西", "广东", "山西", "安徽", "江苏"];
 
@@ -392,40 +727,51 @@ export default function HearingHealthcareChina() {
 
   return (
     <div className="w-full max-w-[95%] mx-auto pb-20 px-4 font-sans">
-      {/* Navigation */}
-      <div className="mb-8 pt-6">
+      {/* Navigation & Language Toggle */}
+      <div className="mb-8 pt-6 flex justify-between items-center">
         <Link href="/projects" className="text-amber-600 hover:text-amber-700 flex items-center gap-2 transition-colors font-bold text-lg">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          返回项目列表
+          {content.back}
         </Link>
+
+        <button 
+          onClick={() => setLang(lang === 'en' ? 'zh' : 'en')}
+          className="flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-2 shadow-sm hover:shadow-md transition-all"
+        >
+          <span className={`font-bold ${lang === 'en' ? 'text-amber-600' : 'text-slate-400'}`}>EN</span>
+          <div className="w-8 h-4 bg-slate-200 rounded-full relative">
+            <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow-sm transition-all duration-300 ${lang === 'en' ? 'left-0.5' : 'left-4.5'}`}></div>
+          </div>
+          <span className={`font-bold ${lang === 'zh' ? 'text-amber-600' : 'text-slate-400'}`}>中</span>
+        </button>
       </div>
 
       {/* Hero Section - Presentation Mode */}
       <div className="bg-gradient-to-br from-amber-50 to-white rounded-[2rem] p-12 md:p-16 border border-amber-100 shadow-sm mb-16 text-center relative overflow-hidden">
         <div className="relative z-10">
           <div className="inline-block px-6 py-2 rounded-full bg-amber-100 text-amber-800 text-base font-bold tracking-wide mb-8 uppercase">
-            Qualitative Research Study
+            {content.tag}
           </div>
           <h1 className="text-5xl md:text-7xl font-extrabold mb-8 text-slate-900 leading-tight whitespace-nowrap overflow-visible">
-            中国医院听力师职业现状研究
+            {content.title}
           </h1>
           <p className="text-xl md:text-2xl text-slate-600 max-w-5xl mx-auto font-light mb-10 leading-relaxed">
-            通过深度定性访谈，揭示中国听力师的职业认同、面临挑战及未来展望。
+            {content.desc}
           </p>
           
           {/* Research Objective */}
           <div className="bg-white/60 backdrop-blur-sm inline-block rounded-2xl p-6 border border-amber-100 max-w-4xl mx-auto">
-            <span className="font-bold text-amber-800 text-2xl">研究目的：</span>
-            <span className="text-slate-700 text-2xl">探究中国医院听力师的职业现状。</span>
+            <span className="font-bold text-amber-800 text-2xl">{content.objLabel} </span>
+            <span className="text-slate-700 text-2xl">{content.objText}</span>
           </div>
 
           {/* Authors */}
           <div className="mt-12 pt-10 border-t border-amber-100/50">
             <div className="flex flex-col items-center gap-4">
               <div className="text-slate-700 text-xl md:text-2xl max-w-6xl leading-relaxed font-medium">
-                <span className="font-bold text-amber-700 border-b-4 border-amber-200">王尚齐郭</span>，王静雯，牟珂奇，莫昌耿，赵铖，赵航，郗昕，赵非，左汶奇
+                {content.authors}
               </div>
               <div className="flex items-center gap-3 text-slate-600 font-bold text-2xl mt-4">
                 <span>The University of Hong Kong</span>
@@ -440,16 +786,16 @@ export default function HearingHealthcareChina() {
         {/* Key Stat Card */}
         <div className="md:col-span-3 bg-slate-900 text-white rounded-3xl p-8 flex flex-col justify-between shadow-xl relative overflow-hidden">
           <div className="relative z-10">
-            <h3 className="text-slate-400 text-xl font-bold uppercase tracking-wider mb-4">受访者总数</h3>
+            <h3 className="text-slate-400 text-xl font-bold uppercase tracking-wider mb-4">{content.totalRespondents}</h3>
             <div className="text-8xl font-bold text-amber-400">33</div>
-            <div className="text-slate-300 mt-4 text-2xl">来自全国各地的听力师</div>
+            <div className="text-slate-300 mt-4 text-2xl">{content.respondentsDesc}</div>
           </div>
           <div className="mt-10 relative z-10">
             <div className="flex flex-col gap-2 text-slate-400">
-              <span className="text-base uppercase font-bold">平均访谈时长</span>
+              <span className="text-base uppercase font-bold">{content.avgDuration}</span>
               <div className="flex items-baseline gap-2">
                 <span className="text-6xl font-bold text-white">40</span>
-                <span className="text-2xl">分钟</span>
+                <span className="text-2xl">{content.minutes}</span>
               </div>
             </div>
           </div>
@@ -457,16 +803,16 @@ export default function HearingHealthcareChina() {
 
         {/* Gender Split - Simple Bar Chart */}
         <div className="md:col-span-4 bg-white border border-slate-100 rounded-3xl p-8 shadow-md flex flex-col">
-          <h3 className="text-slate-500 text-xl font-bold uppercase tracking-wider mb-8">性别分布</h3>
+          <h3 className="text-slate-500 text-xl font-bold uppercase tracking-wider mb-8">{content.genderDist}</h3>
           <div className="flex-1 flex flex-col justify-center gap-8">
             {/* Female Bar */}
             <div>
               <div className="flex justify-between items-end mb-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold text-slate-700">女性</span>
+                  <span className="text-2xl font-bold text-slate-700">{content.female}</span>
                   <span className="text-slate-400 font-medium text-lg">(Female)</span>
                 </div>
-                <div className="text-3xl font-bold text-amber-500">25 <span className="text-sm text-slate-400 font-normal">人</span></div>
+                <div className="text-3xl font-bold text-amber-500">25 <span className="text-sm text-slate-400 font-normal">{content.people}</span></div>
               </div>
               <div className="w-full bg-slate-100 h-8 rounded-full overflow-hidden relative">
                 <div className="absolute top-0 left-0 h-full bg-amber-500 rounded-full flex items-center justify-end px-3" style={{ width: '76%' }}>
@@ -479,10 +825,10 @@ export default function HearingHealthcareChina() {
             <div>
               <div className="flex justify-between items-end mb-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold text-slate-700">男性</span>
+                  <span className="text-2xl font-bold text-slate-700">{content.male}</span>
                   <span className="text-slate-400 font-medium text-lg">(Male)</span>
                 </div>
-                <div className="text-3xl font-bold text-blue-500">8 <span className="text-sm text-slate-400 font-normal">人</span></div>
+                <div className="text-3xl font-bold text-blue-500">8 <span className="text-sm text-slate-400 font-normal">{content.people}</span></div>
               </div>
               <div className="w-full bg-slate-100 h-8 rounded-full overflow-hidden relative">
                 <div className="absolute top-0 left-0 h-full bg-blue-500 rounded-full flex items-center justify-end px-3" style={{ width: '24%' }}>
@@ -495,11 +841,11 @@ export default function HearingHealthcareChina() {
 
         {/* Education Visualization */}
         <div className="md:col-span-5 bg-white border border-slate-100 rounded-3xl p-8 shadow-md">
-          <h3 className="text-slate-500 text-xl font-bold uppercase tracking-wider mb-8">学历分布</h3>
+          <h3 className="text-slate-500 text-xl font-bold uppercase tracking-wider mb-8">{content.eduDist}</h3>
           <div className="space-y-8">
             <div>
               <div className="flex justify-between text-xl mb-2">
-                <span className="font-medium text-slate-700">博士 (PhD)</span>
+                <span className="font-medium text-slate-700">{content.phd}</span>
                 <span className="font-bold text-indigo-600 text-2xl">3 (9%)</span>
               </div>
               <div className="w-full bg-slate-100 rounded-full h-5">
@@ -508,7 +854,7 @@ export default function HearingHealthcareChina() {
             </div>
             <div>
               <div className="flex justify-between text-xl mb-2">
-                <span className="font-medium text-slate-700">硕士 (MSc)</span>
+                <span className="font-medium text-slate-700">{content.msc}</span>
                 <span className="font-bold text-amber-600 text-2xl">18 (55%)</span>
               </div>
               <div className="w-full bg-slate-100 rounded-full h-5">
@@ -517,7 +863,7 @@ export default function HearingHealthcareChina() {
             </div>
             <div>
               <div className="flex justify-between text-xl mb-2">
-                <span className="font-medium text-slate-700">本科 (BSc)</span>
+                <span className="font-medium text-slate-700">{content.bsc}</span>
                 <span className="font-bold text-emerald-600 text-2xl">10 (30%)</span>
               </div>
               <div className="w-full bg-slate-100 rounded-full h-5">
@@ -526,7 +872,7 @@ export default function HearingHealthcareChina() {
             </div>
             <div>
               <div className="flex justify-between text-xl mb-2">
-                <span className="font-medium text-slate-700">专科 (Associate)</span>
+                <span className="font-medium text-slate-700">{content.associate}</span>
                 <span className="font-bold text-blue-500 text-2xl">2 (6%)</span>
               </div>
               <div className="w-full bg-slate-100 rounded-full h-5">
@@ -541,52 +887,52 @@ export default function HearingHealthcareChina() {
       <div className="grid md:grid-cols-2 gap-8 mb-20">
         {/* Age & Experience & Income */}
         <div className="bg-white border border-slate-100 rounded-3xl p-8 shadow-md">
-          <h3 className="text-slate-500 text-xl font-bold uppercase tracking-wider mb-8">年龄、工龄与收入</h3>
+          <h3 className="text-slate-500 text-xl font-bold uppercase tracking-wider mb-8">{content.ageExpIncome}</h3>
           <div className="grid grid-cols-2 gap-8 mb-10">
             <div className="bg-slate-50 p-6 rounded-2xl text-center">
-              <div className="text-lg text-slate-500 mb-2">平均年龄</div>
-              <div className="text-5xl font-bold text-slate-800">35.4 <span className="text-2xl font-normal text-slate-400">岁</span></div>
-              <div className="text-base text-slate-400 mt-3">范围: 24 - 57</div>
+              <div className="text-lg text-slate-500 mb-2">{content.avgAge}</div>
+              <div className="text-5xl font-bold text-slate-800">35.4 <span className="text-2xl font-normal text-slate-400">{content.ageUnit}</span></div>
+              <div className="text-base text-slate-400 mt-3">{content.range}: 24 - 57</div>
             </div>
             <div className="bg-slate-50 p-6 rounded-2xl text-center">
-              <div className="text-lg text-slate-500 mb-2">平均工龄</div>
-              <div className="text-5xl font-bold text-slate-800">11.2 <span className="text-2xl font-normal text-slate-400">年</span></div>
-              <div className="text-base text-slate-400 mt-3">范围: 1 - 34</div>
+              <div className="text-lg text-slate-500 mb-2">{content.avgExp}</div>
+              <div className="text-5xl font-bold text-slate-800">11.2 <span className="text-2xl font-normal text-slate-400">{content.expUnit}</span></div>
+              <div className="text-base text-slate-400 mt-3">{content.range}: 1 - 34</div>
             </div>
           </div>
           
-          <h4 className="text-base font-bold text-slate-400 uppercase mb-6">月收入分布 (CNY)</h4>
+          <h4 className="text-base font-bold text-slate-400 uppercase mb-6">{content.incomeDist}</h4>
           <div className="space-y-6">
             <div className="flex items-center text-xl">
-              <span className="w-36 text-slate-600">1.5万 - 2万+</span>
+              <span className="w-36 text-slate-600">{content.income1}</span>
               <div className="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden mx-4">
                 <div className="h-full bg-amber-500" style={{width: '30%'}}></div>
               </div>
               <span className="w-12 text-right font-bold text-slate-700 text-2xl">10</span>
             </div>
             <div className="flex items-center text-xl">
-              <span className="w-36 text-slate-600">1万 - 1.5万</span>
+              <span className="w-36 text-slate-600">{content.income2}</span>
               <div className="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden mx-4">
                 <div className="h-full bg-amber-600" style={{width: '27%'}}></div>
               </div>
               <span className="w-12 text-right font-bold text-slate-700 text-2xl">9</span>
             </div>
             <div className="flex items-center text-xl">
-              <span className="w-36 text-slate-600">5千 - 1万</span>
+              <span className="w-36 text-slate-600">{content.income3}</span>
               <div className="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden mx-4">
                 <div className="h-full bg-amber-700" style={{width: '30%'}}></div>
               </div>
               <span className="w-12 text-right font-bold text-slate-700 text-2xl">10</span>
             </div>
             <div className="flex items-center text-xl">
-              <span className="w-36 text-slate-600">5千以下</span>
+              <span className="w-36 text-slate-600">{content.income4}</span>
               <div className="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden mx-4">
                 <div className="h-full bg-amber-800" style={{width: '3%'}}></div>
               </div>
               <span className="w-12 text-right font-bold text-slate-700 text-2xl">1</span>
             </div>
             <div className="flex items-center text-xl">
-              <span className="w-36 text-slate-400">未透露/兼职</span>
+              <span className="w-36 text-slate-400">{content.income5}</span>
               <div className="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden mx-4">
                 <div className="h-full bg-slate-300" style={{width: '9%'}}></div>
               </div>
@@ -598,23 +944,36 @@ export default function HearingHealthcareChina() {
         {/* Map Visualization */}
         <div className="bg-white border border-slate-100 rounded-3xl p-0 shadow-md relative overflow-hidden">
           <div className="p-8 pb-0">
-            <h3 className="text-slate-500 text-xl font-bold uppercase tracking-wider">受访者省份分布</h3>
+            <h3 className="text-slate-500 text-xl font-bold uppercase tracking-wider">{content.mapTitle}</h3>
           </div>
-          <ChinaGeoMap activeProvinces={activeProvinces} />
+          <ChinaGeoMap activeProvinces={activeProvinces} lang={lang} />
         </div>
       </div>
 
       {/* Interactive Findings Section - 3-Column Layout */}
       <div className="mb-32">
-        <h2 className="text-5xl font-bold mb-12 text-slate-900 text-center">研究发现：5大核心主题</h2>
+        <h2 className="text-5xl font-bold mb-12 text-slate-900 text-center">{content.findingsTitle}</h2>
         
-        <div className="grid grid-cols-12 gap-6 h-[800px]">
+        <div className="flex gap-6 h-[800px]">
           {/* Column 1: Themes (Level 1) */}
-          <div className="col-span-3 flex flex-col gap-4 overflow-y-auto pr-2">
+          <div 
+            className={`flex flex-col gap-4 overflow-y-auto pr-2 transition-all duration-500 ease-in-out ${
+              focusedColumn === 'themes' ? 'flex-[4]' : 'flex-1'
+            }`}
+            onClick={() => setFocusedColumn('themes')}
+          >
             {themes.map((theme) => (
               <button
                 key={theme.id}
-                onClick={() => setActiveTheme(theme.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (activeTheme === theme.id) {
+                    setFocusedColumn('themes');
+                  } else {
+                    setActiveTheme(theme.id);
+                    setFocusedColumn('subthemes');
+                  }
+                }}
                 className={`w-full text-left p-6 rounded-2xl transition-all duration-300 flex flex-col gap-4 border-2 ${
                   activeTheme === theme.id 
                     ? 'border-amber-500 bg-amber-50 shadow-lg' 
@@ -622,38 +981,53 @@ export default function HearingHealthcareChina() {
                 }`}
               >
                 <div className="flex items-center justify-between w-full">
-                  <span className={`w-14 h-14 rounded-xl flex items-center justify-center text-3xl ${
+                  <span className={`w-14 h-14 rounded-xl flex items-center justify-center text-3xl flex-shrink-0 ${
                     activeTheme === theme.id ? 'bg-amber-200' : 'bg-slate-100'
                   }`}>
                     {theme.icon}
                   </span>
-                  <span className="text-sm font-bold text-slate-400">Theme {theme.id}</span>
+                  <span className={`text-sm font-bold text-slate-400 whitespace-nowrap transition-opacity duration-300 ${
+                    focusedColumn === 'themes' ? 'opacity-100' : 'opacity-0 md:opacity-100'
+                  }`}>{content.themeLabel} {theme.id}</span>
                 </div>
                 <div>
-                  <span className={`font-bold text-xl block mb-2 ${activeTheme === theme.id ? 'text-amber-900' : 'text-slate-600'}`}>
+                  <span className={`font-bold text-xl block mb-2 leading-tight ${activeTheme === theme.id ? 'text-amber-900' : 'text-slate-600'}`}>
                     {theme.title}
                   </span>
-                  <div className="flex gap-2 text-xs font-bold opacity-70">
-                    <span className="bg-slate-200 px-2 py-1 rounded text-slate-700">Files: {theme.files}</span>
-                    <span className="bg-slate-200 px-2 py-1 rounded text-slate-700">Refs: {theme.refs}</span>
-                  </div>
+                  {focusedColumn === 'themes' && (
+                    <div className="flex gap-2 text-xs font-bold opacity-70 animate-fade-in">
+                      <span className="bg-slate-200 px-2 py-1 rounded text-slate-700">{content.files}: {theme.files}</span>
+                      <span className="bg-slate-200 px-2 py-1 rounded text-slate-700">{content.refs}: {theme.refs}</span>
+                    </div>
+                  )}
                 </div>
               </button>
             ))}
           </div>
 
           {/* Column 2: Subthemes (Level 2) */}
-          <div className="col-span-4 bg-white rounded-[2rem] border border-slate-100 shadow-xl p-6 flex flex-col overflow-hidden">
+          <div 
+            className={`bg-white rounded-[2rem] border border-slate-100 shadow-xl p-6 flex flex-col overflow-hidden transition-all duration-500 ease-in-out ${
+              focusedColumn === 'subthemes' ? 'flex-[4]' : 'flex-1'
+            }`}
+            onClick={() => setFocusedColumn('subthemes')}
+          >
             <div className="mb-6 pb-6 border-b border-slate-100">
-              <h3 className="text-2xl font-bold text-slate-900 mb-2">{currentTheme.fullTitle}</h3>
-              <p className="text-slate-500 text-lg leading-relaxed">{currentTheme.description}</p>
+              <h3 className="text-2xl font-bold text-slate-900 mb-2 truncate">{currentTheme.fullTitle}</h3>
+              {focusedColumn === 'subthemes' && (
+                <p className="text-slate-500 text-lg leading-relaxed animate-fade-in">{currentTheme.description}</p>
+              )}
             </div>
             
             <div className="flex-1 overflow-y-auto space-y-4 pr-2">
               {currentTheme.subthemes.map((sub, idx) => (
                 <button
                   key={idx}
-                  onClick={() => setActiveSubtheme(idx)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveSubtheme(idx);
+                    setFocusedColumn('codes');
+                  }}
                   className={`w-full text-left p-5 rounded-xl transition-all duration-200 border-2 ${
                     activeSubtheme === idx
                       ? 'border-amber-400 bg-amber-50'
@@ -666,16 +1040,18 @@ export default function HearingHealthcareChina() {
                     }`}>
                       {idx + 1}
                     </div>
-                    <div className="flex-1">
-                      <span className={`font-bold text-lg block mb-2 leading-snug ${
+                    <div className="flex-1 min-w-0">
+                      <span className={`font-bold text-lg block mb-2 leading-snug truncate ${
                         activeSubtheme === idx ? 'text-slate-900' : 'text-slate-600'
                       }`}>
                         {sub.title}
                       </span>
-                      <div className="flex gap-3 text-xs font-bold text-slate-400">
-                        <span className="bg-white px-2 py-0.5 rounded border border-slate-200">Files: {sub.files}</span>
-                        <span className="bg-white px-2 py-0.5 rounded border border-slate-200">Refs: {sub.refs}</span>
-                      </div>
+                      {focusedColumn === 'subthemes' && (
+                        <div className="flex gap-3 text-xs font-bold text-slate-400 animate-fade-in">
+                          <span className="bg-white px-2 py-0.5 rounded border border-slate-200">{content.files}: {sub.files}</span>
+                          <span className="bg-white px-2 py-0.5 rounded border border-slate-200">{content.refs}: {sub.refs}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </button>
@@ -684,27 +1060,34 @@ export default function HearingHealthcareChina() {
           </div>
 
           {/* Column 3: Codes (Level 3) */}
-          <div className="col-span-5 bg-slate-800 rounded-[2rem] shadow-2xl p-8 flex flex-col overflow-hidden text-white">
+          <div 
+            className={`bg-slate-800 rounded-[2rem] shadow-2xl p-8 flex flex-col overflow-hidden text-white transition-all duration-500 ease-in-out ${
+              focusedColumn === 'codes' ? 'flex-[4]' : 'flex-1'
+            }`}
+            onClick={() => setFocusedColumn('codes')}
+          >
             <div className="mb-6 flex items-center gap-3">
               <div className="w-2 h-8 bg-amber-500 rounded-full"></div>
-              <h4 className="text-xl font-bold text-slate-300 uppercase tracking-wider">Codes & Evidence</h4>
+              <h4 className="text-xl font-bold text-slate-300 uppercase tracking-wider whitespace-nowrap">{content.codesTitle}</h4>
             </div>
 
             <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar">
               {currentSubtheme ? (
                 currentSubtheme.codes.map((code, cIdx) => (
                   <div key={cIdx} className="bg-slate-700/50 p-5 rounded-xl border border-slate-600 hover:border-amber-500/50 transition-colors">
-                    <p className="text-xl leading-relaxed font-medium text-slate-100 mb-3">
+                    <p className={`leading-relaxed font-medium text-slate-100 mb-3 ${focusedColumn === 'codes' ? 'text-xl' : 'text-sm line-clamp-3'}`}>
                       "{code.text}"
                     </p>
-                    <div className="flex gap-3 text-sm font-bold text-slate-400">
-                      <span className="bg-slate-800 px-2 py-1 rounded border border-slate-600">Files: {code.files}</span>
-                      <span className="bg-slate-800 px-2 py-1 rounded border border-slate-600">Refs: {code.refs}</span>
-                    </div>
+                    {focusedColumn === 'codes' && (
+                      <div className="flex gap-3 text-sm font-bold text-slate-400 animate-fade-in">
+                        <span className="bg-slate-800 px-2 py-1 rounded border border-slate-600">{content.files}: {code.files}</span>
+                        <span className="bg-slate-800 px-2 py-1 rounded border border-slate-600">{content.refs}: {code.refs}</span>
+                      </div>
+                    )}
                   </div>
                 ))
               ) : (
-                <div className="text-slate-500 text-center mt-20 text-xl">请选择左侧子主题查看详细 Codes</div>
+                <div className="text-slate-500 text-center mt-20 text-xl">{content.selectPrompt}</div>
               )}
             </div>
           </div>
