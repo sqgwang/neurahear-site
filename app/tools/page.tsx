@@ -1,28 +1,28 @@
 export default function Tools() {
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="mb-4">Research Tools</h1>
-      <p className="text-xl text-gray-600 mb-12">Interactive tools for hearing assessment and research</p>
+      <h1 className="mb-4 text-slate-900">Research Tools</h1>
+      <p className="text-xl text-slate-600 mb-12">Interactive tools for hearing assessment and research</p>
       
       <div className="space-y-6">
-        <div className="card border-2 border-blue-200 bg-gradient-to-br from-white to-blue-50">
-          <div className="flex items-start gap-4 mb-4">
-            <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+        <div className="p-8 rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 shadow-sm hover:shadow-lg transition-all duration-300">
+          <div className="flex items-start gap-4 mb-6">
+            <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md shadow-blue-200">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
               </svg>
             </div>
             <div className="flex-1">
-              <h2 className="text-2xl font-bold mt-0 mb-2">integrated Digit-in-Noise Test</h2>
-              <p className="text-gray-700 mb-4">
+              <h2 className="text-2xl font-bold mt-0 mb-2 text-slate-900">integrated Digit-in-Noise Test</h2>
+              <p className="text-slate-700 mb-4 leading-relaxed">
                 Comprehensive hearing and cognitive screening tool with volume calibration, device check, and adaptive SNR testing in your browser.
               </p>
             </div>
           </div>
           
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
             <a 
-              className="btn" 
+              className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5 duration-200" 
               href="/tools/digit-in-noise-test/" 
               target="_blank" 
               rel="noopener noreferrer"
@@ -34,7 +34,7 @@ export default function Tools() {
               Launch the test
             </a>
             <a 
-              className="btn-secondary" 
+              className="px-6 py-3 bg-white text-slate-700 border border-slate-200 rounded-xl font-semibold hover:bg-slate-50 hover:text-slate-900 transition-colors flex items-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5 duration-200" 
               href="/publications/" 
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -45,19 +45,19 @@ export default function Tools() {
           </div>
         </div>
 
-        <div className="card bg-gray-50 opacity-75">
+        <div className="p-8 rounded-2xl border border-slate-200 bg-slate-50 opacity-75 hover:opacity-100 transition-opacity duration-300">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-gray-400 rounded-lg flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12 bg-slate-300 rounded-xl flex items-center justify-center flex-shrink-0">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
             <div className="flex-1">
-              <h2 className="text-2xl font-bold mt-0 mb-2 text-gray-600">Online Questionnaire</h2>
-              <p className="text-gray-500">
+              <h2 className="text-2xl font-bold mt-0 mb-2 text-slate-500">Online Questionnaire</h2>
+              <p className="text-slate-500 mb-3">
                 Embed Wenjuanxing or Qualtrics for recruitment and follow-ups.
               </p>
-              <span className="inline-block mt-3 px-3 py-1 bg-gray-200 text-gray-600 text-sm rounded-full">Coming Soon</span>
+              <span className="inline-block px-3 py-1 bg-slate-200 text-slate-600 text-sm font-medium rounded-full">Coming Soon</span>
             </div>
           </div>
         </div>

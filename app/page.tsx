@@ -5,7 +5,7 @@ export default function Home() {
       <div className="text-center mb-16">
         <h1 className="text-4xl md:text-6xl mb-6 text-brand-dark">HK Audiology Group</h1>
         <p className="text-lg md:text-xl text-slate-600 mb-8">
-          Welcome to the <strong className="text-brand-primary border-b-2 border-brand-gold/30">HK Audiology Group</strong>
+          Welcome to the <strong className="text-brand-primary border-b-2 border-brand-accent/30">HK Audiology Group</strong>
         </p>
         <div className="flex justify-center gap-4">
           <a href="/teams/" className="btn">
@@ -26,13 +26,13 @@ export default function Home() {
       {/* Mission Card */}
       <div className="grid md:grid-cols-1 gap-6">
         <div className="card relative overflow-hidden border-none group bg-gradient-to-br from-slate-50 to-slate-100">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-brand-primary/10 to-brand-gold/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:opacity-75 transition-opacity duration-500"></div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-brand-primary/10 to-brand-accent/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:opacity-75 transition-opacity duration-500"></div>
           <h2 className="relative z-10 text-slate-900 mt-0">Our Mission</h2>
           <p className="mt-4 text-lg relative z-10 text-slate-700 leading-relaxed font-medium">
             To investigate the auditory system and enhance hearing healthcare services for everyone through 
-            <strong className="text-amber-600 font-bold"> innovative research</strong>, 
-            <strong className="text-amber-600 font-bold"> cutting-edge technology</strong>, and 
-            <strong className="text-amber-600 font-bold"> interdisciplinary collaboration</strong>.
+            <strong className="text-blue-600 font-bold"> innovative research</strong>, 
+            <strong className="text-blue-600 font-bold"> cutting-edge technology</strong>, and 
+            <strong className="text-blue-600 font-bold"> interdisciplinary collaboration</strong>.
           </p>
         </div>
       </div>
@@ -49,9 +49,9 @@ export default function Home() {
           <p className="text-sm text-slate-500">Advancing hearing cognitive science.</p>
         </div>
 
-        <div className="text-center p-8 rounded-2xl bg-white border border-slate-100 hover:border-brand-gold/30 hover:shadow-xl hover:shadow-brand-gold/5 transition-all duration-300 group">
-          <div className="w-16 h-16 mx-auto mb-6 bg-amber-50 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-            <svg className="w-8 h-8 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="text-center p-8 rounded-2xl bg-white border border-slate-100 hover:border-blue-500/30 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 group">
+          <div className="w-16 h-16 mx-auto mb-6 bg-blue-50 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+            <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
             </svg>
           </div>

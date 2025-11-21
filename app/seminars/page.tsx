@@ -140,35 +140,35 @@ export default function Seminars() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <h1 className="mb-4">Seminars</h1>
-      <p className="text-xl text-gray-600 mb-12">线上听力学研讨会 · Online Audiology Seminar Series</p>
+      <h1 className="mb-4 text-slate-900">Seminars</h1>
+      <p className="text-xl text-slate-600 mb-12">线上听力学研讨会 · Online Audiology Seminar Series</p>
       
       {/* Quick Navigation */}
-      <nav className="mb-12 p-6 bg-gradient-to-br from-blue-50 to-white rounded-2xl border-2 border-blue-200 shadow-md">
-        <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+      <nav className="mb-12 p-6 bg-gradient-to-br from-slate-50 to-white rounded-2xl border border-slate-200 shadow-sm">
+        <h3 className="text-lg font-semibold mb-4 text-slate-800 flex items-center gap-2">
           <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
           </svg>
           快速跳转 Quick Navigation
         </h3>
-        <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
+        <div className="space-y-2 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
           {seminars.map((seminar, index) => (
             <a
               key={index}
               href={`#seminar-${index}`}
-              className="block px-4 py-3 bg-white border border-gray-200 rounded-xl hover:bg-blue-50 hover:border-blue-400 hover:shadow-md transition-all duration-300"
+              className="block px-4 py-3 bg-white border border-slate-200 rounded-xl hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all duration-300 group"
             >
               <div className="flex items-start gap-3">
-                <span className="font-bold text-blue-700 min-w-[70px] text-sm">{seminar.episode}</span>
+                <span className="font-bold text-blue-700 min-w-[70px] text-sm group-hover:text-blue-800">{seminar.episode}</span>
                 <div className="flex-1">
                   {seminar.speakers.map((speaker, idx) => {
                     const speakerName = speaker.split('：')[0];
                     const topic = speaker.split('：')[1] || speaker;
                     return (
                       <div key={idx} className="text-sm leading-relaxed">
-                        <span className="font-semibold text-gray-900">{speakerName}</span>
+                        <span className="font-semibold text-slate-900">{speakerName}</span>
                         {speaker.includes('：') && (
-                          <span className="text-gray-600">：{topic.length > 60 ? topic.substring(0, 60) + '...' : topic}</span>
+                          <span className="text-slate-600 group-hover:text-slate-800">：{topic.length > 60 ? topic.substring(0, 60) + '...' : topic}</span>
                         )}
                       </div>
                     );
@@ -181,17 +181,17 @@ export default function Seminars() {
       </nav>
       
       {seminars.map((seminar, index) => (
-        <div key={index} id={`seminar-${index}`} className="mt-12 p-6 bg-white rounded-2xl border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 scroll-mt-6">
-          <h2 className="text-2xl font-bold mb-3 text-gray-900">{seminar.title}</h2>
+        <div key={index} id={`seminar-${index}`} className="mt-12 p-6 bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 scroll-mt-6 group">
+          <h2 className="text-2xl font-bold mb-3 text-slate-900 group-hover:text-blue-700 transition-colors">{seminar.title}</h2>
           {seminar.speakers.map((speaker, idx) => (
-            <p key={idx} className="text-lg mb-2 text-gray-700">{speaker}</p>
+            <p key={idx} className="text-lg mb-2 text-slate-700">{speaker}</p>
           ))}
           
           {/* Bilibili 视频嵌入 */}
-          <div className="relative w-full mt-4" style={{ paddingBottom: '56.25%' }}>
+          <div className="relative w-full mt-4 rounded-xl overflow-hidden shadow-md border border-slate-100" style={{ paddingBottom: '56.25%' }}>
             <iframe
               src={`https://player.bilibili.com/player.html?bvid=${seminar.bvid}&page=1&high_quality=1&danmaku=0&autoplay=0`}
-              className="absolute top-0 left-0 w-full h-full rounded-lg"
+              className="absolute top-0 left-0 w-full h-full"
               scrolling="no"
               frameBorder="0"
               allowFullScreen
@@ -203,9 +203,10 @@ export default function Seminars() {
             href={seminar.url}
             target="_blank" 
             rel="noopener noreferrer"
-            className="inline-block mt-4 text-blue-600 hover:underline"
+            className="inline-flex items-center gap-2 mt-4 text-blue-600 hover:text-blue-700 font-medium hover:underline decoration-blue-300 underline-offset-4 transition-colors"
           >
-            在Bilibili上观看 →
+            <span>在Bilibili上观看</span>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
           </a>
         </div>
       ))}

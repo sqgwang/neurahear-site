@@ -13,8 +13,9 @@
   {
     "name": "Dicky Mo",
     "slug": "dicky-mo",
-    "affiliation": "Orka",
+    "title": "Audiology Researcher",
+    "affiliation": "Orka Labs",
     "photo": "dicky_mo.jpg",
-    "externalLink": "https://www.dickymo.com"
+    "externalLink": null
   }
 ]

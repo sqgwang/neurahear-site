@@ -13,7 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <div className="w-10 h-10 bg-brand-dark rounded-xl flex items-center justify-center shadow-lg shadow-brand-primary/20 ring-1 ring-white/10 group-hover:scale-105 transition-transform duration-300">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white">
                   <path d="M3 12H6L9 5L15 19L18 12H21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <circle cx="9" cy="5" r="2" className="text-brand-gold fill-current" stroke="none"/>
+                  <circle cx="9" cy="5" r="2" className="text-brand-accent fill-current" stroke="none"/>
                   <circle cx="15" cy="19" r="2" className="text-brand-primary fill-current" stroke="none"/>
                 </svg>
               </div>

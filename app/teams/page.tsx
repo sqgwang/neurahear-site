@@ -17,36 +17,36 @@ export default function TeamsPage() {
                   <img
                     src={`/images/teams/${m.photo}`}
                     alt={`${m.name} photo`}
-                    className="w-full aspect-square object-cover transition-transform duration-300 group-hover:scale-110"
+                    className="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </div>
               ) : (
-                <div className="w-full aspect-square rounded-xl bg-gradient-to-br from-blue-600 to-blue-800 text-white flex items-center justify-center text-4xl font-bold mb-4 shadow-lg">
+                <div className="w-full aspect-square rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 text-white flex items-center justify-center text-4xl font-bold mb-4 shadow-lg border border-slate-600">
                   {initials(m.name)}
                 </div>
               )}
-              <h3 className="text-xl font-bold text-gray-900 mb-1">{m.name}</h3>
-              {m.title && <div className="text-sm text-gray-600 mb-1">{m.title}</div>}
-              {m.affiliation && <div className="text-sm text-gray-500 italic">{m.affiliation}</div>}
+              <h3 className="text-xl font-bold text-slate-900 mb-1 group-hover:text-blue-600 transition-colors">{m.name}</h3>
+              {m.title && <div className="text-sm text-slate-600 mb-1 font-medium">{m.title}</div>}
+              {m.affiliation && <div className="text-sm text-slate-500 italic">{m.affiliation}</div>}
             </>
           )
 
           return (
-            <li key={m.name} className="text-center">
+            <li key={m.name} className="text-center group">
               {m.externalLink ? (
                 <a
                   href={m.externalLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block p-4 rounded-2xl border-2 border-gray-200 bg-white hover:border-blue-400 hover:shadow-xl transition-all duration-300"
+                  className="block p-4 rounded-2xl border border-slate-200 bg-white hover:border-blue-200 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 h-full"
                 >
                   {content}
                 </a>
               ) : (
                 <Link
                   href={`/teams/${slugify(m.name)}`}
-                  className="block p-4 rounded-2xl border-2 border-gray-200 bg-white hover:border-blue-400 hover:shadow-xl transition-all duration-300"
+                  className="block p-4 rounded-2xl border border-slate-200 bg-white hover:border-blue-200 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 h-full"
                 >
                   {content}
                 </Link>
