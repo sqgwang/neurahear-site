@@ -3,6 +3,30 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
+interface Code {
+  text: string;
+  files: number;
+  refs: number;
+}
+
+interface Subtheme {
+  title: string;
+  files: number;
+  refs: number;
+  codes: Code[];
+}
+
+interface Theme {
+  id: number;
+  title: string;
+  fullTitle: string;
+  icon: string;
+  description: string;
+  files: number;
+  refs: number;
+  subthemes: Subtheme[];
+}
+
 // Realistic China Map Component (3D Isometric / Pillar Map)
 const ChinaGeoMap = ({ activeProvinces, lang }: { activeProvinces: string[], lang: 'zh' | 'en' }) => {
   // Approximate relative coordinates for major provinces
@@ -221,6 +245,200 @@ const ChinaGeoMap = ({ activeProvinces, lang }: { activeProvinces: string[], lan
   );
 };
 
+const themesEn: Theme[] = [
+  {
+    id: 1,
+    title: "Clinical Role & Growth",
+    fullTitle: "Clinical Role, Authority Limits & Professional Growth",
+    icon: "🩺",
+    description: "Challenges in scope of practice, decision-making authority, and professional development.",
+    files: 28,
+    refs: 52,
+    subthemes: [
+      {
+        title: "Narrow Scope & Repetitive Work",
+        files: 12,
+        refs: 18,
+        codes: [
+          { text: "Narrow scope of practice", files: 5, refs: 8 },
+          { text: "Repetitive daily work", files: 4, refs: 6 },
+          { text: "Limited participation in hearing care", files: 3, refs: 4 }
+        ]
+      },
+      {
+        title: "Lack of Decision Authority",
+        files: 8,
+        refs: 12,
+        codes: [
+          { text: "Lack of clinical decision-making authority", files: 5, refs: 7 },
+          { text: "Dependent on doctors for diagnosis", files: 3, refs: 5 }
+        ]
+      },
+      {
+        title: "Insufficient Clinical Knowledge",
+        files: 6,
+        refs: 10,
+        codes: [
+          { text: "Insufficient clinical knowledge", files: 4, refs: 6 },
+          { text: "Gap in practical skills", files: 2, refs: 4 }
+        ]
+      },
+      {
+        title: "Education-Practice Disconnect",
+        files: 10,
+        refs: 15,
+        codes: [
+          { text: "Disconnect between education & practice", files: 6, refs: 9 },
+          { text: "Need for research & continuous learning", files: 4, refs: 6 }
+        ]
+      }
+    ]
+  },
+  {
+    id: 2,
+    title: "Career Path & Certification",
+    fullTitle: "Career Path & Certification Bottlenecks",
+    icon: "🎓",
+    description: "Issues with promotion, certification, and policy support.",
+    files: 25,
+    refs: 48,
+    subthemes: [
+      {
+        title: "Limited Promotion Opportunities",
+        files: 10,
+        refs: 15,
+        codes: [
+          { text: "Limited promotion opportunities", files: 6, refs: 9 },
+          { text: "Low career ceiling", files: 4, refs: 6 }
+        ]
+      },
+      {
+        title: "Lack of Certification",
+        files: 8,
+        refs: 12,
+        codes: [
+          { text: "Lack of regulation & industry certification", files: 5, refs: 8 },
+          { text: "Unclear professional standards", files: 3, refs: 4 }
+        ]
+      },
+      {
+        title: "Need for Policy Support",
+        files: 7,
+        refs: 11,
+        codes: [
+          { text: "Need for policy support", files: 4, refs: 6 },
+          { text: "Need for audiologist unity", files: 3, refs: 5 }
+        ]
+      }
+    ]
+  },
+  {
+    id: 3,
+    title: "Recognition & Status",
+    fullTitle: "Insufficient Recognition from Hospital & Society",
+    icon: "👀",
+    description: "Struggles with internal identity, hospital status, and public perception.",
+    files: 22,
+    refs: 45,
+    subthemes: [
+      {
+        title: "Internal Identity vs. Value",
+        files: 8,
+        refs: 14,
+        codes: [
+          { text: "Internal identity vs. relative low value", files: 5, refs: 8 },
+          { text: "Self-perception issues", files: 3, refs: 6 }
+        ]
+      },
+      {
+        title: "Low Hospital Status",
+        files: 7,
+        refs: 12,
+        codes: [
+          { text: "Low status in hospital", files: 4, refs: 7 },
+          { text: "High dependence on leadership", files: 3, refs: 5 }
+        ]
+      },
+      {
+        title: "Public Misconception",
+        files: 7,
+        refs: 11,
+        codes: [
+          { text: "Public misconception", files: 4, refs: 6 },
+          { text: "Blurred professional boundaries", files: 3, refs: 5 }
+        ]
+      }
+    ]
+  },
+  {
+    id: 4,
+    title: "Economic & Life Balance",
+    fullTitle: "Balance between Economic & Life Rewards",
+    icon: "⚖️",
+    description: "Balancing salary, workload, and family stability.",
+    files: 20,
+    refs: 40,
+    subthemes: [
+      {
+        title: "Salary vs. Workload",
+        files: 10,
+        refs: 18,
+        codes: [
+          { text: "Salary matches workload & value creation", files: 6, refs: 10 },
+          { text: "Work intensity issues", files: 4, refs: 8 }
+        ]
+      },
+      {
+        title: "Family & Stability",
+        files: 8,
+        refs: 14,
+        codes: [
+          { text: "Family & stability advantages", files: 5, refs: 9 },
+          { text: "Job security", files: 3, refs: 5 }
+        ]
+      }
+    ]
+  },
+  {
+    id: 5,
+    title: "Future Prospects",
+    fullTitle: "Challenges & Future Prospects",
+    icon: "🚀",
+    description: "Expectations for industry development, regional differences, and supply-demand.",
+    files: 22,
+    refs: 41,
+    subthemes: [
+      {
+        title: "Regional Inequality",
+        files: 5,
+        refs: 6,
+        codes: [
+          { text: "Audiology development in small hospitals is weak", files: 2, refs: 2 },
+          { text: "Regional differences in hearing care", files: 3, refs: 4 }
+        ]
+      },
+      {
+        title: "Supply & Demand",
+        files: 6,
+        refs: 8,
+        codes: [
+          { text: "High demand for hearing services", files: 3, refs: 4 },
+          { text: "Shortage of qualified professionals", files: 3, refs: 4 }
+        ]
+      },
+      {
+        title: "Industry Development",
+        files: 8,
+        refs: 12,
+        codes: [
+          { text: "Optimism for future development", files: 5, refs: 7 },
+          { text: "Technological advancements", files: 3, refs: 5 }
+        ]
+      }
+    ]
+  }
+];
+
 export default function HearingHealthcareChina() {
   const [activeTheme, setActiveTheme] = useState(1);
   const [activeSubtheme, setActiveSubtheme] = useState<number>(0);
@@ -316,7 +534,7 @@ export default function HearingHealthcareChina() {
   const content = t[lang];
 
   // Chinese Data
-  const themesZh = [
+  const themesZh: Theme[] = [
     {
       id: 1,
       title: "临床角色，权限限制与专业成长",
@@ -706,10 +924,10 @@ export default function HearingHealthcareChina() {
             <div>
               <div className="flex justify-between text-xl mb-2">
                 <span className="font-medium text-slate-700">{content.bsc}</span>
-                <span className="font-bold text-emerald-600 text-2xl">10 (30%)</span>
+                <span className="font-bold text-teal-600 text-2xl">10 (30%)</span>
               </div>
               <div className="w-full bg-slate-100 rounded-full h-5">
-                <div className="bg-emerald-500 h-5 rounded-full" style={{width: '30%'}}></div>
+                <div className="bg-teal-500 h-5 rounded-full" style={{width: '30%'}}></div>
               </div>
             </div>
             <div>
@@ -786,7 +1004,7 @@ export default function HearingHealthcareChina() {
         {/* Map Visualization */}
         <div className="bg-white border border-slate-100 rounded-3xl p-0 shadow-md relative overflow-hidden">
           <div className="p-6 md:p-8 pb-0">
-            <h3 className="text-slate-500 text-lg md:text-xl font-bold uppercase tracking-wider">{content.mapTitle}</h3>
+            <h3 className="text-slate-500 text-lg md:text-2xl font-bold uppercase tracking-wider">{content.mapTitle}</h3>
           </div>
           <ChinaGeoMap activeProvinces={activeProvinces} lang={lang} />
         </div>

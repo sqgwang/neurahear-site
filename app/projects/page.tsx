@@ -11,13 +11,13 @@ export default function Projects() {
     {
       title: "Evaluating the Impact of Hearing Loss on Everyday Functioning",
       icon: "👂",
-      color: "purple",
+      color: "indigo",
       link: "#"
     },
     {
       title: "AI and Audiology",
       icon: "🤖",
-      color: "green",
+      color: "cyan",
       link: "#"
     },
     {
@@ -30,14 +30,14 @@ export default function Projects() {
 
   const colorClasses = {
     blue: "border-slate-200 bg-white hover:border-blue-300 hover:shadow-blue-500/5",
-    purple: "border-slate-200 bg-white hover:border-purple-300 hover:shadow-purple-500/5",
-    green: "border-slate-200 bg-white hover:border-emerald-300 hover:shadow-emerald-500/5"
+    indigo: "border-slate-200 bg-white hover:border-indigo-300 hover:shadow-indigo-500/5",
+    cyan: "border-slate-200 bg-white hover:border-cyan-300 hover:shadow-cyan-500/5"
   };
 
   const iconBgClasses = {
     blue: "bg-blue-50",
-    purple: "bg-purple-50",
-    green: "bg-emerald-50"
+    indigo: "bg-indigo-50",
+    cyan: "bg-cyan-50"
   };
 
   return (
