@@ -1,3 +1,5 @@
+import QuantumAcoustics from './components/QuantumAcoustics';
+
 export default function Home() {
   return (
     <div className="max-w-4xl mx-auto">
@@ -35,6 +37,11 @@ export default function Home() {
             <strong className="text-blue-600 font-bold"> interdisciplinary collaboration</strong>.
           </p>
         </div>
+      </div>
+
+      {/* Interactive Acoustic Visualization */}
+      <div className="mt-12">
+        <QuantumAcoustics />
       </div>
 
       {/* Features Grid */}
