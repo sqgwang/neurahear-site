@@ -38,7 +38,7 @@ export default function ZhananPage() {
 
   // Load records from server on mount
   useEffect(() => {
-    fetch('/api/zhanan/records')
+    fetch('/zhanan-api/records')
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -90,7 +90,7 @@ export default function ZhananPage() {
         
         // Use XHR for progress tracking
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', '/api/upload', true);
+        xhr.open('POST', '/zhanan-api/upload', true);
         xhr.setRequestHeader('Content-Type', 'application/json');
         
         xhr.upload.onprogress = (event) => {
@@ -154,7 +154,7 @@ export default function ZhananPage() {
     if (fileInputRef.current) fileInputRef.current.value = '';
 
     try {
-        const res = await fetch('/api/zhanan/records', {
+        const res = await fetch('/zhanan-api/records', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(record)
@@ -188,7 +188,7 @@ export default function ZhananPage() {
     setRecords(prev => prev.filter(r => r.id !== id));
 
     try {
-        const res = await fetch(`/api/zhanan/records/${id}`, { method: 'DELETE' });
+        const res = await fetch(`/zhanan-api/records/${id}`, { method: 'DELETE' });
         if (!res.ok) {
             throw new Error('Delete failed');
         }

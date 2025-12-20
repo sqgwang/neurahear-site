@@ -3,7 +3,7 @@ const path = require('path');
 const http = require('http');
 const fs = require('fs');
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 // Increase payload limit for image uploads
 app.use(express.json({ limit: '50mb' }));
@@ -57,7 +57,7 @@ const writeDb = (data) => {
 };
 
 // Upload Image Endpoint
-app.post('/api/upload', (req, res) => {
+app.post('/zhanan-api/upload', (req, res) => {
     try {
         const { image } = req.body;
         if (!image || !image.startsWith('data:image')) {
@@ -83,13 +83,13 @@ app.post('/api/upload', (req, res) => {
 });
 
 // Get all records
-app.get('/api/zhanan/records', (req, res) => {
+app.get('/zhanan-api/records', (req, res) => {
     const data = readDb();
     res.json(data);
 });
 
 // Add a new record
-app.post('/api/zhanan/records', (req, res) => {
+app.post('/zhanan-api/records', (req, res) => {
     try {
         const newRecord = req.body;
         const data = readDb();
@@ -123,7 +123,7 @@ app.post('/api/zhanan/records', (req, res) => {
 });
 
 // Delete a record
-app.delete('/api/zhanan/records/:id', (req, res) => {
+app.delete('/zhanan-api/records/:id', (req, res) => {
     try {
         const { id } = req.params;
         const data = readDb();
