@@ -167,10 +167,11 @@ export default function ZhananPage() {
                 setRecords(prev => [savedData.record, ...prev.filter(r => r.id !== record.id)]);
             }
         } else {
-            console.error('Server save failed');
+            const errorData = await res.json().catch(() => ({}));
+            console.error('Server save failed', errorData);
             // Revert on failure
             setRecords(records);
-            alert('保存失败，请重试');
+            alert(`保存失败: ${errorData.error || '服务器错误'}`);
         }
     } catch (err) {
         console.error('Network error', err);

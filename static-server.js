@@ -30,6 +30,32 @@ app.use('/uploads', express.static(UPLOADS_DIR));
 
 // --- API Routes for Zhanan Page ---
 
+// Helper to safely read DB
+const readDb = () => {
+    try {
+        if (!fs.existsSync(DB_FILE)) {
+            return [];
+        }
+        const content = fs.readFileSync(DB_FILE, 'utf8');
+        if (!content.trim()) return [];
+        return JSON.parse(content);
+    } catch (err) {
+        console.error('Error reading DB:', err);
+        return [];
+    }
+};
+
+// Helper to safely write DB
+const writeDb = (data) => {
+    try {
+        fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+        return true;
+    } catch (err) {
+        console.error('Error writing DB:', err);
+        return false;
+    }
+};
+
 // Upload Image Endpoint
 app.post('/api/upload', (req, res) => {
     try {
@@ -52,31 +78,27 @@ app.post('/api/upload', (req, res) => {
         res.json({ success: true, url: `/uploads/${filename}` });
     } catch (err) {
         console.error('Upload error:', err);
-        res.status(500).json({ error: 'Upload failed' });
+        res.status(500).json({ error: 'Upload failed: ' + err.message });
     }
 });
 
 // Get all records
 app.get('/api/zhanan/records', (req, res) => {
-    try {
-        const data = fs.readFileSync(DB_FILE, 'utf8');
-        res.json(JSON.parse(data));
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to read database' });
-    }
+    const data = readDb();
+    res.json(data);
 });
 
 // Add a new record
 app.post('/api/zhanan/records', (req, res) => {
     try {
         const newRecord = req.body;
-        const data = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+        const data = readDb();
         
-        // Handle Image Upload (Base64 -> File)
+        // Handle Image Upload (Base64 -> File) - Legacy support or direct upload
         if (newRecord.image && newRecord.image.startsWith('data:image')) {
             const matches = newRecord.image.match(/^data:image\/([A-Za-z-+\/]+);base64,(.+)$/);
             if (matches) {
-                const ext = matches[1];
+                const ext = matches[1].replace('jpeg', 'jpg');
                 const buffer = Buffer.from(matches[2], 'base64');
                 const filename = `img_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${ext}`;
                 const filePath = path.join(UPLOADS_DIR, filename);
@@ -89,11 +111,14 @@ app.post('/api/zhanan/records', (req, res) => {
         }
 
         const updatedData = [newRecord, ...data];
-        fs.writeFileSync(DB_FILE, JSON.stringify(updatedData, null, 2));
-        res.json({ success: true, record: newRecord });
+        if (writeDb(updatedData)) {
+            res.json({ success: true, record: newRecord });
+        } else {
+            res.status(500).json({ error: 'Failed to write to database' });
+        }
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to save record' });
+        console.error('Save record error:', err);
+        res.status(500).json({ error: 'Failed to save record: ' + err.message });
     }
 });
 
@@ -101,7 +126,7 @@ app.post('/api/zhanan/records', (req, res) => {
 app.delete('/api/zhanan/records/:id', (req, res) => {
     try {
         const { id } = req.params;
-        const data = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+        const data = readDb();
         
         // Find record to delete image if exists
         const recordToDelete = data.find(r => r.id === id);
@@ -118,11 +143,14 @@ app.delete('/api/zhanan/records/:id', (req, res) => {
         }
 
         const updatedData = data.filter(r => r.id !== id);
-        fs.writeFileSync(DB_FILE, JSON.stringify(updatedData, null, 2));
-        res.json({ success: true });
+        if (writeDb(updatedData)) {
+            res.json({ success: true });
+        } else {
+            res.status(500).json({ error: 'Failed to update database' });
+        }
     } catch (err) {
         console.error('Delete error:', err);
-        res.status(500).json({ error: 'Failed to delete record' });
+        res.status(500).json({ error: 'Failed to delete record: ' + err.message });
     }
 });
 
