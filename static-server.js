@@ -30,6 +30,32 @@ app.use('/uploads', express.static(UPLOADS_DIR));
 
 // --- API Routes for Zhanan Page ---
 
+// Upload Image Endpoint
+app.post('/api/upload', (req, res) => {
+    try {
+        const { image } = req.body;
+        if (!image || !image.startsWith('data:image')) {
+            return res.status(400).json({ error: 'Invalid image data' });
+        }
+        
+        const matches = image.match(/^data:image\/([A-Za-z-+\/]+);base64,(.+)$/);
+        if (!matches) {
+            return res.status(400).json({ error: 'Invalid base64 format' });
+        }
+
+        const ext = matches[1].replace('jpeg', 'jpg'); // Normalize jpeg
+        const buffer = Buffer.from(matches[2], 'base64');
+        const filename = `img_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${ext}`;
+        const filePath = path.join(UPLOADS_DIR, filename);
+        
+        fs.writeFileSync(filePath, buffer);
+        res.json({ success: true, url: `/uploads/${filename}` });
+    } catch (err) {
+        console.error('Upload error:', err);
+        res.status(500).json({ error: 'Upload failed' });
+    }
+});
+
 // Get all records
 app.get('/api/zhanan/records', (req, res) => {
     try {
@@ -80,14 +106,14 @@ app.delete('/api/zhanan/records/:id', (req, res) => {
         // Find record to delete image if exists
         const recordToDelete = data.find(r => r.id === id);
         if (recordToDelete && recordToDelete.image && recordToDelete.image.startsWith('/uploads/')) {
-            const imagePath = path.join(__dirname, 'server-storage', recordToDelete.image); // path is relative to root in url, but absolute on disk
-            // Fix path construction: record.image is like "/uploads/filename.png"
-            // We need "server-storage/uploads/filename.png"
-            // Actually, let's just use the filename
             const filename = path.basename(recordToDelete.image);
             const fullPath = path.join(UPLOADS_DIR, filename);
             if (fs.existsSync(fullPath)) {
-                fs.unlinkSync(fullPath);
+                try {
+                    fs.unlinkSync(fullPath);
+                } catch (e) {
+                    console.error('Failed to delete image file:', e);
+                }
             }
         }
 
@@ -95,6 +121,7 @@ app.delete('/api/zhanan/records/:id', (req, res) => {
         fs.writeFileSync(DB_FILE, JSON.stringify(updatedData, null, 2));
         res.json({ success: true });
     } catch (err) {
+        console.error('Delete error:', err);
         res.status(500).json({ error: 'Failed to delete record' });
     }
 });

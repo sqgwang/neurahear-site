@@ -32,6 +32,8 @@ export default function ZhananPage() {
     image: null,
     date: new Date().toISOString().split('T')[0]
   });
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+  const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load records from server on mount
@@ -78,9 +80,49 @@ export default function ZhananPage() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Reset status
+      setUploadStatus('uploading');
+      setUploadProgress(0);
+      
       const reader = new FileReader();
       reader.onloadend = () => {
-        setNewRecord(prev => ({ ...prev, image: reader.result as string }));
+        const base64Image = reader.result as string;
+        
+        // Use XHR for progress tracking
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/upload', true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percentComplete = (event.loaded / event.total) * 100;
+            setUploadProgress(Math.round(percentComplete));
+          }
+        };
+        
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            const response = JSON.parse(xhr.responseText);
+            if (response.success && response.url) {
+              setNewRecord(prev => ({ ...prev, image: response.url }));
+              setUploadStatus('success');
+              setUploadProgress(100);
+            } else {
+              setUploadStatus('error');
+              alert('上传失败：服务器返回错误');
+            }
+          } else {
+            setUploadStatus('error');
+            alert('上传失败：' + xhr.statusText);
+          }
+        };
+        
+        xhr.onerror = () => {
+          setUploadStatus('error');
+          alert('网络错误，上传失败');
+        };
+        
+        xhr.send(JSON.stringify({ image: base64Image }));
       };
       reader.readAsDataURL(file);
     }
@@ -88,6 +130,10 @@ export default function ZhananPage() {
 
   const handleAddRecord = async () => {
     if (!newRecord.food) return;
+    if (uploadStatus === 'uploading') {
+        alert('请等待图片上传完成');
+        return;
+    }
 
     const record: MealRecord = {
       id: Date.now().toString(),
@@ -103,6 +149,8 @@ export default function ZhananPage() {
     
     // Reset form
     setNewRecord({ food: '', note: '', image: null, date: new Date().toISOString().split('T')[0] });
+    setUploadStatus('idle');
+    setUploadProgress(0);
     if (fileInputRef.current) fileInputRef.current.value = '';
 
     try {
@@ -114,7 +162,7 @@ export default function ZhananPage() {
         
         if (res.ok) {
             const savedData = await res.json();
-            // Update with the server version (which has the correct image URL)
+            // Update with the server version
             if (savedData.success && savedData.record) {
                 setRecords(prev => [savedData.record, ...prev.filter(r => r.id !== record.id)]);
             }
@@ -132,6 +180,8 @@ export default function ZhananPage() {
   };
 
   const handleDeleteRecord = async (id: string) => {
+    if (!confirm('确定要删除这条记录吗？')) return;
+
     // Optimistic update
     const oldRecords = [...records];
     setRecords(prev => prev.filter(r => r.id !== id));
@@ -252,14 +302,40 @@ export default function ZhananPage() {
                   type="file"
                   accept="image/*"
                   onChange={handleImageUpload}
+                  disabled={uploadStatus === 'uploading'}
                   className="block w-full text-sm text-slate-500
                     file:mr-4 file:py-2 file:px-4
                     file:rounded-full file:border-0
                     file:text-sm file:font-semibold
                     file:bg-blue-50 file:text-blue-700
                     hover:file:bg-blue-100
+                    disabled:opacity-50 disabled:cursor-not-allowed
                   "
                 />
+                
+                {/* Upload Progress Bar */}
+                {uploadStatus === 'uploading' && (
+                    <div className="mt-2 w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                        <div 
+                            className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" 
+                            style={{ width: `${uploadProgress}%` }}
+                        ></div>
+                        <p className="text-xs text-slate-500 mt-1 text-right">{uploadProgress}% 上传中...</p>
+                    </div>
+                )}
+                
+                {uploadStatus === 'success' && (
+                    <p className="mt-2 text-xs text-green-600 font-medium flex items-center gap-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                        照片上传成功！
+                    </p>
+                )}
+                
+                {uploadStatus === 'error' && (
+                    <p className="mt-2 text-xs text-red-600 font-medium">
+                        上传失败，请重试
+                    </p>
+                )}
               </div>
             </div>
             
@@ -272,10 +348,18 @@ export default function ZhananPage() {
             <div className="mt-4 flex justify-end">
               <button
                 onClick={handleAddRecord}
-                disabled={!newRecord.food}
-                className="px-6 py-2 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                disabled={!newRecord.food || uploadStatus === 'uploading'}
+                className="px-6 py-2 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
               >
-                打卡记录
+                {uploadStatus === 'uploading' ? (
+                    <>
+                        <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        上传中...
+                    </>
+                ) : '打卡记录'}
               </button>
             </div>
           </div>
