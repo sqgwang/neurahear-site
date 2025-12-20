@@ -26,9 +26,8 @@ jobs:
       
       - name: Create deployment package
         run: |
-          cd out
-          tar -czf ../site.tar.gz .
-          cd ..
+          # Include static files, server script, and package info
+          tar -czf site.tar.gz out static-server.js package.json package-lock.json
       
       - name: Transfer site files
         uses: appleboy/scp-action@v0.1.7
@@ -62,22 +61,44 @@ jobs:
             LABSITE_ROOT="/var/www/labsite"
             PERSIST_DATA_SUBPATH="tools/digit-in-noise-test/data"
 
-            echo "=== Extracting static files to temp ==="
+            echo "=== Extracting files to temp ==="
             TEMP_DIR=$(mktemp -d /tmp/neurahear-static-XXXX)
             tar -xzf /tmp/site.tar.gz -C "$TEMP_DIR"
             rm -f /tmp/site.tar.gz
 
             echo "=== Ensuring persistent data directory exists ==="
             mkdir -p "$STATIC_ROOT/$PERSIST_DATA_SUBPATH"
+            # Ensure server storage exists for Zhanan page
+            mkdir -p "$STATIC_ROOT/server-storage/data"
+            mkdir -p "$STATIC_ROOT/server-storage/uploads"
+            chmod -R 777 "$STATIC_ROOT/server-storage"
 
-            echo "=== Syncing static site (preserving data directory) ==="
-            rsync -av --delete --exclude="$PERSIST_DATA_SUBPATH/**" "$TEMP_DIR"/ "$STATIC_ROOT"/
+            echo "=== Syncing site files (preserving data directories) ==="
+            # Sync static files to out/ directory if they were at root in tar
+            # But now tar structure is: out/, static-server.js, package.json
+            
+            # 1. Copy static-server.js and package.json to root
+            cp "$TEMP_DIR/static-server.js" "$STATIC_ROOT/"
+            cp "$TEMP_DIR/package.json" "$STATIC_ROOT/"
+            cp "$TEMP_DIR/package-lock.json" "$STATIC_ROOT/"
+            
+            # 2. Sync out/ directory
+            rsync -av --delete --exclude="$PERSIST_DATA_SUBPATH/**" "$TEMP_DIR/out/" "$STATIC_ROOT/out/"
 
             echo "=== Restoring data directory (if needed) ==="
-            mkdir -p "$STATIC_ROOT/$PERSIST_DATA_SUBPATH"
+            mkdir -p "$STATIC_ROOT/out/$PERSIST_DATA_SUBPATH"
 
             echo "=== Cleaning up temp directory ==="
             rm -rf "$TEMP_DIR"
+
+            echo "=== Installing server dependencies ==="
+            cd "$STATIC_ROOT"
+            npm install --production
+
+            echo "=== Restarting Neurahear Server ==="
+            # Start/Restart the static-server which serves both UI and API
+            pm2 restart neurahear || pm2 start static-server.js --name neurahear
+            pm2 save
 
             echo "=== Updating backend code ==="
             cd "$LABSITE_ROOT"
