@@ -8,3 +8,4 @@ npm-debug.log*
 *.log
 /tmp/
 server/din-backend/data/
+server-storage/
