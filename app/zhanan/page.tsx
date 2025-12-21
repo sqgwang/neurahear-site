@@ -35,6 +35,7 @@ export default function ZhananPage() {
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedRecord, setSelectedRecord] = useState<MealRecord | null>(null);
 
   // Load records from server on mount
   useEffect(() => {
@@ -368,7 +369,7 @@ export default function ZhananPage() {
           {/* Gallery */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {records.map(record => (
-              <div key={record.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-slate-100 hover:shadow-md transition-shadow group">
+              <div key={record.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-slate-100 hover:shadow-md transition-shadow group cursor-pointer" onClick={() => setSelectedRecord(record)}>
                 {record.image ? (
                   <div className="h-48 overflow-hidden bg-slate-100">
                     <img src={record.image} alt={record.food} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -414,6 +415,70 @@ export default function ZhananPage() {
         </div>
 
       </div>
+
+      {/* Image Modal */}
+      {selectedRecord && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setSelectedRecord(null)}>
+          <div className="relative max-w-4xl w-full bg-white rounded-2xl overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
+            <button 
+              onClick={() => setSelectedRecord(null)}
+              className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors z-10"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            
+            <div className="flex flex-col md:flex-row">
+              <div className="md:w-2/3 bg-black flex items-center justify-center min-h-[300px] md:min-h-[500px]">
+                {selectedRecord.image ? (
+                  <img src={selectedRecord.image} alt={selectedRecord.food} className="max-w-full max-h-[80vh] object-contain" />
+                ) : (
+                  <div className="text-slate-500 flex flex-col items-center">
+                    <svg className="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>暂无图片</span>
+                  </div>
+                )}
+              </div>
+              
+              <div className="md:w-1/3 p-6 md:p-8 flex flex-col">
+                <div className="mb-auto">
+                  <h3 className="text-2xl font-bold text-slate-900 mb-2">{selectedRecord.food}</h3>
+                  <p className="text-slate-500 mb-6 flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    {selectedRecord.date}
+                  </p>
+                  
+                  {selectedRecord.note && (
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                      <p className="text-slate-700 leading-relaxed">{selectedRecord.note}</p>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="mt-6 pt-6 border-t border-slate-100 flex justify-end">
+                  <button 
+                    onClick={() => {
+                      handleDeleteRecord(selectedRecord.id);
+                      setSelectedRecord(null);
+                    }}
+                    className="text-red-500 hover:text-red-600 text-sm font-medium flex items-center gap-1 px-3 py-2 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    删除此记录
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
