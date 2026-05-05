@@ -42,6 +42,8 @@
             <option value="mandarin" selected>Mandarin</option>
             <option value="cantonese">Cantonese</option>
             <option value="british_english">British English</option>
+            <option value="american_english">American English</option>
+            <option value="taiwanese">Taiwanese</option>
             <option value="ningboese">Ningboese</option>
             <option value="hangzhouese">Hangzhouese</option>
             <option value="min">Min</option>
@@ -90,6 +92,16 @@
         <label class="check">
           <input id="showSnr" type="checkbox" />
           <span>Show SNR during trials</span>
+        </label>
+
+        <label class="check">
+          <input id="autoPlay" type="checkbox" checked />
+          <span>Auto play next trial</span>
+        </label>
+
+        <label>
+          Auto-play gap (ms)
+          <input id="autoPlayDelay" type="number" min="200" max="5000" step="100" value="800" />
         </label>
       </div>
 

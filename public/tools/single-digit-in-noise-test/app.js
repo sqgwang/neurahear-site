@@ -17,6 +17,8 @@ const targetPctEl = document.getElementById('targetPct');
 const noiseGainEl = document.getElementById('noiseGain');
 const participantIdEl = document.getElementById('participantId');
 const showSnrEl = document.getElementById('showSnr');
+const autoPlayEl = document.getElementById('autoPlay');
+const autoPlayDelayEl = document.getElementById('autoPlayDelay');
 const setupMsg = document.getElementById('setupMsg');
 const trialCountEl = document.getElementById('trialCount');
 const groupJsonFilesEl = document.getElementById('groupJsonFiles');
@@ -62,6 +64,7 @@ let isPlaying = false;
 let settingsSnapshot = null;
 let latestAnalysis = null;
 let applyingPreset = false;
+let autoPlayTimer = null;
 
 const presets = {
   quick: {
@@ -152,6 +155,31 @@ function updateTaskUI() {
   const trial = trialList[trialIndex];
   currentSNREl.textContent = trial && settingsSnapshot.showSnr ? `SNR: ${trial.snr} dB` : 'SNR hidden';
   inputDisplay.textContent = currentInput;
+}
+
+function getAutoPlayDelayMs() {
+  const value = Number(autoPlayDelayEl.value);
+  if (!Number.isFinite(value)) return 800;
+  return Math.max(200, Math.min(5000, Math.round(value)));
+}
+
+function clearAutoPlayTimer() {
+  if (autoPlayTimer != null) {
+    clearTimeout(autoPlayTimer);
+    autoPlayTimer = null;
+  }
+}
+
+function scheduleAutoPlay(label = 'Auto-playing') {
+  clearAutoPlayTimer();
+  if (!settingsSnapshot?.autoPlay || !trialList[trialIndex]) return;
+
+  const delay = settingsSnapshot.autoPlayDelayMs;
+  statusEl.textContent = `${label} in ${delay} ms...`;
+  autoPlayTimer = setTimeout(() => {
+    autoPlayTimer = null;
+    playCurrentTrial(true);
+  }, delay);
 }
 
 async function loadAudio(lang) {
@@ -297,6 +325,7 @@ async function handlePlay() {
   if (!trialList[trialIndex]) return;
 
   if (!buffers || buffers.lang !== settingsSnapshot.lang) {
+    statusEl.textContent = `Loading audio for ${settingsSnapshot.lang}...`;
     await loadAudio(settingsSnapshot.lang);
   }
 
@@ -325,6 +354,19 @@ async function handlePlay() {
   statusEl.textContent = 'Enter the digit you heard.';
   setResponseDisabled(false);
   isPlaying = false;
+}
+
+async function playCurrentTrial(isAuto = false) {
+  clearAutoPlayTimer();
+  try {
+    await handlePlay();
+  } catch (err) {
+    console.error(err);
+    statusEl.textContent = `${isAuto ? 'Auto-play' : 'Playback'} error: ${err.message || err}`;
+    playBtn.disabled = false;
+    setResponseDisabled(true);
+    isPlaying = false;
+  }
 }
 
 function summarize(responsesArr, snrsInOrder) {
@@ -646,6 +688,7 @@ function correctionPayload() {
 }
 
 function renderAnalysisResults({ summary, analysis, settings, title, subtitle }) {
+  clearAutoPlayTimer();
   latestAnalysis = analysis;
   settingsSnapshot = settings;
   resultsTitle.textContent = title;
@@ -675,6 +718,7 @@ function showResults() {
 }
 
 function handleSubmit() {
+  clearAutoPlayTimer();
   if (!trialList[trialIndex]) return;
   if (!hasPlayedThisTrial) {
     statusEl.textContent = 'Please play the stimulus first.';
@@ -711,7 +755,11 @@ function handleSubmit() {
   }
 
   prepareForNextTrial();
-  statusEl.textContent = 'Ready for the next trial.';
+  if (settingsSnapshot.autoPlay) {
+    scheduleAutoPlay('Next trial');
+  } else {
+    statusEl.textContent = 'Ready for the next trial.';
+  }
 }
 
 function beginExperiment() {
@@ -719,6 +767,7 @@ function beginExperiment() {
   const reps = Number(repsEl.value);
   const noiseGain = Number(noiseGainEl.value);
   const targetPct = Number(targetPctEl.value);
+  const autoPlayDelayMs = getAutoPlayDelayMs();
   const lang = stimLangEl.value;
 
   if (!snrs) {
@@ -750,6 +799,8 @@ function beginExperiment() {
     targetProbability: targetPct / 100,
     noiseGain,
     showSnr: showSnrEl.checked,
+    autoPlay: autoPlayEl.checked,
+    autoPlayDelayMs,
     startedAt: new Date().toISOString(),
   };
 
@@ -768,7 +819,14 @@ function beginExperiment() {
   taskCard.classList.remove('hidden');
 
   prepareForNextTrial();
-  statusEl.textContent = 'Press Play to hear one digit.';
+  if (settingsSnapshot.autoPlay) {
+    if (audioCtx.state !== 'running') {
+      audioCtx.resume().catch(() => {});
+    }
+    scheduleAutoPlay('First trial');
+  } else {
+    statusEl.textContent = 'Press Play to hear one digit.';
+  }
 }
 
 function readFileAsText(file) {
@@ -921,17 +979,7 @@ preloadBtn.addEventListener('click', async () => {
 });
 
 startBtn.addEventListener('click', beginExperiment);
-playBtn.addEventListener('click', async () => {
-  try {
-    await handlePlay();
-  } catch (err) {
-    console.error(err);
-    statusEl.textContent = `Playback error: ${err.message || err}`;
-    playBtn.disabled = false;
-    setResponseDisabled(true);
-    isPlaying = false;
-  }
-});
+playBtn.addEventListener('click', () => playCurrentTrial(false));
 submitBtn.addEventListener('click', handleSubmit);
 clearBtn.addEventListener('click', clearInput);
 
@@ -992,6 +1040,7 @@ copyCorrectionsBtn.addEventListener('click', async () => {
 });
 
 restartBtn.addEventListener('click', () => {
+  clearAutoPlayTimer();
   taskCard.classList.add('hidden');
   resultsCard.classList.add('hidden');
   setupCard.classList.remove('hidden');
