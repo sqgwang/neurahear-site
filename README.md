@@ -78,6 +78,7 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 - **Website**: https://www.neurahear.com
 - **DIN Test**: https://www.neurahear.com/tools/digit-in-noise-test/
+- **Single DIN (R&D)**: https://www.neurahear.com/tools/single-digit-in-noise-test/
 - **Admin Panel**: https://www.neurahear.com/tools/digit-in-noise-test/admin.html
 - **GitHub**: https://github.com/sqgwang/neurahear-site
 

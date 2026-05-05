@@ -26,8 +26,8 @@ sudo npm install -g pm2
 # 5. 设置环境变量并启动
 PORT=4000 \
 JWT_SECRET='your_production_secret_key' \
-DATA_DIR=/path/to/neurahear-site/server/din-backend/data \
-ADMIN_BOOT_PASSWORD='120120' \
+DATA_DIR=/opt/neurahear/din-data \
+ADMIN_BOOT_PASSWORD='<set-on-server-only>' \
 ALLOWED_ORIGINS='https://neurahear.com,https://www.neurahear.com' \
 pm2 start server.js --name din-backend
 
@@ -102,7 +102,7 @@ curl https://neurahear.com/api/health
 # 4. 测试登录（从本地）
 curl -X POST https://neurahear.com/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"120120"}'
+  -d '{"username":"admin","password":"<admin-password>"}'
 ```
 
 ### 4. 故障排除
@@ -165,7 +165,7 @@ sudo journalctl -u din-backend -f
 
 2. **HTTPS**: 确保只通过 HTTPS 访问（Secure cookies 需要）
 
-3. **数据备份**: 定期备份 `data/results.jsonl` 和 `data/users.json`
+3. **数据备份**: 定期备份 `/opt/neurahear/din-data/results.jsonl` 和 `/opt/neurahear/din-data/users.json`
    ```bash
    # 添加到 crontab
    0 2 * * * tar -czf /backup/din-backend-$(date +\%Y\%m\%d).tar.gz /path/to/din-backend/data/
@@ -188,7 +188,7 @@ sudo journalctl -u din-backend -f
 ```bash
 PORT=4000
 JWT_SECRET='<生成的随机密钥>'
-DATA_DIR='/path/to/neurahear-site/server/din-backend/data'
-ADMIN_BOOT_PASSWORD='120120'
+DATA_DIR='/opt/neurahear/din-data'
+ADMIN_BOOT_PASSWORD='<set-on-server-only>'
 ALLOWED_ORIGINS='https://neurahear.com,https://www.neurahear.com'
 ```

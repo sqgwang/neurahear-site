@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 
 interface Code {
@@ -777,11 +777,6 @@ export default function HearingHealthcareChina() {
   // Active provinces for map
   const activeProvinces = ["北京", "上海", "重庆", "浙江", "山东", "河南", "陕西", "广东", "山西", "安徽", "江苏"];
 
-  // Reset subtheme when theme changes
-  useEffect(() => {
-    setActiveSubtheme(0);
-  }, [activeTheme]);
-
   const currentTheme = themes.find(t => t.id === activeTheme) || themes[0];
   const currentSubtheme = currentTheme.subthemes[activeSubtheme];
 
@@ -1031,6 +1026,7 @@ export default function HearingHealthcareChina() {
                     setFocusedColumn('themes');
                   } else {
                     setActiveTheme(theme.id);
+                    setActiveSubtheme(0);
                     setFocusedColumn('subthemes');
                   }
                 }}
@@ -1136,7 +1132,7 @@ export default function HearingHealthcareChina() {
                 currentSubtheme.codes.map((code, cIdx) => (
                   <div key={cIdx} className="bg-slate-700/50 p-4 md:p-5 rounded-xl border border-slate-600 hover:border-blue-500/50 transition-colors">
                     <p className={`leading-relaxed font-medium text-slate-100 mb-3 ${focusedColumn === 'codes' ? 'text-base md:text-xl' : 'text-sm line-clamp-3'}`}>
-                      "{code.text}"
+                      &quot;{code.text}&quot;
                     </p>
                     {focusedColumn === 'codes' && (
                       <div className="flex gap-3 text-sm font-bold text-slate-400 animate-fade-in">

@@ -165,7 +165,7 @@ export default async function MemberPage({ params }: { params: Promise<{ slug: s
               <span className="font-bold text-blue-600 min-w-[120px] text-sm uppercase tracking-wider pt-1">June 2025</span>
               <p className="text-lg text-slate-700">
                 Participated in The Johns Hopkins Cochlear Center Fellows Program in Aging, Hearing, and Public Health, hosted by 
-                Shanghai Ninth People's Hospital at Shanghai Jiao Tong University School of Medicine, Shanghai, China.
+                Shanghai Ninth People&apos;s Hospital at Shanghai Jiao Tong University School of Medicine, Shanghai, China.
               </p>
             </div>
             <div className="flex flex-col md:flex-row gap-2 md:gap-6">
