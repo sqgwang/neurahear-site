@@ -9,11 +9,11 @@ const tools = [
     tone: "teal",
   },
   {
-    title: "Single Digit-in-Noise Test",
-    description: "A fixed-SNR R&D task for PI-function development and digit-level balancing studies.",
-    status: "R&D",
+    title: "Digit Optimization Test",
+    description: "A fixed-SNR single-digit workflow for estimating PI functions and generating correction levels for sequence synthesis.",
+    status: "Optimization",
     href: "/tools/single-digit-in-noise-test/",
-    cta: "Launch R&D test",
+    cta: "Launch optimization",
     tone: "amber",
   },
   {

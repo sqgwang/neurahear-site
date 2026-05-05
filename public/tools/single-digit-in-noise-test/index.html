@@ -3,22 +3,39 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Single Digit in Noise Test (R&D)</title>
+  <title>Digit Optimization Test</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">Single Digit in Noise Test (R&D)</div>
+    <a class="brand" href="/tools/">HK Audiology Group</a>
+    <span>Digit Optimization Test</span>
   </header>
 
   <main class="container">
-    <section class="card" id="setupCard">
-      <h1>Single Digit in Noise (Research)</h1>
+    <section class="hero">
+      <p class="eyebrow">Single digit in noise</p>
+      <h1>Digit Optimization Test</h1>
       <p class="muted">
-        Fixed-SNR single-digit identification task for PI-function development and digit-level balancing.
+        Fixed-SNR single-digit task for estimating PI functions and digit-level correction values.
       </p>
+    </section>
+
+    <section class="card" id="setupCard">
+      <div class="sectionHead">
+        <div>
+          <h2>Setup</h2>
+          <p class="muted">Select a design and run the uncorrected single-digit trials.</p>
+        </div>
+        <div class="trialCount" id="trialCount">0 trials</div>
+      </div>
 
       <div class="grid">
+        <label>
+          Participant ID
+          <input id="participantId" type="text" placeholder="optional" />
+        </label>
+
         <label>
           Stimulus language
           <select id="stimLang">
@@ -33,7 +50,17 @@
         </label>
 
         <label>
-          SNR levels (dB, comma separated)
+          Design preset
+          <select id="designPreset">
+            <option value="quick" selected>Quick pilot</option>
+            <option value="potgieter2016">Potgieter 2016 style</option>
+            <option value="wang2023">Wang & Wong 2023 style</option>
+            <option value="custom">Custom</option>
+          </select>
+        </label>
+
+        <label>
+          SNR levels (dB)
           <input id="snrList" type="text" value="-4,-8,-12,-16,-20" />
         </label>
 
@@ -43,14 +70,32 @@
         </label>
 
         <label>
-          Noise gain
+          Trial order
+          <select id="trialOrder">
+            <option value="random" selected>Fully randomized</option>
+            <option value="blocked">SNR blocks, easy to hard</option>
+          </select>
+        </label>
+
+        <label>
+          Correction target (% correct)
+          <input id="targetPct" type="number" min="11" max="99" step="1" value="50" />
+        </label>
+
+        <label>
+          Masker gain
           <input id="noiseGain" type="number" min="0.1" max="3" step="0.1" value="1" />
+        </label>
+
+        <label class="check">
+          <input id="showSnr" type="checkbox" />
+          <span>Show SNR during trials</span>
         </label>
       </div>
 
       <div class="row">
         <button id="preloadBtn" class="secondary">Preload audio</button>
-        <button id="startBtn" class="primary">Start experiment</button>
+        <button id="startBtn" class="primary">Start test</button>
       </div>
 
       <p id="setupMsg" class="note"></p>
@@ -63,7 +108,7 @@
       </div>
 
       <div class="meta">
-        <span id="currentSNR">SNR: --</span>
+        <span id="currentSNR">SNR hidden</span>
         <span id="status">Press Play to hear one digit.</span>
       </div>
 
@@ -71,32 +116,48 @@
         <button id="playBtn" class="primary">Play</button>
       </div>
 
-      <div class="display" id="inputDisplay"></div>
+      <div class="display" id="inputDisplay" aria-live="polite"></div>
 
       <div class="keypad" id="keypad">
         <button data-val="1">1</button><button data-val="2">2</button><button data-val="3">3</button>
         <button data-val="4">4</button><button data-val="5">5</button><button data-val="6">6</button>
         <button data-val="7">7</button><button data-val="8">8</button><button data-val="9">9</button>
-        <button id="clearBtn">⌫</button><button data-val="0">0</button><button id="submitBtn" class="primary">Submit</button>
+        <button id="clearBtn">Clear</button><button data-val="0">0</button><button id="submitBtn" class="primary">Submit</button>
       </div>
-
-      <p class="note">Keyboard input is supported: 0-9, Backspace, Enter.</p>
     </section>
 
     <section class="card hidden" id="resultsCard">
-      <h2>Results</h2>
-      <p class="muted">PI summary by SNR and by digit (based on correctness rate).</p>
-
-      <div class="row">
-        <button id="downloadCsv" class="secondary">Download raw CSV</button>
-        <button id="downloadJson" class="secondary">Download JSON</button>
+      <div class="sectionHead">
+        <div>
+          <h2>Optimization Results</h2>
+          <p class="muted">Positive correction values increase digit level; negative values decrease it.</p>
+        </div>
         <button id="restartBtn" class="primary">Run again</button>
       </div>
 
-      <h3>Accuracy by SNR × Digit</h3>
+      <div class="actions">
+        <button id="downloadCsv" class="secondary">Download raw CSV</button>
+        <button id="downloadJson" class="secondary">Download full JSON</button>
+        <button id="downloadCorrections" class="secondary">Download corrections.json</button>
+        <button id="copyCorrections" class="secondary">Copy corrections array</button>
+      </div>
+
+      <h3>Integrated DIN correction array</h3>
+      <pre id="correctionsOutput" tabindex="0"></pre>
+
+      <h3>Correction levels</h3>
+      <div class="tableWrap" id="correctionTable"></div>
+
+      <h3>PI function plot</h3>
+      <div class="plotWrap" id="piPlot"></div>
+
+      <h3>Fit quality</h3>
+      <div class="tableWrap" id="fitTable"></div>
+
+      <h3>Accuracy by SNR x Digit</h3>
       <div class="tableWrap" id="snrDigitTable"></div>
 
-      <h3>PI Function (Digit across SNR)</h3>
+      <h3>Observed PI points</h3>
       <div class="tableWrap" id="digitPiTable"></div>
     </section>
   </main>
