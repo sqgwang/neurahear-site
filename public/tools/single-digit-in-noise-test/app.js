@@ -19,6 +19,9 @@ const participantIdEl = document.getElementById('participantId');
 const showSnrEl = document.getElementById('showSnr');
 const setupMsg = document.getElementById('setupMsg');
 const trialCountEl = document.getElementById('trialCount');
+const groupJsonFilesEl = document.getElementById('groupJsonFiles');
+const analyzeGroupBtn = document.getElementById('analyzeGroupBtn');
+const groupMsg = document.getElementById('groupMsg');
 
 const preloadBtn = document.getElementById('preloadBtn');
 const startBtn = document.getElementById('startBtn');
@@ -38,6 +41,8 @@ const downloadCorrectionsBtn = document.getElementById('downloadCorrections');
 const copyCorrectionsBtn = document.getElementById('copyCorrections');
 const restartBtn = document.getElementById('restartBtn');
 
+const resultsTitle = document.getElementById('resultsTitle');
+const resultsSubtitle = document.getElementById('resultsSubtitle');
 const correctionsOutput = document.getElementById('correctionsOutput');
 const correctionTable = document.getElementById('correctionTable');
 const fitTable = document.getElementById('fitTable');
@@ -56,6 +61,7 @@ let hasPlayedThisTrial = false;
 let isPlaying = false;
 let settingsSnapshot = null;
 let latestAnalysis = null;
+let applyingPreset = false;
 
 const presets = {
   quick: {
@@ -639,19 +645,33 @@ function correctionPayload() {
   };
 }
 
-function showResults() {
-  const summary = summarize(responses, settingsSnapshot.snrs);
-  latestAnalysis = analyzeOptimization(summary, settingsSnapshot.snrs, settingsSnapshot.targetProbability);
-
+function renderAnalysisResults({ summary, analysis, settings, title, subtitle }) {
+  latestAnalysis = analysis;
+  settingsSnapshot = settings;
+  resultsTitle.textContent = title;
+  resultsSubtitle.textContent = subtitle;
   correctionsOutput.textContent = JSON.stringify(latestAnalysis.correctionsArray, null, 2);
   correctionTable.innerHTML = buildCorrectionTable(latestAnalysis);
   fitTable.innerHTML = buildFitTable(latestAnalysis);
-  snrDigitTable.innerHTML = buildSnrDigitTable(summary, settingsSnapshot.snrs);
-  digitPiTable.innerHTML = buildDigitPiTable(summary, settingsSnapshot.snrs);
-  piPlot.innerHTML = buildPiPlot(latestAnalysis, settingsSnapshot.snrs);
+  snrDigitTable.innerHTML = buildSnrDigitTable(summary, settings.snrs);
+  digitPiTable.innerHTML = buildDigitPiTable(summary, settings.snrs);
+  piPlot.innerHTML = buildPiPlot(latestAnalysis, settings.snrs);
 
   taskCard.classList.add('hidden');
+  setupCard.classList.add('hidden');
   resultsCard.classList.remove('hidden');
+}
+
+function showResults() {
+  const summary = summarize(responses, settingsSnapshot.snrs);
+  const analysis = analyzeOptimization(summary, settingsSnapshot.snrs, settingsSnapshot.targetProbability);
+  renderAnalysisResults({
+    summary,
+    analysis,
+    settings: settingsSnapshot,
+    title: 'Participant Optimization Results',
+    subtitle: 'Positive values increase digit level; negative values decrease it. These participant-level results are useful for QA; final correction levels should come from pooled group data.',
+  });
 }
 
 function handleSubmit() {
@@ -720,6 +740,7 @@ function beginExperiment() {
 
   const sortedSnrs = snrs.slice().sort((a, b) => b - a);
   settingsSnapshot = {
+    analysisLevel: 'participant',
     participantId: participantIdEl.value.trim() || null,
     lang,
     preset: presetEl.value,
@@ -750,16 +771,144 @@ function beginExperiment() {
   statusEl.textContent = 'Press Play to hear one digit.';
 }
 
+function readFileAsText(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(reader.error || new Error(`Cannot read ${file.name}`));
+    reader.readAsText(file);
+  });
+}
+
+function normalizeImportedResponses(payload, sourceName) {
+  const settings = payload && typeof payload === 'object' && !Array.isArray(payload) ? (payload.settings || {}) : {};
+  const rawRows = Array.isArray(payload) ? payload : payload.responses;
+  if (!Array.isArray(rawRows)) {
+    throw new Error(`${sourceName}: no responses array found`);
+  }
+
+  const participantKey = settings.participantId || sourceName;
+  return rawRows.map((row, index) => {
+    const snr = Number(row.snr);
+    const target = Number(row.target ?? row.digit);
+    const response = Number(row.response);
+    if (!Number.isFinite(snr) || !DIGITS.includes(target)) {
+      throw new Error(`${sourceName}: invalid response row ${index + 1}`);
+    }
+    const correct = typeof row.correct === 'boolean'
+      ? row.correct
+      : Number.isFinite(response) && response === target;
+    return {
+      trial: row.trial ?? index + 1,
+      snr,
+      effectiveSNR: row.effectiveSNR ?? null,
+      target,
+      response: Number.isFinite(response) ? response : null,
+      correct,
+      rep: row.rep ?? null,
+      rtMs: row.rtMs ?? null,
+      participantId: participantKey,
+      sourceFile: sourceName,
+    };
+  });
+}
+
+async function analyzeGroupJsonFiles() {
+  const files = Array.from(groupJsonFilesEl.files || []);
+  if (!files.length) {
+    groupMsg.textContent = 'Choose one or more full JSON exports first.';
+    groupMsg.style.color = '#b91c1c';
+    return;
+  }
+
+  const targetPct = Number(targetPctEl.value);
+  if (!Number.isFinite(targetPct) || targetPct <= CHANCE_LEVEL * 100 || targetPct >= 100) {
+    groupMsg.textContent = `Target must be greater than chance (${Math.round(CHANCE_LEVEL * 100)}%) and less than 100%.`;
+    groupMsg.style.color = '#b91c1c';
+    return;
+  }
+
+  try {
+    const imported = [];
+    const languages = new Set();
+    for (const file of files) {
+      const text = await readFileAsText(file);
+      const payload = JSON.parse(text);
+      if (payload.settings?.lang) languages.add(payload.settings.lang);
+      imported.push(...normalizeImportedResponses(payload, file.name));
+    }
+
+    if (!imported.length) {
+      throw new Error('No completed response rows found in the selected files');
+    }
+
+    const snrs = Array.from(new Set(imported.map(r => r.snr))).sort((a, b) => b - a);
+    const participants = Array.from(new Set(imported.map(r => r.participantId || r.sourceFile)));
+    const groupSettings = {
+      analysisLevel: 'group',
+      participantId: 'group-analysis',
+      lang: languages.size === 1 ? Array.from(languages)[0] : 'mixed',
+      preset: 'group-import',
+      snrs,
+      reps: null,
+      trialOrder: 'imported',
+      targetProbability: targetPct / 100,
+      noiseGain: null,
+      showSnr: true,
+      groupNFiles: files.length,
+      groupNParticipants: participants.length,
+      startedAt: new Date().toISOString(),
+    };
+
+    responses = imported;
+    trialList = [];
+    const summary = summarize(responses, snrs);
+    const analysis = analyzeOptimization(summary, snrs, groupSettings.targetProbability);
+    renderAnalysisResults({
+      summary,
+      analysis,
+      settings: groupSettings,
+      title: 'Group Optimization Results',
+      subtitle: `Positive values increase digit level; negative values decrease it. Pooled ${imported.length} trials from ${participants.length} participant/file IDs; use this group-level correction array for the integrated DIN materials.`,
+    });
+
+    const participantNote = participants.length < 20
+      ? ` Loaded ${participants.length}; final optimization usually targets about 20 normal-hearing listeners.`
+      : '';
+    groupMsg.textContent = `Loaded ${files.length} JSON file(s), ${imported.length} responses.${participantNote}`;
+    groupMsg.style.color = '#5f666d';
+  } catch (err) {
+    console.error(err);
+    groupMsg.textContent = `Group analysis failed: ${err.message || err}`;
+    groupMsg.style.color = '#b91c1c';
+  }
+}
+
+function markPresetCustom() {
+  if (!applyingPreset && presetEl.value !== 'custom') {
+    presetEl.value = 'custom';
+  }
+  updateTrialCount();
+}
+
 presetEl.addEventListener('change', () => {
   const preset = presets[presetEl.value];
   if (!preset) return;
+  applyingPreset = true;
   snrListEl.value = preset.snrs;
   repsEl.value = preset.reps;
   orderEl.value = preset.order;
+  applyingPreset = false;
   updateTrialCount();
 });
 
-[snrListEl, repsEl].forEach(el => el.addEventListener('input', updateTrialCount));
+[snrListEl, repsEl, targetPctEl, noiseGainEl].forEach(el => el.addEventListener('input', markPresetCustom));
+[orderEl, showSnrEl].forEach(el => el.addEventListener('change', markPresetCustom));
+
+analyzeGroupBtn.addEventListener('click', analyzeGroupJsonFiles);
+groupJsonFilesEl.addEventListener('change', () => {
+  groupMsg.textContent = '';
+});
 
 preloadBtn.addEventListener('click', async () => {
   try {
@@ -806,7 +955,7 @@ document.addEventListener('keydown', (e) => {
 downloadCsvBtn.addEventListener('click', () => {
   const rows = responses.map(r => ({
     ...r,
-    participantId: settingsSnapshot.participantId,
+    participantId: r.participantId ?? settingsSnapshot.participantId,
     lang: settingsSnapshot.lang,
     reps: settingsSnapshot.reps,
     snrList: settingsSnapshot.snrs.join('|'),
@@ -818,7 +967,7 @@ downloadCsvBtn.addEventListener('click', () => {
 downloadJsonBtn.addEventListener('click', () => {
   const payload = {
     settings: settingsSnapshot,
-    nTrials: trialList.length,
+    nTrials: trialList.length || responses.length,
     nCompleted: responses.length,
     responses,
     analysis: latestAnalysis,

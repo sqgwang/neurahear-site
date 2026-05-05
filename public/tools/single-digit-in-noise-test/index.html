@@ -25,7 +25,7 @@
       <div class="sectionHead">
         <div>
           <h2>Setup</h2>
-          <p class="muted">Select a design and run the uncorrected single-digit trials.</p>
+          <p class="muted">Preset designs fill in the protocol parameters; edit any field to switch to Custom.</p>
         </div>
         <div class="trialCount" id="trialCount">0 trials</div>
       </div>
@@ -99,6 +99,20 @@
       </div>
 
       <p id="setupMsg" class="note"></p>
+
+      <div class="groupPanel">
+        <div>
+          <h3>Group-level PI analysis</h3>
+          <p class="muted">
+            After collecting individual full JSON exports, upload them together here to estimate the final group PI functions and correction levels.
+          </p>
+        </div>
+        <div class="row">
+          <input id="groupJsonFiles" type="file" accept="application/json,.json" multiple />
+          <button id="analyzeGroupBtn" class="secondary">Analyze group JSON files</button>
+        </div>
+        <p id="groupMsg" class="note"></p>
+      </div>
     </section>
 
     <section class="card hidden" id="taskCard">
@@ -129,8 +143,8 @@
     <section class="card hidden" id="resultsCard">
       <div class="sectionHead">
         <div>
-          <h2>Optimization Results</h2>
-          <p class="muted">Positive correction values increase digit level; negative values decrease it.</p>
+          <h2 id="resultsTitle">Optimization Results</h2>
+          <p class="muted" id="resultsSubtitle">Positive correction values increase digit level; negative values decrease it.</p>
         </div>
         <button id="restartBtn" class="primary">Run again</button>
       </div>
