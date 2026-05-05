@@ -45,6 +45,7 @@ export default function QuantumAcoustics() {
   const [freqRange, setFreqRange] = useState<FreqRange>('full');
   const [showControls, setShowControls] = useState(false);
   const [autoCycle, setAutoCycle] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Snapshot State
   const [isRecording, setIsRecording] = useState(false);
@@ -58,7 +59,9 @@ export default function QuantumAcoustics() {
   const startListening = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const AudioContextCtor = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!AudioContextCtor) throw new Error('Web Audio API is not supported in this browser.');
+      const ctx = new AudioContextCtor();
       const analyzerNode = ctx.createAnalyser();
       const sourceNode = ctx.createMediaStreamSource(stream);
       
@@ -348,7 +351,6 @@ export default function QuantumAcoustics() {
             y = wave * 20 + (norm * 100);
           } else if (mode === 'snapshot') {
              // Static Crystal Logic
-             const intensity = p.orbit || 0;
              const breath = 1 + Math.sin(time) * 0.05;
              x = p.baseX * breath;
              y = p.baseY * breath;
@@ -638,12 +640,14 @@ export default function QuantumAcoustics() {
   // Mouse Handlers for 3D Rotation
   const handleMouseDown = (e: React.MouseEvent) => {
     mouseRef.current.down = true;
+    setIsDragging(true);
     mouseRef.current.lastX = e.clientX;
     mouseRef.current.lastY = e.clientY;
   };
 
   const handleMouseUp = () => {
     mouseRef.current.down = false;
+    setIsDragging(false);
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -671,6 +675,7 @@ export default function QuantumAcoustics() {
   const handleMouseLeave = () => {
     mouseRef.current.active = false;
     mouseRef.current.down = false;
+    setIsDragging(false);
   };
 
   return (
@@ -887,7 +892,7 @@ export default function QuantumAcoustics() {
           onMouseUp={handleMouseUp}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
-          className={`w-full h-full block ${mouseRef.current.down ? 'cursor-grabbing' : 'cursor-grab'}`}
+          className={`w-full h-full block ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         />
         {!isListening && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">

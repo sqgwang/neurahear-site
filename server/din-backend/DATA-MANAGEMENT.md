@@ -3,8 +3,8 @@
 ## 📁 数据存储位置
 
 ### 生产环境
-- **测试结果**：`/var/www/labsite/server/din-backend/data/results.jsonl`
-- **用户信息**：`/var/www/labsite/server/din-backend/data/users.json`
+- **测试结果**：`/opt/neurahear/din-data/results.jsonl`
+- **用户信息**：`/opt/neurahear/din-data/users.json`
 
 ### 本地开发
 - **测试结果**：`server/din-backend/data/results.jsonl`
@@ -89,23 +89,23 @@ JSON 数组：
 
 ### 查看最新 10 条测试结果
 ```bash
-tail -n 10 /var/www/labsite/server/din-backend/data/results.jsonl
+tail -n 10 /opt/neurahear/din-data/results.jsonl
 ```
 
 ### 统计测试总数
 ```bash
-wc -l /var/www/labsite/server/din-backend/data/results.jsonl
+wc -l /opt/neurahear/din-data/results.jsonl
 ```
 
 ### 查看数据文件大小
 ```bash
-ls -lh /var/www/labsite/server/din-backend/data/
+ls -lh /opt/neurahear/din-data/
 ```
 
 ### 通过 Admin 界面查看
 访问：https://www.neurahear.com/tools/digit-in-noise-test/admin.html
 - 用户名：`admin`
-- 密码：`120120`
+- 密码：见服务器环境变量或密码管理器，不写入仓库
 
 ## ⚠️ 注意事项
 

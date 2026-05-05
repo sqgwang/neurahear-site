@@ -11,6 +11,7 @@ services:
       - JWT_SECRET=${JWT_SECRET:-change_me}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-}
       - ADMIN_BOOT_PASSWORD=${ADMIN_BOOT_PASSWORD:-}
+      - DATA_DIR=/data
       - TOKEN_COOKIE=token
     volumes:
       - ./data:/data

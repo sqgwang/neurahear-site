@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build && ./scripts/copy-static.sh",
+    "check": "npm run lint && npm run build",
     "start": "next start",
     "serve": "node static-server.js",
     "lint": "eslint",

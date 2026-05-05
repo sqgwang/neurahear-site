@@ -90,7 +90,7 @@ sudo systemctl status nginx
 - **DIN 测试首页**：https://www.neurahear.com/tools/digit-in-noise-test/
 - **管理后台**：https://www.neurahear.com/tools/digit-in-noise-test/admin.html
   - 用户名：`admin`
-  - 密码：`120120`
+  - 密码：见服务器环境变量或密码管理器，不写入仓库
 
 ### 后端 API
 - **基础地址**：https://www.neurahear.com/api/
@@ -140,10 +140,10 @@ npm run build
 
 ```env
 PORT=4000
-JWT_SECRET=YXRLRnkWvvQHb0CGbRryF8keC8zGr9weq496tZKJONA=
-ADMIN_BOOT_PASSWORD=120120
+JWT_SECRET=<generate-with-openssl-rand-base64-32>
+ADMIN_BOOT_PASSWORD=<set-on-server-only>
 ALLOWED_ORIGINS=https://neurahear.com,https://www.neurahear.com
-DATA_DIR=/var/www/labsite/server/din-backend/data
+DATA_DIR=/opt/neurahear/din-data
 NODE_ENV=production
 ```
 
@@ -161,13 +161,13 @@ curl https://www.neurahear.com/api/auth/login
 ### 查看数据统计
 ```bash
 # 测试结果总数
-wc -l /var/www/labsite/server/din-backend/data/results.jsonl
+wc -l /opt/neurahear/din-data/results.jsonl
 
 # 查看最新测试
-tail -n 5 /var/www/labsite/server/din-backend/data/results.jsonl
+tail -n 5 /opt/neurahear/din-data/results.jsonl
 
 # 数据文件大小
-ls -lh /var/www/labsite/server/din-backend/data/
+ls -lh /opt/neurahear/din-data/
 ```
 
 ### 磁盘空间

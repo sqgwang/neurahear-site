@@ -48,8 +48,8 @@ nano .env
 确保包含：
 ```env
 PORT=4000
-JWT_SECRET=YXRLRnkWvvQHb0CGbRryF8keC8zGr9weq496tZKJONA=
-ADMIN_BOOT_PASSWORD=120120
+JWT_SECRET=<generate-with-openssl-rand-base64-32>
+ADMIN_BOOT_PASSWORD=<set-on-server-only>
 ALLOWED_ORIGINS=https://neurahear.com,https://www.neurahear.com
 DATA_DIR=/opt/neurahear/din-data
 NODE_ENV=production
@@ -244,8 +244,8 @@ sudo chown -R $USER:$USER /opt/neurahear
 cd /var/www/labsite/server/din-backend
 cat > .env << 'EOF'
 PORT=4000
-JWT_SECRET=YXRLRnkWvvQHb0CGbRryF8keC8zGr9weq496tZKJONA=
-ADMIN_BOOT_PASSWORD=120120
+JWT_SECRET=<generate-with-openssl-rand-base64-32>
+ADMIN_BOOT_PASSWORD=<set-on-server-only>
 ALLOWED_ORIGINS=https://neurahear.com,https://www.neurahear.com
 DATA_DIR=/opt/neurahear/din-data
 NODE_ENV=production

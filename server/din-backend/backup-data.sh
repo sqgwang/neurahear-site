@@ -5,7 +5,7 @@
 set -e
 
 # 配置
-DATA_DIR="${DATA_DIR:-/var/www/labsite/server/din-backend/data}"
+DATA_DIR="${DATA_DIR:-/opt/neurahear/din-data}"
 BACKUP_DIR="${BACKUP_DIR:-/var/www/labsite/backups/din-data}"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 BACKUP_FILE="din-data-backup-${TIMESTAMP}.tar.gz"
