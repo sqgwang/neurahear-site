@@ -679,17 +679,17 @@ export default function QuantumAcoustics() {
   };
 
   return (
-    <div className="w-full bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
-      <div className="p-6 border-b border-slate-100 flex flex-wrap gap-4 justify-between items-center">
+    <div className="w-full overflow-hidden rounded-lg border border-stone-200 bg-white shadow-[0_1px_2px_rgba(23,23,23,0.05)] transition-all duration-300 hover:shadow-[0_16px_40px_rgba(23,23,23,0.08)]">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-200 p-5">
         <div>
-          <h3 className="text-lg font-semibold text-slate-800">Quantum Acoustic Field</h3>
-          <p className="text-sm text-slate-500">Interactive sound visualization</p>
+          <h3 className="text-lg font-semibold text-neutral-950">Quantum Acoustic Field</h3>
+          <p className="text-sm text-neutral-500">Interactive sound visualization</p>
         </div>
         
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowControls(!showControls)}
-            className={`p-2 rounded-full transition-colors ${showControls ? 'bg-slate-100 text-slate-800' : 'text-slate-400 hover:text-slate-600'}`}
+            className={`rounded-md p-2 transition-colors ${showControls ? 'bg-stone-100 text-neutral-900' : 'text-neutral-400 hover:text-neutral-700'}`}
             title="Settings"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -700,10 +700,10 @@ export default function QuantumAcoustics() {
           
           <button
             onClick={isListening ? stopListening : startListening}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+            className={`rounded-md px-4 py-2 text-sm font-semibold transition-all duration-300 ${
               isListening 
                 ? 'bg-red-50 text-red-600 hover:bg-red-100' 
-                : 'bg-brand-primary text-white hover:bg-blue-700 shadow-lg shadow-blue-500/30'
+                : 'bg-neutral-950 text-white shadow-[0_10px_24px_rgba(23,23,23,0.16)] hover:bg-neutral-800'
             }`}
           >
             {isListening ? (
@@ -727,20 +727,20 @@ export default function QuantumAcoustics() {
       </div>
 
       {/* Controls Panel */}
-      <div className={`bg-slate-50 border-b border-slate-100 transition-all duration-300 overflow-hidden ${showControls ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+      <div className={`overflow-hidden border-b border-stone-200 bg-stone-50 transition-all duration-300 ${showControls ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           
           {/* Voice Snapshot Section */}
-          <div className="col-span-full bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+          <div className="col-span-full rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
             <div className="flex justify-between items-center mb-3">
-                <h4 className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                <h4 className="flex items-center gap-2 text-sm font-bold text-neutral-700">
+                    <span className="h-2 w-2 rounded-full bg-brand-primary"></span>
                     Voice Crystal
                 </h4>
                 {mode === 'snapshot' && (
                     <button 
                         onClick={handleDownload}
-                        className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1 rounded-full flex items-center gap-1 transition-colors"
+                        className="flex items-center gap-1 rounded-md bg-stone-100 px-3 py-1 text-xs text-neutral-600 transition-colors hover:bg-stone-200"
                     >
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                         Download Snapshot
@@ -754,17 +754,17 @@ export default function QuantumAcoustics() {
                     disabled={isRecording}
                     className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
                         isRecording 
-                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
-                        : 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:shadow-lg hover:scale-[1.02]'
+                        ? 'bg-stone-100 text-neutral-400 cursor-not-allowed'
+                        : 'bg-brand-primary text-white hover:shadow-lg hover:scale-[1.02]'
                     }`}
                 >
                     {isRecording ? 'Recording...' : 'Create Voice Crystal'}
                 </button>
                 
                 {isRecording && (
-                    <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-stone-100">
                         <div 
-                            className="h-full bg-purple-500 transition-all duration-100 ease-linear"
+                            className="h-full bg-brand-primary transition-all duration-100 ease-linear"
                             style={{ width: `${recordingProgress}%` }}
                         />
                     </div>
@@ -773,13 +773,13 @@ export default function QuantumAcoustics() {
                 {!isRecording && mode === 'snapshot' && (
                     <button
                         onClick={() => setMode('galaxy')}
-                        className="px-4 py-2 text-sm text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                        className="rounded-md px-4 py-2 text-sm text-neutral-500 transition-colors hover:bg-stone-100 hover:text-neutral-700"
                     >
                         Reset
                     </button>
                 )}
             </div>
-            <p className="text-xs text-slate-400 mt-2">
+            <p className="mt-2 text-xs text-neutral-400">
                 Record 3 seconds of audio to generate a unique 3D crystal structure based on your voice frequency profile.
             </p>
           </div>
@@ -787,10 +787,10 @@ export default function QuantumAcoustics() {
           {/* Mode Selector */}
           <div className="col-span-full">
             <div className="flex justify-between items-center mb-2">
-              <label className="text-xs font-semibold text-slate-500 uppercase">Visualization Mode</label>
+              <label className="text-xs font-semibold uppercase text-neutral-500">Visualization Mode</label>
               <button 
                 onClick={() => setAutoCycle(!autoCycle)}
-                className={`text-xs px-2 py-0.5 rounded-full border ${autoCycle ? 'bg-green-100 text-green-700 border-green-200' : 'text-slate-400 border-slate-200'}`}
+                className={`rounded-full border px-2 py-0.5 text-xs ${autoCycle ? 'bg-green-100 text-green-700 border-green-200' : 'text-neutral-400 border-stone-200'}`}
               >
                 Auto Cycle: {autoCycle ? 'ON' : 'OFF'}
               </button>
@@ -801,7 +801,7 @@ export default function QuantumAcoustics() {
                   key={m}
                   onClick={() => setMode(m)}
                   className={`px-3 py-1 rounded-md text-sm capitalize transition-colors ${
-                    mode === m ? 'bg-white shadow-sm text-brand-primary font-medium' : 'text-slate-500 hover:bg-white/50'
+                    mode === m ? 'bg-white shadow-sm text-brand-primary font-medium' : 'text-neutral-500 hover:bg-white/50'
                   }`}
                 >
                   {m}
@@ -812,14 +812,14 @@ export default function QuantumAcoustics() {
 
           {/* Theme Selector */}
           <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Color Theme</label>
+            <label className="mb-2 block text-xs font-semibold uppercase text-neutral-500">Color Theme</label>
             <div className="flex gap-2">
               {(['cyan', 'purple', 'gold', 'rainbow', 'matrix'] as ColorTheme[]).map((t) => (
                 <button
                   key={t}
                   onClick={() => setTheme(t)}
                   className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 ${
-                    theme === t ? 'border-slate-400 scale-110' : 'border-transparent'
+                    theme === t ? 'border-neutral-400 scale-110' : 'border-transparent'
                   }`}
                   style={{ 
                     background: t === 'rainbow' 
@@ -835,14 +835,14 @@ export default function QuantumAcoustics() {
 
           {/* Frequency Focus */}
           <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Freq Focus</label>
-            <div className="flex gap-1 bg-slate-200 p-1 rounded-lg w-fit">
+            <label className="mb-2 block text-xs font-semibold uppercase text-neutral-500">Freq Focus</label>
+            <div className="flex w-fit gap-1 rounded-lg bg-stone-200 p-1">
               {(['full', 'bass', 'mid', 'treble'] as FreqRange[]).map((f) => (
                 <button
                   key={f}
                   onClick={() => setFreqRange(f)}
                   className={`px-3 py-1 rounded-md text-xs capitalize transition-all ${
-                    freqRange === f ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-700'
+                    freqRange === f ? 'bg-white shadow-sm text-neutral-800' : 'text-neutral-500 hover:text-neutral-700'
                   }`}
                 >
                   {f}
@@ -854,7 +854,7 @@ export default function QuantumAcoustics() {
           {/* Sliders */}
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">
+              <label className="mb-1 block text-xs font-semibold uppercase text-neutral-500">
                 Sensitivity: {sensitivity.toFixed(1)}
               </label>
               <input
@@ -864,11 +864,11 @@ export default function QuantumAcoustics() {
                 step="0.1"
                 value={sensitivity}
                 onChange={(e) => setSensitivity(parseFloat(e.target.value))}
-                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-primary"
+                className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-stone-200 accent-brand-primary"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">
+              <label className="mb-1 block text-xs font-semibold uppercase text-neutral-500">
                 Speed: {speed.toFixed(1)}x
               </label>
               <input
@@ -878,7 +878,7 @@ export default function QuantumAcoustics() {
                 step="0.1"
                 value={speed}
                 onChange={(e) => setSpeed(parseFloat(e.target.value))}
-                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-primary"
+                className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-stone-200 accent-brand-primary"
               />
             </div>
           </div>

@@ -5,10 +5,10 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          dark: '#0f172a',   // Slate-900: 沉稳的主色调
-          primary: '#2563eb', // Blue-600: 交互色
-          accent: '#3b82f6',    // Blue-500: 视觉焦点/高亮 (Previously Amber)
-          light: '#f8fafc',   // Slate-50: 背景底色
+          dark: '#171717',
+          primary: '#0f766e',
+          accent: '#d97706',
+          light: '#f6f7f3',
         }
       },
       backgroundImage: {

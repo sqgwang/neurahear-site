@@ -19,16 +19,14 @@ export default async function MemberPage({ params }: { params: Promise<{ slug: s
     return (
       <div className="max-w-5xl mx-auto">
         {/* Header with photo */}
-        <div className="flex flex-col md:flex-row gap-8 mb-12 p-8 bg-gradient-to-br from-slate-50 to-white rounded-2xl border border-slate-200 shadow-lg relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+        <div className="flex flex-col md:flex-row gap-8 mb-12 p-8 bg-gradient-to-br from-slate-50 to-white rounded-lg border border-slate-200 shadow-lg relative overflow-hidden">
           
           <div className="relative">
             <img
               src="/images/teams/shang_wang.jpg"
               alt="Shang Wang"
-              className="w-64 h-64 rounded-2xl object-cover shadow-xl ring-4 ring-white"
+              className="w-64 h-64 rounded-lg object-cover shadow-xl ring-4 ring-white"
             />
-            <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full opacity-20 blur-xl"></div>
           </div>
           <div className="flex-1 relative z-10">
             <h1 className="text-5xl mb-3 font-bold text-slate-900">Shang Wang</h1>
@@ -83,25 +81,25 @@ export default async function MemberPage({ params }: { params: Promise<{ slug: s
         </div>
 
         {/* Table of Contents Navigation */}
-        <nav className="mb-12 p-4 bg-white rounded-2xl border border-slate-200 shadow-sm sticky top-4 z-50 backdrop-blur-md bg-white/90">
+        <nav className="mb-12 p-4 bg-white rounded-lg border border-slate-200 shadow-sm sticky top-4 z-50 backdrop-blur-md bg-white/90">
           <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-            <a href="#about" className="px-4 py-2 rounded-xl text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300 text-sm font-bold">
+            <a href="#about" className="px-4 py-2 rounded-md text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300 text-sm font-bold">
               About
             </a>
-            <a href="#research" className="px-4 py-2 rounded-xl text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300 text-sm font-bold">
+            <a href="#research" className="px-4 py-2 rounded-md text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300 text-sm font-bold">
               Research & Work
             </a>
-            <a href="#background" className="px-4 py-2 rounded-xl text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300 text-sm font-bold">
+            <a href="#background" className="px-4 py-2 rounded-md text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300 text-sm font-bold">
               Background
             </a>
-            <a href="#news" className="px-4 py-2 rounded-xl text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300 text-sm font-bold">
+            <a href="#news" className="px-4 py-2 rounded-md text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300 text-sm font-bold">
               News
             </a>
           </div>
         </nav>
 
         {/* About */}
-        <section id="about" className="mb-12 scroll-mt-24 p-8 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+        <section id="about" className="mb-12 scroll-mt-24 p-8 bg-white rounded-lg border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
           <h2 className="text-2xl font-bold mb-6 pb-4 border-b border-slate-100 flex items-center gap-3 text-slate-900">
             <span className="w-2 h-8 bg-blue-500 rounded-full"></span>
             About
@@ -119,7 +117,7 @@ export default async function MemberPage({ params }: { params: Promise<{ slug: s
         </section>
 
         {/* Research and Work */}
-        <section id="research" className="mb-12 scroll-mt-24 p-8 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+        <section id="research" className="mb-12 scroll-mt-24 p-8 bg-white rounded-lg border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
           <h2 className="text-2xl font-bold mb-6 pb-4 border-b border-slate-100 flex items-center gap-3 text-slate-900">
             <span className="w-2 h-8 bg-blue-500 rounded-full"></span>
             Research and Work
@@ -136,7 +134,7 @@ export default async function MemberPage({ params }: { params: Promise<{ slug: s
         </section>
 
         {/* Background */}
-        <section id="background" className="mb-12 scroll-mt-24 p-8 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+        <section id="background" className="mb-12 scroll-mt-24 p-8 bg-white rounded-lg border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
           <h2 className="text-2xl font-bold mb-6 pb-4 border-b border-slate-100 flex items-center gap-3 text-slate-900">
             <span className="w-2 h-8 bg-blue-500 rounded-full"></span>
             Background
@@ -151,7 +149,7 @@ export default async function MemberPage({ params }: { params: Promise<{ slug: s
         </section>
 
         {/* News */}
-        <section id="news" className="mb-12 scroll-mt-24 p-8 bg-gradient-to-br from-slate-50 to-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+        <section id="news" className="mb-12 scroll-mt-24 p-8 bg-gradient-to-br from-slate-50 to-white rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
           <h2 className="text-2xl font-bold mb-6 pb-4 border-b border-slate-200 flex items-center gap-3 text-slate-900">
             <span className="w-2 h-8 bg-blue-500 rounded-full"></span>
             News 
@@ -193,16 +191,14 @@ export default async function MemberPage({ params }: { params: Promise<{ slug: s
     return (
       <div className="max-w-5xl mx-auto">
         {/* Header with photo */}
-        <div className="flex flex-col md:flex-row gap-8 mb-12 p-8 bg-gradient-to-br from-slate-50 to-white rounded-2xl border border-slate-200 shadow-lg relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+        <div className="flex flex-col md:flex-row gap-8 mb-12 p-8 bg-gradient-to-br from-slate-50 to-white rounded-lg border border-slate-200 shadow-lg relative overflow-hidden">
           
           <div className="relative">
             <img
               src="/images/teams/dicky_mo.jpg"
               alt="Dicky Mo"
-              className="w-64 h-64 rounded-2xl object-cover shadow-xl ring-4 ring-white"
+              className="w-64 h-64 rounded-lg object-cover shadow-xl ring-4 ring-white"
             />
-            <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full opacity-20 blur-xl"></div>
           </div>
           <div className="flex-1 relative z-10">
             <h1 className="text-5xl mb-3 font-bold text-slate-900">Dicky Mo</h1>
@@ -219,22 +215,22 @@ export default async function MemberPage({ params }: { params: Promise<{ slug: s
         </div>
 
         {/* Table of Contents Navigation */}
-        <nav className="mb-12 p-4 bg-white rounded-2xl border border-slate-200 shadow-sm sticky top-4 z-50 backdrop-blur-md bg-white/90">
+        <nav className="mb-12 p-4 bg-white rounded-lg border border-slate-200 shadow-sm sticky top-4 z-50 backdrop-blur-md bg-white/90">
           <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-            <a href="#about" className="px-4 py-2 rounded-xl text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300 text-sm font-bold">
+            <a href="#about" className="px-4 py-2 rounded-md text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300 text-sm font-bold">
               About
             </a>
-            <a href="#research" className="px-4 py-2 rounded-xl text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300 text-sm font-bold">
+            <a href="#research" className="px-4 py-2 rounded-md text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300 text-sm font-bold">
               Research
             </a>
-            <a href="#background" className="px-4 py-2 rounded-xl text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300 text-sm font-bold">
+            <a href="#background" className="px-4 py-2 rounded-md text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300 text-sm font-bold">
               Background
             </a>
           </div>
         </nav>
 
         {/* About */}
-        <section id="about" className="mb-12 scroll-mt-24 p-8 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+        <section id="about" className="mb-12 scroll-mt-24 p-8 bg-white rounded-lg border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
           <h2 className="text-2xl font-bold mb-6 pb-4 border-b border-slate-100 flex items-center gap-3 text-slate-900">
             <span className="w-2 h-8 bg-blue-500 rounded-full"></span>
             About Me
@@ -245,7 +241,7 @@ export default async function MemberPage({ params }: { params: Promise<{ slug: s
         </section>
 
         {/* Research */}
-        <section id="research" className="mb-12 scroll-mt-24 p-8 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+        <section id="research" className="mb-12 scroll-mt-24 p-8 bg-white rounded-lg border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
           <h2 className="text-2xl font-bold mb-6 pb-4 border-b border-slate-100 flex items-center gap-3 text-slate-900">
             <span className="w-2 h-8 bg-blue-500 rounded-full"></span>
             Current Research
@@ -256,7 +252,7 @@ export default async function MemberPage({ params }: { params: Promise<{ slug: s
         </section>
 
         {/* Background */}
-        <section id="background" className="mb-12 scroll-mt-24 p-8 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+        <section id="background" className="mb-12 scroll-mt-24 p-8 bg-white rounded-lg border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
           <h2 className="text-2xl font-bold mb-6 pb-4 border-b border-slate-100 flex items-center gap-3 text-slate-900">
             <span className="w-2 h-8 bg-blue-500 rounded-full"></span>
             Background

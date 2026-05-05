@@ -4,47 +4,60 @@
 
 :root { 
   color-scheme: light;
+  --paper: #f6f7f3;
+  --paper-strong: #ffffff;
+  --ink: #171717;
+  --muted: #5f666d;
+  --line: #dedbd2;
+  --teal: #0f766e;
+  --amber: #d97706;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body { 
-  @apply text-slate-800 bg-slate-50;
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.03) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(59, 130, 246, 0.05) 0px, transparent 50%);
+  @apply text-neutral-900 antialiased;
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(rgba(23, 23, 23, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(23, 23, 23, 0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
   background-attachment: fixed;
   min-height: 100vh;
 }
 
 .container { 
-  @apply mx-auto max-w-6xl px-6;
+  @apply mx-auto max-w-7xl px-5 sm:px-6 lg:px-8;
 }
 
 .card { 
-  @apply bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-100 p-8 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-500;
+  @apply rounded-lg border border-stone-200 bg-white p-6 shadow-[0_1px_2px_rgba(23,23,23,0.05)] transition-all duration-300 hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-[0_16px_40px_rgba(23,23,23,0.08)];
 }
 
 .btn { 
-  @apply inline-flex items-center gap-2 rounded-xl px-6 py-3 bg-brand-dark text-white font-semibold no-underline hover:bg-slate-800 transition-all duration-300 shadow-lg shadow-slate-900/20 hover:shadow-slate-900/30 hover:-translate-y-0.5;
+  @apply inline-flex items-center justify-center gap-2 rounded-md bg-neutral-950 px-5 py-3 text-sm font-semibold text-white no-underline shadow-[0_10px_24px_rgba(23,23,23,0.16)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-neutral-800;
 }
 
 .btn-secondary {
-  @apply inline-flex items-center gap-2 rounded-xl px-6 py-3 bg-white text-brand-dark font-semibold no-underline border border-slate-200 hover:border-brand-accent/50 hover:bg-brand-light transition-all duration-300 shadow-sm hover:shadow-md;
+  @apply inline-flex items-center justify-center gap-2 rounded-md border border-stone-300 bg-white px-5 py-3 text-sm font-semibold text-neutral-900 no-underline shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-primary hover:bg-stone-50;
 }
 
 .link { 
-  @apply text-brand-primary hover:text-brand-dark underline decoration-2 underline-offset-4 transition-colors duration-200;
+  @apply text-brand-primary underline decoration-2 underline-offset-4 transition-colors duration-200 hover:text-neutral-950;
 }
 
 h1, h2, h3, h4 {
-  @apply text-brand-dark tracking-tight;
+  @apply text-neutral-950 tracking-tight;
 }
 
 h1 { 
-  @apply font-extrabold text-slate-900;
+  @apply text-4xl font-bold leading-[0.98] sm:text-5xl lg:text-6xl;
 }
 
 h2 { 
-  @apply text-3xl font-bold mt-10;
+  @apply text-3xl font-semibold;
 }
 
 h3 {
@@ -52,7 +65,19 @@ h3 {
 }
 
 p { 
-  @apply text-slate-600 leading-relaxed;
+  @apply text-neutral-600 leading-relaxed;
+}
+
+.eyebrow {
+  @apply mb-4 inline-flex items-center rounded-full border border-stone-300 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-neutral-600;
+}
+
+.surface {
+  @apply rounded-lg border border-stone-200 bg-white/90 shadow-[0_1px_2px_rgba(23,23,23,0.04)];
+}
+
+.kicker {
+  @apply text-xs font-semibold uppercase tracking-[0.18em] text-brand-primary;
 }
 
 /* Animations */
@@ -67,14 +92,5 @@ p {
 
 /* Navigation styles */
 .nav-link {
-  @apply relative text-slate-600 hover:text-brand-dark transition-colors duration-200 font-medium;
-}
-
-.nav-link::after {
-  content: '';
-  @apply absolute bottom-0 left-0 w-0 h-0.5 bg-brand-accent transition-all duration-300;
-}
-
-.nav-link:hover::after {
-  @apply w-full;
+  @apply rounded-md px-3 py-2 text-sm font-medium text-neutral-600 transition-colors duration-200 hover:bg-white hover:text-neutral-950;
 }
