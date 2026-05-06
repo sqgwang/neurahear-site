@@ -5,6 +5,7 @@ const CHANCE_LEVEL = 1 / DIGITS.length;
 const DEFAULT_TARGET = 0.5;
 
 const setupCard = document.getElementById('setupCard');
+const calibrationCard = document.getElementById('calibrationCard');
 const taskCard = document.getElementById('taskCard');
 const resultsCard = document.getElementById('resultsCard');
 
@@ -27,6 +28,14 @@ const groupMsg = document.getElementById('groupMsg');
 
 const preloadBtn = document.getElementById('preloadBtn');
 const startBtn = document.getElementById('startBtn');
+const calibrationLang = document.getElementById('calibrationLang');
+const calibrationPlayBtn = document.getElementById('calibrationPlayBtn');
+const calibrationStopBtn = document.getElementById('calibrationStopBtn');
+const calibrationBackBtn = document.getElementById('calibrationBackBtn');
+const calibrationConfirmBtn = document.getElementById('calibrationConfirmBtn');
+const calibrationGainEl = document.getElementById('calibrationGain');
+const calibrationGainValue = document.getElementById('calibrationGainValue');
+const calibrationMsg = document.getElementById('calibrationMsg');
 const playBtn = document.getElementById('playBtn');
 const submitBtn = document.getElementById('submitBtn');
 const clearBtn = document.getElementById('clearBtn');
@@ -65,6 +74,9 @@ let settingsSnapshot = null;
 let latestAnalysis = null;
 let applyingPreset = false;
 let autoPlayTimer = null;
+let pendingSettings = null;
+let calibrationNoiseSource = null;
+let calibrationNoiseGainNode = null;
 
 const presets = {
   quick: {
@@ -140,6 +152,47 @@ function setSetupMessage(msg, isError = false) {
   setupMsg.style.color = isError ? '#b91c1c' : '#5f666d';
 }
 
+function setCalibrationMessage(msg, isError = false) {
+  calibrationMsg.textContent = msg;
+  calibrationMsg.style.color = isError ? '#b91c1c' : '#5f666d';
+}
+
+function clampNoiseGain(value) {
+  if (!Number.isFinite(value)) return 1;
+  return Math.max(0.05, Math.min(3, value));
+}
+
+function calibrationStorageKey(lang) {
+  return `digitOptimizationNoiseGain:${lang}`;
+}
+
+function getStoredCalibrationGain(lang) {
+  try {
+    const stored = Number(localStorage.getItem(calibrationStorageKey(lang)));
+    return Number.isFinite(stored) && stored > 0 ? clampNoiseGain(stored) : null;
+  } catch {
+    return null;
+  }
+}
+
+function rememberCalibrationGain(lang, gain) {
+  try {
+    localStorage.setItem(calibrationStorageKey(lang), String(gain));
+  } catch {
+    // Some privacy modes disable localStorage; the current calibrated test can still proceed.
+  }
+}
+
+function updateCalibrationGain(value) {
+  const gain = clampNoiseGain(Number(value));
+  calibrationGainEl.value = String(gain);
+  calibrationGainValue.textContent = gain.toFixed(2);
+  if (calibrationNoiseGainNode) {
+    calibrationNoiseGainNode.gain.value = gain;
+  }
+  return gain;
+}
+
 function updateTrialCount() {
   const snrs = parseSNRList(snrListEl.value) || [];
   const reps = Number(repsEl.value);
@@ -201,6 +254,40 @@ async function loadAudio(lang) {
 
   buffers = { lang, digitBuffers, noiseBuffer };
   setSetupMessage(`Audio ready for ${lang}.`);
+}
+
+function stopCalibrationNoise() {
+  if (calibrationNoiseSource) {
+    try { calibrationNoiseSource.stop(); } catch {}
+    try { calibrationNoiseSource.disconnect(); } catch {}
+    calibrationNoiseSource = null;
+    calibrationNoiseGainNode = null;
+  }
+}
+
+async function startCalibrationNoise() {
+  const settings = pendingSettings || readSetupSettings();
+  if (!settings) return;
+
+  if (audioCtx.state !== 'running') {
+    await audioCtx.resume();
+  }
+  if (!buffers || buffers.lang !== settings.lang) {
+    setCalibrationMessage(`Loading noise for ${settings.lang}...`);
+    await loadAudio(settings.lang);
+  }
+
+  stopCalibrationNoise();
+  const src = audioCtx.createBufferSource();
+  const gain = audioCtx.createGain();
+  src.buffer = buffers.noiseBuffer;
+  src.loop = true;
+  gain.gain.value = updateCalibrationGain(calibrationGainEl.value);
+  src.connect(gain).connect(audioCtx.destination);
+  src.start();
+  calibrationNoiseSource = src;
+  calibrationNoiseGainNode = gain;
+  setCalibrationMessage('Noise is playing. Adjust the slider until it is comfortable and clearly audible.');
 }
 
 function buildTrials(snrs, repsPerDigit, orderMode) {
@@ -701,6 +788,7 @@ function renderAnalysisResults({ summary, analysis, settings, title, subtitle })
   piPlot.innerHTML = buildPiPlot(latestAnalysis, settings.snrs);
 
   taskCard.classList.add('hidden');
+  calibrationCard.classList.add('hidden');
   setupCard.classList.add('hidden');
   resultsCard.classList.remove('hidden');
 }
@@ -738,6 +826,7 @@ function handleSubmit() {
     trial: trialIndex + 1,
     snr: trial.snr,
     effectiveSNR: trial.effectiveSNR ?? null,
+    noiseGain: settingsSnapshot.noiseGain,
     target: trial.digit,
     response: guess,
     correct,
@@ -762,7 +851,7 @@ function handleSubmit() {
   }
 }
 
-function beginExperiment() {
+function readSetupSettings() {
   const snrs = parseSNRList(snrListEl.value);
   const reps = Number(repsEl.value);
   const noiseGain = Number(noiseGainEl.value);
@@ -784,11 +873,11 @@ function beginExperiment() {
   }
   if (!Number.isFinite(targetPct) || targetPct <= CHANCE_LEVEL * 100 || targetPct >= 100) {
     setSetupMessage(`Target must be greater than chance (${Math.round(CHANCE_LEVEL * 100)}%) and less than 100%.`, true);
-    return;
+    return null;
   }
 
   const sortedSnrs = snrs.slice().sort((a, b) => b - a);
-  settingsSnapshot = {
+  return {
     analysisLevel: 'participant',
     participantId: participantIdEl.value.trim() || null,
     lang,
@@ -801,10 +890,46 @@ function beginExperiment() {
     showSnr: showSnrEl.checked,
     autoPlay: autoPlayEl.checked,
     autoPlayDelayMs,
+  };
+}
+
+async function openCalibration() {
+  stopCalibrationNoise();
+  clearAutoPlayTimer();
+  setSetupMessage('');
+  pendingSettings = readSetupSettings();
+  if (!pendingSettings) return;
+
+  calibrationLang.textContent = pendingSettings.lang.replaceAll('_', ' ');
+  const storedGain = getStoredCalibrationGain(pendingSettings.lang);
+  updateCalibrationGain(storedGain ?? pendingSettings.noiseGain);
+
+  setupCard.classList.add('hidden');
+  resultsCard.classList.add('hidden');
+  taskCard.classList.add('hidden');
+  calibrationCard.classList.remove('hidden');
+  setCalibrationMessage('Loading calibration audio...');
+
+  try {
+    if (audioCtx.state !== 'running') await audioCtx.resume();
+    if (!buffers || buffers.lang !== pendingSettings.lang) {
+      await loadAudio(pendingSettings.lang);
+    }
+    setCalibrationMessage('Play the noise and adjust the masker level. This value will be fixed for the test.');
+  } catch (err) {
+    console.error(err);
+    setCalibrationMessage(`Audio load failed: ${err.message || err}`, true);
+  }
+}
+
+function beginExperiment(settings) {
+  stopCalibrationNoise();
+  settingsSnapshot = {
+    ...settings,
     startedAt: new Date().toISOString(),
   };
 
-  trialList = buildTrials(sortedSnrs, reps, settingsSnapshot.trialOrder);
+  trialList = buildTrials(settingsSnapshot.snrs, settingsSnapshot.reps, settingsSnapshot.trialOrder);
   trialIndex = 0;
   responses = [];
   currentInput = '';
@@ -815,6 +940,7 @@ function beginExperiment() {
   latestAnalysis = null;
 
   setupCard.classList.add('hidden');
+  calibrationCard.classList.add('hidden');
   resultsCard.classList.add('hidden');
   taskCard.classList.remove('hidden');
 
@@ -960,7 +1086,7 @@ presetEl.addEventListener('change', () => {
   updateTrialCount();
 });
 
-[snrListEl, repsEl, targetPctEl, noiseGainEl].forEach(el => el.addEventListener('input', markPresetCustom));
+[snrListEl, repsEl, targetPctEl].forEach(el => el.addEventListener('input', markPresetCustom));
 [orderEl, showSnrEl].forEach(el => el.addEventListener('change', markPresetCustom));
 
 analyzeGroupBtn.addEventListener('click', analyzeGroupJsonFiles);
@@ -978,7 +1104,60 @@ preloadBtn.addEventListener('click', async () => {
   }
 });
 
-startBtn.addEventListener('click', beginExperiment);
+startBtn.addEventListener('click', () => {
+  openCalibration().catch((err) => {
+    console.error(err);
+    setSetupMessage(`Calibration setup failed: ${err.message || err}`, true);
+  });
+});
+calibrationPlayBtn.addEventListener('click', () => {
+  startCalibrationNoise().catch((err) => {
+    console.error(err);
+    setCalibrationMessage(`Noise playback failed: ${err.message || err}`, true);
+  });
+});
+calibrationStopBtn.addEventListener('click', () => {
+  stopCalibrationNoise();
+  setCalibrationMessage('Noise stopped. Adjust or confirm the fixed masker level.');
+});
+calibrationBackBtn.addEventListener('click', () => {
+  stopCalibrationNoise();
+  calibrationCard.classList.add('hidden');
+  setupCard.classList.remove('hidden');
+  setSetupMessage('Calibration cancelled. Adjust setup if needed.');
+});
+calibrationGainEl.addEventListener('input', (e) => {
+  const gain = updateCalibrationGain(e.target.value);
+  setCalibrationMessage(`Masker level set to ${gain.toFixed(2)}. Confirm this level when ready.`);
+});
+calibrationConfirmBtn.addEventListener('click', async () => {
+  const gain = updateCalibrationGain(calibrationGainEl.value);
+  if (!pendingSettings) {
+    setCalibrationMessage('Setup information is missing. Return to setup and try again.', true);
+    return;
+  }
+
+  stopCalibrationNoise();
+  rememberCalibrationGain(pendingSettings.lang, gain);
+  noiseGainEl.value = gain.toFixed(2);
+  const calibratedAt = new Date().toISOString();
+  const calibratedSettings = {
+    ...pendingSettings,
+    noiseGain: gain,
+    calibration: {
+      type: 'user_adjusted_noise_loop',
+      maskerGain: gain,
+      language: pendingSettings.lang,
+      calibratedAt,
+      note: 'Noise level was fixed from this calibration step for all subsequent formal trials.',
+    },
+  };
+
+  if (audioCtx.state !== 'running') {
+    try { await audioCtx.resume(); } catch {}
+  }
+  beginExperiment(calibratedSettings);
+});
 playBtn.addEventListener('click', () => playCurrentTrial(false));
 submitBtn.addEventListener('click', handleSubmit);
 clearBtn.addEventListener('click', clearInput);
@@ -1008,6 +1187,7 @@ downloadCsvBtn.addEventListener('click', () => {
     reps: settingsSnapshot.reps,
     snrList: settingsSnapshot.snrs.join('|'),
     targetProbability: settingsSnapshot.targetProbability,
+    calibratedNoiseGain: settingsSnapshot.noiseGain ?? r.noiseGain ?? null,
   }));
   downloadFile('digit-optimization-raw.csv', toCsv(rows), 'text/csv;charset=utf-8');
 });
@@ -1041,11 +1221,15 @@ copyCorrectionsBtn.addEventListener('click', async () => {
 
 restartBtn.addEventListener('click', () => {
   clearAutoPlayTimer();
+  stopCalibrationNoise();
   taskCard.classList.add('hidden');
+  calibrationCard.classList.add('hidden');
   resultsCard.classList.add('hidden');
   setupCard.classList.remove('hidden');
   setSetupMessage('');
   updateTrialCount();
 });
+
+window.addEventListener('pagehide', stopCalibrationNoise);
 
 updateTrialCount();

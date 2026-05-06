@@ -85,8 +85,9 @@
         </label>
 
         <label>
-          Masker gain
-          <input id="noiseGain" type="number" min="0.1" max="3" step="0.1" value="1" />
+          Initial masker gain
+          <input id="noiseGain" type="number" min="0.05" max="3" step="0.01" value="1" />
+          <small>Starting value for the calibration step.</small>
         </label>
 
         <label class="check">
@@ -107,7 +108,7 @@
 
       <div class="row">
         <button id="preloadBtn" class="secondary">Preload audio</button>
-        <button id="startBtn" class="primary">Start test</button>
+        <button id="startBtn" class="primary">Continue to noise calibration</button>
       </div>
 
       <p id="setupMsg" class="note"></p>
@@ -124,6 +125,45 @@
           <button id="analyzeGroupBtn" class="secondary">Analyze group JSON files</button>
         </div>
         <p id="groupMsg" class="note"></p>
+      </div>
+    </section>
+
+    <section class="card hidden" id="calibrationCard">
+      <div class="sectionHead">
+        <div>
+          <h2>Noise calibration</h2>
+          <p class="muted">
+            Adjust the background noise to a comfortable, clearly audible level. This masker level will stay fixed for all formal trials.
+          </p>
+        </div>
+        <div class="trialCount" id="calibrationLang">Language</div>
+      </div>
+
+      <div class="calibrationPanel">
+        <div>
+          <h3>Set masker level</h3>
+          <p class="muted">
+            Use the same headphones and computer volume you will use during the test. Start the noise loop, adjust the slider, then confirm the level.
+          </p>
+        </div>
+
+        <div class="row">
+          <button id="calibrationPlayBtn" class="primary">Play continuous noise</button>
+          <button id="calibrationStopBtn" class="secondary">Stop noise</button>
+        </div>
+
+        <label class="rangeLabel" for="calibrationGain">
+          <span>Masker level</span>
+          <input id="calibrationGain" type="range" min="0.05" max="3" step="0.01" value="1" />
+          <output id="calibrationGainValue" for="calibrationGain">1.00</output>
+        </label>
+
+        <p id="calibrationMsg" class="note">Play the noise and adjust the level before starting the test.</p>
+      </div>
+
+      <div class="row">
+        <button id="calibrationBackBtn" class="secondary">Back to setup</button>
+        <button id="calibrationConfirmBtn" class="primary">Use this level and start test</button>
       </div>
     </section>
 
