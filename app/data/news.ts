@@ -14,6 +14,16 @@ export const RECENT_NEWS_MONTHS = 6;
 
 export const newsItems: NewsItem[] = [
   {
+    id: "wca-2026-seoul",
+    date: "2026-05-24",
+    dateLabel: "May 24-27, 2026",
+    type: "Conference",
+    title: "HK Audiology Group will attend WCA 2026 Seoul",
+    summary:
+      "We will join the 37th World Congress of Audiology in Seoul, Korea, a global meeting focused on the future of audiology.",
+    href: "https://www.wca2026seoul.com/",
+  },
+  {
     id: "hfeq-mandarin-preview",
     date: "2026-05-06",
     type: "Tool",
@@ -51,6 +61,16 @@ export const newsItems: NewsItem[] = [
     href: "/publications/",
   },
   {
+    id: "second-language-exposure-idin",
+    date: "2026-01-14",
+    dateLabel: "2026",
+    type: "Publication",
+    title: "Effects of second language exposure on the integrated digits-in-noise test in Cantonese non-native speakers",
+    summary:
+      "An International Journal of Audiology article examining second-language exposure effects on iDIN performance.",
+    href: "/publications/",
+  },
+  {
     id: "chatbot-timeliness-prompt",
     date: "2026-01-10",
     dateLabel: "2026",
@@ -58,6 +78,26 @@ export const newsItems: NewsItem[] = [
     title: "Evaluation of AI chatbots in hearing health: model timeliness and prompt design matter",
     summary:
       "A publication highlighting practical considerations for using AI chatbots in hearing-health information and support.",
+    href: "/publications/",
+  },
+  {
+    id: "reference-aware-sfm-layers",
+    date: "2026-01-08",
+    dateLabel: "2026",
+    type: "Publication",
+    title: "Reference-aware SFM layers for intrusive intelligibility prediction",
+    summary:
+      "An ICASSP 2026 contribution on speech foundation model layers for intelligibility prediction.",
+    href: "/publications/",
+  },
+  {
+    id: "multiple-speech-enhancers",
+    date: "2026-01-07",
+    dateLabel: "2026",
+    type: "Publication",
+    title: "Leveraging multiple speech enhancers for non-intrusive intelligibility prediction for hearing-impaired listeners",
+    summary:
+      "An ICASSP 2026 contribution on non-intrusive intelligibility prediction using multiple speech enhancers.",
     href: "/publications/",
   },
   {

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { sortNews } from "../data/news";
 
 export const metadata = {
@@ -16,6 +17,22 @@ const typeClasses = {
 
 function formatDate(date: string) {
   return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(`${date}T00:00:00`));
+}
+
+function NewsLink({ href, children, className }: { href: string; children: ReactNode; className: string }) {
+  if (href.startsWith("http")) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className={className}>
+        {children}
+      </a>
+    );
+  }
+
+  return (
+    <Link href={href} className={className}>
+      {children}
+    </Link>
+  );
 }
 
 export default function NewsPage() {
@@ -48,9 +65,9 @@ export default function NewsPage() {
                 <p className="mt-3 text-sm text-neutral-600">{item.summary}</p>
               </div>
               {item.href ? (
-                <Link href={item.href} className="btn-secondary shrink-0">
+                <NewsLink href={item.href} className="btn-secondary shrink-0">
                   Open
-                </Link>
+                </NewsLink>
               ) : null}
             </div>
           </article>

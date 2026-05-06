@@ -73,12 +73,12 @@ export default function PlatformResearchPanel() {
             </div>
           </div>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <div className="mt-5 grid gap-3">
             {platformPillars.map((pillar) => (
-              <div key={pillar.label} className="rounded-md border border-white/10 bg-white/[0.04] p-3">
+              <div key={pillar.label} className="min-w-0 rounded-md border border-white/10 bg-white/[0.04] p-3">
                 <div className="text-xs font-semibold uppercase text-stone-400">{pillar.label}</div>
                 <div className="mt-2 text-sm font-semibold text-white">{pillar.title}</div>
-                <p className="mt-2 text-xs leading-relaxed text-stone-300">{pillar.text}</p>
+                <p className="mt-2 break-words text-xs leading-relaxed text-stone-300">{pillar.text}</p>
               </div>
             ))}
           </div>
@@ -101,11 +101,11 @@ export default function PlatformResearchPanel() {
               {assessmentTools.map((tool) => (
                 <div key={tool.name} className="rounded-md border border-stone-200 bg-white p-3">
                   <div className="flex items-center justify-between gap-3">
-                    <div>
+                    <div className="min-w-0">
                       <div className="text-sm font-semibold text-neutral-950">{tool.name}</div>
-                      <div className="mt-1 text-xs text-neutral-500">{tool.detail}</div>
+                      <div className="mt-1 break-words text-xs text-neutral-500">{tool.detail}</div>
                     </div>
-                    <span className="rounded-full border border-teal-200 bg-teal-50 px-2 py-1 text-[11px] font-semibold text-teal-800">
+                    <span className="shrink-0 rounded-full border border-teal-200 bg-teal-50 px-2 py-1 text-[11px] font-semibold text-teal-800">
                       {tool.status}
                     </span>
                   </div>
