@@ -7,7 +7,7 @@ on:
 
 concurrency:
   group: neurahear-production
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   deploy:
@@ -35,89 +35,113 @@ jobs:
         run: |
           tar -czf site.tar.gz out
       
+      - name: Configure SSH
+        shell: bash
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          : "${SSH_HOST:?Missing SSH_HOST secret}"
+          : "${SSH_PRIVATE_KEY:?Missing SSH_PRIVATE_KEY secret}"
+
+          SSH_PORT="${SSH_PORT:-22}"
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/neurahear_deploy_key
+          chmod 600 ~/.ssh/neurahear_deploy_key
+          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts
+
       - name: Transfer site files
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          port: ${{ secrets.SSH_PORT }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "site.tar.gz"
-          target: "/tmp/"
+        shell: bash
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          set -euo pipefail
+          : "${SSH_HOST:?Missing SSH_HOST secret}"
+          : "${SSH_USER:?Missing SSH_USER secret}"
+          SSH_PORT="${SSH_PORT:-22}"
+          scp -i ~/.ssh/neurahear_deploy_key -P "$SSH_PORT" -o BatchMode=yes site.tar.gz "$SSH_USER@$SSH_HOST:/tmp/site.tar.gz"
       
       - name: Deploy static site to Nginx
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          port: ${{ secrets.SSH_PORT }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          command_timeout: 10m
-          script: |
-            set -eu
+        shell: bash
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          set -euo pipefail
+          : "${SSH_HOST:?Missing SSH_HOST secret}"
+          : "${SSH_USER:?Missing SSH_USER secret}"
+          SSH_PORT="${SSH_PORT:-22}"
 
-            echo "=== Current user info ==="
-            whoami
-            id
-            echo "=== Directory permissions ==="
-            ls -ld /var/www/neurahear /var/www/neurahear/out /var/www/labsite
+          ssh -i ~/.ssh/neurahear_deploy_key -p "$SSH_PORT" -o BatchMode=yes "$SSH_USER@$SSH_HOST" "GITHUB_SHA_VALUE=$GITHUB_SHA bash -s" <<'REMOTE'
+          set -euo pipefail
 
-            STATIC_OUT="/var/www/neurahear/out"
-            LABSITE_ROOT="/var/www/labsite"
-            DIN_DATA_DIR="/opt/neurahear/din-data"
-            DIN_BACKUP_DIR="/opt/neurahear/backups"
-            OUT_BACKUP_DIR="/var/www/neurahear/out-backups"
-            GITHUB_SHA_VALUE="${{ github.sha }}"
-            SHORT_SHA="$(printf "%s" "$GITHUB_SHA_VALUE" | cut -c1-7)"
+          echo "=== Current user info ==="
+          whoami
+          id
+          echo "=== Directory permissions ==="
+          ls -ld /var/www/neurahear /var/www/neurahear/out /var/www/labsite
 
-            echo "=== DIN data safety guard ==="
-            if [ ! -d "$DIN_DATA_DIR" ]; then
-              echo "ERROR: Expected DIN data directory is missing: $DIN_DATA_DIR"
-              echo "Refusing to deploy until production DATA_DIR is migrated and verified."
-              exit 1
-            fi
-            if [ ! -f "$DIN_DATA_DIR/users.json" ] || [ ! -f "$DIN_DATA_DIR/results.jsonl" ]; then
-              echo "ERROR: DIN data files are incomplete in $DIN_DATA_DIR"
-              ls -la "$DIN_DATA_DIR"
-              exit 1
-            fi
-            mkdir -p "$DIN_BACKUP_DIR"
-            PREDEPLOY_BACKUP="$DIN_BACKUP_DIR/din-data-predeploy-$SHORT_SHA-$(date +%Y%m%d_%H%M%S).tar.gz"
-            tar -czf "$PREDEPLOY_BACKUP" -C "$(dirname "$DIN_DATA_DIR")" "$(basename "$DIN_DATA_DIR")"
-            find "$DIN_BACKUP_DIR" -name "din-data-predeploy-*.tar.gz" -mtime +30 -delete
-            echo "DIN pre-deploy backup created: $PREDEPLOY_BACKUP"
+          STATIC_OUT="/var/www/neurahear/out"
+          LABSITE_ROOT="/var/www/labsite"
+          DIN_DATA_DIR="/opt/neurahear/din-data"
+          DIN_BACKUP_DIR="/opt/neurahear/backups"
+          OUT_BACKUP_DIR="/var/www/neurahear/out-backups"
+          SHORT_SHA="$(printf "%s" "$GITHUB_SHA_VALUE" | cut -c1-7)"
 
-            echo "=== Extracting files to temp ==="
-            TEMP_DIR=$(mktemp -d /tmp/neurahear-static-XXXX)
-            tar -xzf /tmp/site.tar.gz -C "$TEMP_DIR"
-            rm -f /tmp/site.tar.gz
+          echo "=== DIN data safety guard ==="
+          if [ ! -d "$DIN_DATA_DIR" ]; then
+            echo "ERROR: Expected DIN data directory is missing: $DIN_DATA_DIR"
+            echo "Refusing to deploy until production DATA_DIR is migrated and verified."
+            exit 1
+          fi
+          if [ ! -f "$DIN_DATA_DIR/users.json" ] || [ ! -f "$DIN_DATA_DIR/results.jsonl" ]; then
+            echo "ERROR: DIN data files are incomplete in $DIN_DATA_DIR"
+            ls -la "$DIN_DATA_DIR"
+            exit 1
+          fi
+          mkdir -p "$DIN_BACKUP_DIR"
+          PREDEPLOY_BACKUP="$DIN_BACKUP_DIR/din-data-predeploy-$SHORT_SHA-$(date +%Y%m%d_%H%M%S).tar.gz"
+          tar -czf "$PREDEPLOY_BACKUP" -C "$(dirname "$DIN_DATA_DIR")" "$(basename "$DIN_DATA_DIR")"
+          find "$DIN_BACKUP_DIR" -name "din-data-predeploy-*.tar.gz" -mtime +30 -delete
+          echo "DIN pre-deploy backup created: $PREDEPLOY_BACKUP"
 
-            echo "=== Backing up current static output ==="
-            mkdir -p "$OUT_BACKUP_DIR"
-            STATIC_BACKUP="$OUT_BACKUP_DIR/out-predeploy-$SHORT_SHA-$(date +%Y%m%d_%H%M%S).tar.gz"
-            tar -czf "$STATIC_BACKUP" -C "$(dirname "$STATIC_OUT")" "$(basename "$STATIC_OUT")"
-            find "$OUT_BACKUP_DIR" -name "out-predeploy-*.tar.gz" -mtime +14 -delete
-            echo "Static backup created: $STATIC_BACKUP"
+          echo "=== Extracting files to temp ==="
+          TEMP_DIR=$(mktemp -d /tmp/neurahear-static-XXXX)
+          tar -xzf /tmp/site.tar.gz -C "$TEMP_DIR"
+          rm -f /tmp/site.tar.gz
 
-            echo "=== Syncing static files to Nginx root ==="
-            mkdir -p "$STATIC_OUT"
-            rsync -a --delete \
-              --exclude="tools/digit-in-noise-test/data/**" \
-              "$TEMP_DIR/out/" "$STATIC_OUT/"
+          echo "=== Backing up current static output ==="
+          mkdir -p "$OUT_BACKUP_DIR"
+          STATIC_BACKUP="$OUT_BACKUP_DIR/out-predeploy-$SHORT_SHA-$(date +%Y%m%d_%H%M%S).tar.gz"
+          tar -czf "$STATIC_BACKUP" -C "$(dirname "$STATIC_OUT")" "$(basename "$STATIC_OUT")"
+          find "$OUT_BACKUP_DIR" -name "out-predeploy-*.tar.gz" -mtime +14 -delete
+          echo "Static backup created: $STATIC_BACKUP"
 
-            echo "=== Updating server source checkout ==="
-            cd "$LABSITE_ROOT"
-            git fetch origin main
-            git pull --ff-only origin main
+          echo "=== Syncing static files to Nginx root ==="
+          mkdir -p "$STATIC_OUT"
+          rsync -a --delete \
+            --exclude="tools/digit-in-noise-test/data/**" \
+            "$TEMP_DIR/out/" "$STATIC_OUT/"
 
-            echo "=== Cleaning up temp directory ==="
-            rm -rf "$TEMP_DIR"
+          echo "=== Updating server source checkout ==="
+          cd "$LABSITE_ROOT"
+          git fetch origin main
+          git pull --ff-only origin main
 
-            echo "=== Reloading Nginx and smoke testing ==="
-            nginx -t
-            systemctl reload nginx
-            curl --fail --silent --show-error http://127.0.0.1/tools/single-digit-in-noise-test/ > /dev/null
-            test -f "$STATIC_OUT/tools/digit-in-noise-test/audio/american_english/corrections.json"
-            wc -l "$DIN_DATA_DIR/results.jsonl"
+          echo "=== Cleaning up temp directory ==="
+          rm -rf "$TEMP_DIR"
 
-            echo "=== Deployment complete ==="
+          echo "=== Reloading Nginx and smoke testing ==="
+          nginx -t
+          systemctl reload nginx
+          curl --fail --silent --show-error http://127.0.0.1/tools/single-digit-in-noise-test/ > /dev/null
+          test -f "$STATIC_OUT/tools/digit-in-noise-test/audio/american_english/corrections.json"
+          wc -l "$DIN_DATA_DIR/results.jsonl"
+
+          echo "=== Deployment complete ==="
+          REMOTE
