@@ -24,8 +24,8 @@ const tools = [
     description:
       "An ICF-based questionnaire workflow for Mandarin-speaking adults, covering hearing, communication, participation, support, personal resources, and health.",
     status: "In validation",
-    href: "",
-    cta: "",
+    href: "/tools/hfeq-mandarin/",
+    cta: "Open preview",
     tone: "sky",
   },
   {

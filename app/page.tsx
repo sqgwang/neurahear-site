@@ -1,4 +1,5 @@
 import PlatformResearchPanel from "./components/PlatformResearchPanel";
+import LatestNews from "./components/LatestNews";
 import Link from "next/link";
 
 const stats = [
@@ -98,6 +99,8 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      <LatestNews />
     </div>
   );
 }

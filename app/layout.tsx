@@ -10,6 +10,7 @@ const navItems = [
   { href: "/teams/", label: "Team" },
   { href: "/projects/", label: "Projects" },
   { href: "/publications/", label: "Publications" },
+  { href: "/news/", label: "News" },
   { href: "/seminars/", label: "Seminars" },
   { href: "/tools/", label: "Tools" },
 ];
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <p className="text-sm text-neutral-500">© 2026 HK Audiology Group / The University of Hong Kong</p>
               <div className="flex gap-4 text-sm text-neutral-500">
                 <Link href="/publications/" className="hover:text-neutral-950 transition-colors">Publications</Link>
+                <Link href="/news/" className="hover:text-neutral-950 transition-colors">News</Link>
                 <Link href="/tools/" className="hover:text-neutral-950 transition-colors">Assessment tools</Link>
               </div>
             </div>
