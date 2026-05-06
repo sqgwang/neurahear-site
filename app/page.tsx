@@ -1,24 +1,24 @@
-import DinResearchPanel from "./components/DinResearchPanel";
+import PlatformResearchPanel from "./components/PlatformResearchPanel";
 import Link from "next/link";
 
 const stats = [
   { value: "27", label: "Scholar-indexed outputs" },
+  { value: "3", label: "Assessment pathways" },
   { value: "9", label: "DIN language tracks" },
-  { value: "2", label: "Live research tools" },
 ];
 
 const focusAreas = [
   {
-    title: "Hearing and cognition",
-    text: "Rapid screening methods that connect speech-in-noise performance with cognitive load and everyday listening.",
+    title: "AI-enabled hearing care",
+    text: "Research on responsible AI systems for hearing-care education, assessment, counseling, and clinical decision support.",
   },
   {
-    title: "Clinical AI",
-    text: "Responsible use of AI systems in audiology education, assessment, and hearing-care workflows.",
+    title: "Digital assessment tools",
+    text: "A growing platform of browser-based assessment tools, including speech-in-noise tests and patient-reported outcomes.",
   },
   {
-    title: "Digital assessment",
-    text: "Browser-based tools for digit-in-noise testing, calibration, data capture, and translational studies.",
+    title: "Everyday functioning",
+    text: "ICF-informed measures that connect hearing ability with communication, participation, support, and daily-life impact.",
   },
 ];
 
@@ -46,8 +46,8 @@ export default function Home() {
           <div className="eyebrow">The University of Hong Kong</div>
           <h1>HK Audiology Group</h1>
           <p className="mt-6 max-w-2xl text-lg text-neutral-700 md:text-xl">
-            We build evidence, tools, and clinical insight for better hearing care, with a focus on speech perception in noise,
-            cognitive screening, and AI-enabled audiology.
+            We build AI-enabled hearing-care research and digital assessment tools for speech-in-noise performance,
+            everyday functioning, and clinical translation.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -57,7 +57,7 @@ export default function Home() {
             </Link>
             <Link href="/tools/" className="btn-secondary">
               <WaveIcon />
-              Research tools
+              Assessment tools
             </Link>
           </div>
 
@@ -72,7 +72,7 @@ export default function Home() {
         </div>
 
         <div className="min-w-0">
-          <DinResearchPanel />
+          <PlatformResearchPanel />
         </div>
       </section>
 
@@ -81,7 +81,7 @@ export default function Home() {
           <p className="kicker">Mission</p>
           <h2 className="mt-3 text-3xl md:text-4xl">Research that can move into practice.</h2>
           <p className="mt-5 text-base text-neutral-700">
-            Our work sits between auditory science, digital health, and service design. The goal is practical:
+            Our work sits between auditory science, digital health, AI, and service design. The goal is practical:
             make hearing assessment easier to access, easier to interpret, and more useful for people and clinicians.
           </p>
         </div>

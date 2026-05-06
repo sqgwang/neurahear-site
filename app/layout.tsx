@@ -45,7 +45,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <p className="text-sm text-neutral-500">© 2026 HK Audiology Group / The University of Hong Kong</p>
               <div className="flex gap-4 text-sm text-neutral-500">
                 <Link href="/publications/" className="hover:text-neutral-950 transition-colors">Publications</Link>
-                <Link href="/tools/" className="hover:text-neutral-950 transition-colors">Research tools</Link>
+                <Link href="/tools/" className="hover:text-neutral-950 transition-colors">Assessment tools</Link>
               </div>
             </div>
           </div>

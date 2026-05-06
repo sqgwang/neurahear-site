@@ -1,6 +1,7 @@
 const tools = [
   {
     title: "integrated Digit-in-Noise Test",
+    category: "Speech-in-noise assessment",
     description:
       "A browser-based screening workflow with calibration, device checks, adaptive SNR testing, and server-backed data capture.",
     status: "Live",
@@ -10,16 +11,29 @@ const tools = [
   },
   {
     title: "Digit Optimization Test",
+    category: "Stimulus optimization",
     description: "A fixed-SNR single-digit workflow for estimating PI functions and generating correction levels for sequence synthesis.",
-    status: "Optimization",
+    status: "Live",
     href: "/tools/single-digit-in-noise-test/",
     cta: "Launch optimization",
     tone: "amber",
   },
   {
-    title: "Online Questionnaire",
-    description: "Recruitment and follow-up questionnaire integration for future study workflows.",
-    status: "Coming soon",
+    title: "HFEQ-Mandarin Research Preview",
+    category: "Everyday functioning PROM",
+    description:
+      "An ICF-based questionnaire workflow for Mandarin-speaking adults, covering hearing, communication, participation, support, personal resources, and health.",
+    status: "In validation",
+    href: "",
+    cta: "",
+    tone: "sky",
+  },
+  {
+    title: "AI-Guided Hearing-Care Workflows",
+    category: "AI in hearing care",
+    description:
+      "Planned tools for AI-supported questionnaire guidance, triage, interpretation, and care-pathway support, developed with human oversight.",
+    status: "In development",
     href: "",
     cta: "",
     tone: "neutral",
@@ -29,6 +43,7 @@ const tools = [
 const toneClasses = {
   teal: "border-teal-200 bg-teal-50 text-teal-800",
   amber: "border-amber-200 bg-amber-50 text-amber-800",
+  sky: "border-sky-200 bg-sky-50 text-sky-800",
   neutral: "border-stone-200 bg-stone-50 text-neutral-600",
 };
 
@@ -44,9 +59,11 @@ export default function Tools() {
   return (
     <div className="space-y-10">
       <section className="max-w-3xl">
-        <div className="eyebrow">Research infrastructure</div>
-        <h1>Research Tools</h1>
-        <p className="mt-5 text-lg text-neutral-700">Interactive tools for hearing assessment, pilot testing, and data collection.</p>
+        <div className="eyebrow">Digital assessment platform</div>
+        <h1>Assessment Tools</h1>
+        <p className="mt-5 text-lg text-neutral-700">
+          A growing platform for AI-enabled hearing care, speech-in-noise assessment, patient-reported outcomes, and study workflows.
+        </p>
       </section>
 
       <section className="grid gap-4">
@@ -57,6 +74,7 @@ export default function Tools() {
                 <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${toneClasses[tool.tone as keyof typeof toneClasses]}`}>
                   {tool.status}
                 </span>
+                <p className="mt-4 text-xs font-semibold uppercase text-brand-primary">{tool.category}</p>
                 <h2 className="mt-4 text-2xl">{tool.title}</h2>
                 <p className="mt-3 text-sm text-neutral-600">{tool.description}</p>
               </div>
