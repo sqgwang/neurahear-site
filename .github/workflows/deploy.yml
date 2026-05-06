@@ -124,7 +124,7 @@ jobs:
 
           echo "=== Syncing static files to Nginx root ==="
           mkdir -p "$STATIC_OUT"
-          rsync -a --delete \
+          rsync -a --no-owner --no-group --delete \
             --exclude="tools/digit-in-noise-test/data/**" \
             "$TEMP_DIR/out/" "$STATIC_OUT/"
 
@@ -137,8 +137,8 @@ jobs:
           rm -rf "$TEMP_DIR"
 
           echo "=== Reloading Nginx and smoke testing ==="
-          nginx -t
-          systemctl reload nginx
+          sudo -n /usr/sbin/nginx -t
+          sudo -n /usr/bin/systemctl reload nginx
           curl --fail --silent --show-error http://127.0.0.1/tools/single-digit-in-noise-test/ > /dev/null
           test -f "$STATIC_OUT/tools/digit-in-noise-test/audio/american_english/corrections.json"
           wc -l "$DIN_DATA_DIR/results.jsonl"
