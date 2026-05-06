@@ -21,7 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="sticky top-0 z-50 border-b border-stone-200 bg-[rgba(246,247,243,0.88)] backdrop-blur-xl">
           <div className="container flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
             <Link href="/" className="group flex items-center gap-3 no-underline">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-neutral-950 text-sm font-bold tracking-tight text-white shadow-[0_10px_24px_rgba(23,23,23,0.18)] transition-transform duration-300 group-hover:-translate-y-0.5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-neutral-950 text-sm font-bold text-white shadow-[0_10px_24px_rgba(23,23,23,0.18)] transition-transform duration-300 group-hover:-translate-y-0.5">
                 NH
               </div>
               <div>

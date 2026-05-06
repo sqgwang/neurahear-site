@@ -1,9 +1,9 @@
-import QuantumAcoustics from "./components/QuantumAcoustics";
+import DinResearchPanel from "./components/DinResearchPanel";
 import Link from "next/link";
 
 const stats = [
   { value: "27", label: "Scholar-indexed outputs" },
-  { value: "6", label: "DIN language tracks" },
+  { value: "9", label: "DIN language tracks" },
   { value: "2", label: "Live research tools" },
 ];
 
@@ -41,7 +41,7 @@ function WaveIcon() {
 export default function Home() {
   return (
     <div className="space-y-16">
-      <section className="grid min-h-[calc(100vh-220px)] gap-10 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-center">
+      <section className="grid min-h-[calc(100vh-220px)] gap-10 lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] lg:items-center">
         <div className="max-w-3xl py-6">
           <div className="eyebrow">The University of Hong Kong</div>
           <h1>HK Audiology Group</h1>
@@ -64,7 +64,7 @@ export default function Home() {
           <dl className="mt-10 grid gap-3 sm:grid-cols-3">
             {stats.map((item) => (
               <div key={item.label} className="surface p-4">
-                <dt className="text-3xl font-semibold tracking-tight text-neutral-950">{item.value}</dt>
+                <dt className="text-3xl font-semibold text-neutral-950">{item.value}</dt>
                 <dd className="mt-1 text-sm leading-snug text-neutral-500">{item.label}</dd>
               </div>
             ))}
@@ -72,7 +72,7 @@ export default function Home() {
         </div>
 
         <div className="min-w-0">
-          <QuantumAcoustics />
+          <DinResearchPanel />
         </div>
       </section>
 

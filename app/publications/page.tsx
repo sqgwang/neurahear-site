@@ -309,15 +309,15 @@ export default function Publications() {
 
       <section className="grid gap-4 md:grid-cols-3">
         <div className="surface p-5">
-          <div className="text-3xl font-semibold tracking-tight text-neutral-950">{publications.length}</div>
+          <div className="text-3xl font-semibold text-neutral-950">{publications.length}</div>
           <div className="mt-1 text-sm text-neutral-500">Unique publication entries</div>
         </div>
         <div className="surface p-5">
-          <div className="text-3xl font-semibold tracking-tight text-neutral-950">{recentCount}</div>
+          <div className="text-3xl font-semibold text-neutral-950">{recentCount}</div>
           <div className="mt-1 text-sm text-neutral-500">Entries from 2025 onward</div>
         </div>
         <div className="surface p-5">
-          <div className="text-3xl font-semibold tracking-tight text-neutral-950">{citationTotal}</div>
+          <div className="text-3xl font-semibold text-neutral-950">{citationTotal}</div>
           <div className="mt-1 text-sm text-neutral-500">Citations across listed entries</div>
         </div>
       </section>

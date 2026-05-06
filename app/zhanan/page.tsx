@@ -206,7 +206,7 @@ export default function ZhananPage() {
         
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight sm:text-4xl">
+          <h1 className="text-3xl font-extrabold text-slate-900 sm:text-4xl">
             🍲 渣男们额度小助手
           </h1>
           <p className="mt-3 text-lg text-slate-500">
