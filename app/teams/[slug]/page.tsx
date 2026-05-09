@@ -209,7 +209,19 @@ export default async function MemberPage({ params }: { params: Promise<{ slug: s
             
             {/* Social Links with Icons */}
             <div className="flex flex-wrap gap-3">
-              {/* Add email/socials if available in data later, for now just placeholders or skip */}
+              {member.googleScholar && (
+                <a
+                  href={member.googleScholar}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-lg hover:border-blue-300 hover:text-blue-600 transition text-sm font-medium shadow-sm"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M5.242 13.769L0 9.5 12 0l12 9.5-5.242 4.269C17.548 11.249 14.978 9.5 12 9.5c-2.977 0-5.548 1.748-6.758 4.269zM12 10a7 7 0 1 0 0 14 7 7 0 0 0 0-14z"/>
+                  </svg>
+                  Google Scholar
+                </a>
+              )}
             </div>
           </div>
         </div>

@@ -22,21 +22,30 @@ const scholarProfiles: Array<{
     key: "Shang",
     name: "Shangqiguo Wang",
     role: "Post-doctoral Fellow, University of Hong Kong",
-    citations: 123,
-    listed: 18,
+    citations: 125,
+    listed: 19,
     url: "https://scholar.google.com/citations?user=V9WkSfkAAAAJ&hl=en",
   },
   {
     key: "Dicky",
     name: "Changgeng Mo",
     role: "Orka Labs Inc",
-    citations: 37,
+    citations: 41,
     listed: 12,
     url: "https://scholar.google.com/citations?user=R_Gt36wAAAAJ&hl=en",
   },
 ];
 
 const publications: Publication[] = [
+  {
+    title: "Democratizing Audiology Education: How Generative Artificial Intelligence Can Bridge the Global Resource Gap",
+    authors: "C Mo, S Wang",
+    venue: "The Hearing Journal 79(5), 1-4",
+    year: 2026,
+    citations: 0,
+    profiles: ["Shang", "Dicky"],
+    url: "https://www.deepdyve.com/lp/wolters-kluwer/democratizing-audiology-education-how-generative-artificial-QbOcHtCI0N",
+  },
   {
     title: "Perspectives of audiologists in China on artificial intelligence in clinical practice and professional identity: a qualitative study",
     authors: "S Wang, K Mou, J Wang, C Mo, X Shen, J Wang, W Zuo, Y Chen",
@@ -67,7 +76,7 @@ const publications: Publication[] = [
     venue: "International Journal of Audiology, 1-4",
     year: 2026,
     citations: 0,
-    profiles: ["Shang"],
+    profiles: ["Shang", "Dicky"],
   },
   {
     title: "Reference-aware SFM layers for intrusive intelligibility prediction",
@@ -175,7 +184,7 @@ const publications: Publication[] = [
     authors: "S Wang, C Mo, Y Chen, X Dai, H Wang, X Shen",
     venue: "JMIR Medical Education 10(1), e55595",
     year: 2024,
-    citations: 21,
+    citations: 22,
     profiles: ["Shang", "Dicky"],
     url: "https://doi.org/10.2196/55595",
   },
@@ -211,7 +220,7 @@ const publications: Publication[] = [
     authors: "S Wang, C Mo, C Zhao, X Shen, Y Chen",
     venue: "Perspectives of the ASHA Special Interest Groups 9(4), 1033-1038",
     year: 2024,
-    citations: 2,
+    citations: 3,
     profiles: ["Shang", "Dicky"],
     url: "https://doi.org/10.1044/2024_PERSP-24-00080",
   },
@@ -220,7 +229,7 @@ const publications: Publication[] = [
     authors: "C Mo, TF Ma, B McPherson",
     venue: "International Journal of Audiology 63(2), 106-116",
     year: 2024,
-    citations: 3,
+    citations: 4,
     profiles: ["Dicky"],
   },
   {
@@ -245,7 +254,7 @@ const publications: Publication[] = [
     authors: "B McPherson, C Mo",
     venue: "Journal of Hearing Science 12(1)",
     year: 2022,
-    citations: 0,
+    citations: 1,
     profiles: ["Dicky"],
   },
   {

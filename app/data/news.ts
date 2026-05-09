@@ -51,9 +51,18 @@ export const newsItems: NewsItem[] = [
     href: "/tools/digit-in-noise-test/",
   },
   {
+    id: "democratizing-audiology-education",
+    date: "2026-05-02",
+    type: "Publication",
+    title: "Democratizing Audiology Education: How Generative Artificial Intelligence Can Bridge the Global Resource Gap",
+    summary:
+      "A Hearing Journal article by Changgeng Mo and Shangqiguo Wang on how generative AI may broaden access to audiology education.",
+    href: "/publications/",
+  },
+  {
     id: "ai-audiologists-china",
-    date: "2026-01-15",
-    dateLabel: "2026",
+    date: "2026-04-23",
+    dateLabel: "Apr 2026",
     type: "Publication",
     title: "Perspectives of audiologists in China on artificial intelligence in clinical practice and professional identity",
     summary:
@@ -62,8 +71,8 @@ export const newsItems: NewsItem[] = [
   },
   {
     id: "second-language-exposure-idin",
-    date: "2026-01-14",
-    dateLabel: "2026",
+    date: "2026-04-02",
+    dateLabel: "Apr 2026",
     type: "Publication",
     title: "Effects of second language exposure on the integrated digits-in-noise test in Cantonese non-native speakers",
     summary:
