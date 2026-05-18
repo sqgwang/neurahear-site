@@ -84,19 +84,19 @@ jobs:
           whoami
           id
           echo "=== Directory permissions ==="
-          ls -ld /var/www/neurahear /var/www/labsite
+          ls -ld /var/www/neurahear /var/www/neurahear/current /var/www/labsite
 
-          STATIC_ROOT="/var/www/neurahear"
+          STATIC_ROOT="/var/www/neurahear/current"
           STATIC_PARENT="$(dirname "$STATIC_ROOT")"
           LABSITE_ROOT="/var/www/labsite"
           DIN_DATA_DIR="/opt/neurahear/din-data"
           DIN_BACKUP_DIR="/opt/neurahear/backups"
-          OUT_BACKUP_DIR="/var/www/neurahear-backups"
-          RELEASES_DIR="/var/www/neurahear-releases"
+          OUT_BACKUP_DIR="$STATIC_PARENT/backups-static"
+          RELEASES_DIR="$STATIC_PARENT/releases"
           SHORT_SHA="$(printf "%s" "$GITHUB_SHA_VALUE" | cut -c1-7)"
           RELEASE_ID="$SHORT_SHA-$(date +%Y%m%d_%H%M%S)"
           RELEASE_DIR="$RELEASES_DIR/$RELEASE_ID"
-          NEXT_LINK="$STATIC_PARENT/neurahear.next"
+          NEXT_LINK="$STATIC_PARENT/current.next"
           PREVIOUS_TARGET=""
           LEGACY_OUT=""
 
@@ -158,7 +158,7 @@ jobs:
           if [ -L "$STATIC_ROOT" ]; then
             PREVIOUS_TARGET="$(readlink -f "$STATIC_ROOT" || true)"
           elif [ -d "$STATIC_ROOT" ]; then
-            LEGACY_OUT="$STATIC_PARENT/neurahear-legacy-$RELEASE_ID"
+            LEGACY_OUT="$STATIC_PARENT/current-legacy-$RELEASE_ID"
             mv "$STATIC_ROOT" "$LEGACY_OUT"
             echo "Moved legacy static directory to $LEGACY_OUT"
           fi
@@ -201,7 +201,7 @@ jobs:
             | tail -n +8 \
             | cut -d' ' -f2- \
             | xargs -r rm -rf
-          find "$STATIC_PARENT" -maxdepth 1 -type d -name "neurahear-legacy-*" -mtime +14 -exec rm -rf {} +
+          find "$STATIC_PARENT" -maxdepth 1 -type d -name "current-legacy-*" -mtime +14 -exec rm -rf {} +
           rm -rf "$TEMP_DIR"
 
           echo "=== Deployment complete ==="
