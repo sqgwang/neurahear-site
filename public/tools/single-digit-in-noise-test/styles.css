@@ -255,6 +255,26 @@ button:disabled {
   opacity: 0.5;
 }
 
+button[aria-busy="true"] {
+  position: relative;
+  opacity: 0.78;
+}
+
+button[aria-busy="true"]::after {
+  content: "";
+  width: 0.9em;
+  height: 0.9em;
+  margin-left: 0.55em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 999px;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .meta {
   display: flex;
   flex-wrap: wrap;

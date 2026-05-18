@@ -84,14 +84,21 @@ jobs:
           whoami
           id
           echo "=== Directory permissions ==="
-          ls -ld /var/www/neurahear /var/www/neurahear/out /var/www/labsite
+          ls -ld /var/www/neurahear /var/www/labsite
 
-          STATIC_OUT="/var/www/neurahear/out"
+          STATIC_ROOT="/var/www/neurahear"
+          STATIC_PARENT="$(dirname "$STATIC_ROOT")"
           LABSITE_ROOT="/var/www/labsite"
           DIN_DATA_DIR="/opt/neurahear/din-data"
           DIN_BACKUP_DIR="/opt/neurahear/backups"
-          OUT_BACKUP_DIR="/var/www/neurahear/out-backups"
+          OUT_BACKUP_DIR="/var/www/neurahear-backups"
+          RELEASES_DIR="/var/www/neurahear-releases"
           SHORT_SHA="$(printf "%s" "$GITHUB_SHA_VALUE" | cut -c1-7)"
+          RELEASE_ID="$SHORT_SHA-$(date +%Y%m%d_%H%M%S)"
+          RELEASE_DIR="$RELEASES_DIR/$RELEASE_ID"
+          NEXT_LINK="$STATIC_PARENT/neurahear.next"
+          PREVIOUS_TARGET=""
+          LEGACY_OUT=""
 
           echo "=== DIN data safety guard ==="
           if [ ! -d "$DIN_DATA_DIR" ]; then
@@ -114,34 +121,88 @@ jobs:
           TEMP_DIR=$(mktemp -d /tmp/neurahear-static-XXXX)
           tar -xzf /tmp/site.tar.gz -C "$TEMP_DIR"
           rm -f /tmp/site.tar.gz
+          test -f "$TEMP_DIR/out/index.html"
+          test -d "$TEMP_DIR/out/_next/static"
+          test -f "$TEMP_DIR/out/tools/digit-in-noise-test/audio/american_english/corrections.json"
 
           echo "=== Backing up current static output ==="
           mkdir -p "$OUT_BACKUP_DIR"
-          STATIC_BACKUP="$OUT_BACKUP_DIR/out-predeploy-$SHORT_SHA-$(date +%Y%m%d_%H%M%S).tar.gz"
-          tar -czf "$STATIC_BACKUP" -C "$(dirname "$STATIC_OUT")" "$(basename "$STATIC_OUT")"
-          find "$OUT_BACKUP_DIR" -name "out-predeploy-*.tar.gz" -mtime +14 -delete
+          STATIC_BACKUP="$OUT_BACKUP_DIR/neurahear-predeploy-$SHORT_SHA-$(date +%Y%m%d_%H%M%S).tar.gz"
+          tar -czhf "$STATIC_BACKUP" -C "$STATIC_PARENT" "$(basename "$STATIC_ROOT")"
+          find "$OUT_BACKUP_DIR" -name "neurahear-predeploy-*.tar.gz" -mtime +14 -delete
           echo "Static backup created: $STATIC_BACKUP"
 
-          echo "=== Syncing static files to Nginx root ==="
-          mkdir -p "$STATIC_OUT"
+          echo "=== Preparing immutable release directory ==="
+          mkdir -p "$RELEASES_DIR"
+          rm -rf "$RELEASE_DIR"
+          mkdir -p "$RELEASE_DIR"
           rsync -a --no-owner --no-group --delete \
             --exclude="tools/digit-in-noise-test/data/**" \
-            "$TEMP_DIR/out/" "$STATIC_OUT/"
+            "$TEMP_DIR/out/" "$RELEASE_DIR/"
+          test -f "$RELEASE_DIR/index.html"
+          test -d "$RELEASE_DIR/_next/static"
+          test -f "$RELEASE_DIR/tools/digit-in-noise-test/audio/american_english/corrections.json"
+          printf "%s\n" "$GITHUB_SHA_VALUE" > "$RELEASE_DIR/deploy-sha.txt"
 
-          echo "=== Updating server source checkout ==="
+          echo "=== Updating server source checkout when safe ==="
           cd "$LABSITE_ROOT"
           git fetch origin main
-          git pull --ff-only origin main
+          if [ -z "$(git status --porcelain)" ]; then
+            git pull --ff-only origin main
+          else
+            echo "WARN: server source checkout has local changes; skipping git pull for static deploy."
+            git status --short
+          fi
 
-          echo "=== Cleaning up temp directory ==="
-          rm -rf "$TEMP_DIR"
+          echo "=== Publishing release atomically ==="
+          if [ -L "$STATIC_ROOT" ]; then
+            PREVIOUS_TARGET="$(readlink -f "$STATIC_ROOT" || true)"
+          elif [ -d "$STATIC_ROOT" ]; then
+            LEGACY_OUT="$STATIC_PARENT/neurahear-legacy-$RELEASE_ID"
+            mv "$STATIC_ROOT" "$LEGACY_OUT"
+            echo "Moved legacy static directory to $LEGACY_OUT"
+          fi
+
+          ln -sfn "$RELEASE_DIR" "$NEXT_LINK"
+          mv -Tf "$NEXT_LINK" "$STATIC_ROOT"
 
           echo "=== Reloading Nginx and smoke testing ==="
-          sudo -n /usr/sbin/nginx -t
+          if ! sudo -n /usr/sbin/nginx -t; then
+            echo "ERROR: nginx config test failed; rolling back static symlink."
+            if [ -n "$PREVIOUS_TARGET" ] && [ -d "$PREVIOUS_TARGET" ]; then
+              ln -sfn "$PREVIOUS_TARGET" "$NEXT_LINK"
+              mv -Tf "$NEXT_LINK" "$STATIC_ROOT"
+            elif [ -n "$LEGACY_OUT" ] && [ -d "$LEGACY_OUT" ]; then
+              rm -f "$STATIC_ROOT"
+              mv "$LEGACY_OUT" "$STATIC_ROOT"
+            fi
+            exit 1
+          fi
           sudo -n /usr/bin/systemctl reload nginx
-          curl --fail --silent --show-error http://127.0.0.1/tools/single-digit-in-noise-test/ > /dev/null
-          test -f "$STATIC_OUT/tools/digit-in-noise-test/audio/american_english/corrections.json"
+          if ! curl --fail --silent --show-error http://127.0.0.1/tools/single-digit-in-noise-test/ > /dev/null; then
+            echo "ERROR: smoke test failed; rolling back static symlink."
+            if [ -n "$PREVIOUS_TARGET" ] && [ -d "$PREVIOUS_TARGET" ]; then
+              ln -sfn "$PREVIOUS_TARGET" "$NEXT_LINK"
+              mv -Tf "$NEXT_LINK" "$STATIC_ROOT"
+              sudo -n /usr/bin/systemctl reload nginx
+            elif [ -n "$LEGACY_OUT" ] && [ -d "$LEGACY_OUT" ]; then
+              rm -f "$STATIC_ROOT"
+              mv "$LEGACY_OUT" "$STATIC_ROOT"
+              sudo -n /usr/bin/systemctl reload nginx
+            fi
+            exit 1
+          fi
+          test -f "$STATIC_ROOT/tools/digit-in-noise-test/audio/american_english/corrections.json"
           wc -l "$DIN_DATA_DIR/results.jsonl"
+
+          echo "=== Cleaning up old releases and temp directory ==="
+          find "$RELEASES_DIR" -mindepth 1 -maxdepth 1 -type d -printf "%T@ %p\n" \
+            | sort -rn \
+            | tail -n +8 \
+            | cut -d' ' -f2- \
+            | xargs -r rm -rf
+          find "$STATIC_PARENT" -maxdepth 1 -type d -name "neurahear-legacy-*" -mtime +14 -exec rm -rf {} +
+          rm -rf "$TEMP_DIR"
 
           echo "=== Deployment complete ==="
           REMOTE

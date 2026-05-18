@@ -157,6 +157,21 @@ function setCalibrationMessage(msg, isError = false) {
   calibrationMsg.style.color = isError ? '#b91c1c' : '#5f666d';
 }
 
+function setButtonBusy(button, busy, busyText) {
+  if (!button) return;
+  if (busy) {
+    if (!button.dataset.idleText) button.dataset.idleText = button.textContent;
+    button.textContent = busyText;
+    button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
+    return;
+  }
+
+  button.textContent = button.dataset.idleText || button.textContent;
+  button.disabled = false;
+  button.removeAttribute('aria-busy');
+}
+
 function clampNoiseGain(value) {
   if (!Number.isFinite(value)) return 1;
   return Math.max(0.05, Math.min(3, value));
@@ -241,12 +256,14 @@ async function loadAudio(lang) {
 
   const digitBuffers = [];
   for (let digit = 0; digit <= 9; digit++) {
+    setSetupMessage(`Loading ${lang} audio: digit ${digit} of 9 ...`);
     const r = await fetch(`${base}/${digit}.wav`);
     if (!r.ok) throw new Error(`Cannot load ${digit}.wav for ${lang}`);
     const ab = await r.arrayBuffer();
     digitBuffers.push(await audioCtx.decodeAudioData(ab.slice(0)));
   }
 
+  setSetupMessage(`Loading ${lang} masker noise ...`);
   const noiseResp = await fetch(`${base}/noise.wav`);
   if (!noiseResp.ok) throw new Error(`Cannot load noise.wav for ${lang}`);
   const noiseAb = await noiseResp.arrayBuffer();
@@ -269,25 +286,30 @@ async function startCalibrationNoise() {
   const settings = pendingSettings || readSetupSettings();
   if (!settings) return;
 
-  if (audioCtx.state !== 'running') {
-    await audioCtx.resume();
-  }
-  if (!buffers || buffers.lang !== settings.lang) {
-    setCalibrationMessage(`Loading noise for ${settings.lang}...`);
-    await loadAudio(settings.lang);
-  }
+  setButtonBusy(calibrationPlayBtn, true, 'Preparing noise...');
+  try {
+    if (audioCtx.state !== 'running') {
+      await audioCtx.resume();
+    }
+    if (!buffers || buffers.lang !== settings.lang) {
+      setCalibrationMessage(`Loading noise for ${settings.lang}...`);
+      await loadAudio(settings.lang);
+    }
 
-  stopCalibrationNoise();
-  const src = audioCtx.createBufferSource();
-  const gain = audioCtx.createGain();
-  src.buffer = buffers.noiseBuffer;
-  src.loop = true;
-  gain.gain.value = updateCalibrationGain(calibrationGainEl.value);
-  src.connect(gain).connect(audioCtx.destination);
-  src.start();
-  calibrationNoiseSource = src;
-  calibrationNoiseGainNode = gain;
-  setCalibrationMessage('Noise is playing. Adjust the slider until it is comfortable and clearly audible.');
+    stopCalibrationNoise();
+    const src = audioCtx.createBufferSource();
+    const gain = audioCtx.createGain();
+    src.buffer = buffers.noiseBuffer;
+    src.loop = true;
+    gain.gain.value = updateCalibrationGain(calibrationGainEl.value);
+    src.connect(gain).connect(audioCtx.destination);
+    src.start();
+    calibrationNoiseSource = src;
+    calibrationNoiseGainNode = gain;
+    setCalibrationMessage('Noise is playing. Adjust the slider until it is comfortable and clearly audible.');
+  } finally {
+    setButtonBusy(calibrationPlayBtn, false);
+  }
 }
 
 function buildTrials(snrs, repsPerDigit, orderMode) {
@@ -402,6 +424,7 @@ function prepareForNextTrial() {
   hasPlayedThisTrial = false;
   playedAt = null;
   playedEndedAt = null;
+  setButtonBusy(playBtn, false);
   playBtn.disabled = false;
   setResponseDisabled(true);
   updateTaskUI();
@@ -413,12 +436,13 @@ async function handlePlay() {
 
   if (!buffers || buffers.lang !== settingsSnapshot.lang) {
     statusEl.textContent = `Loading audio for ${settingsSnapshot.lang}...`;
+    setButtonBusy(playBtn, true, 'Loading audio...');
     await loadAudio(settingsSnapshot.lang);
   }
 
   isPlaying = true;
   hasPlayedThisTrial = false;
-  playBtn.disabled = true;
+  setButtonBusy(playBtn, true, 'Playing...');
   setResponseDisabled(true);
   statusEl.textContent = 'Playing...';
 
@@ -441,6 +465,8 @@ async function handlePlay() {
   statusEl.textContent = 'Enter the digit you heard.';
   setResponseDisabled(false);
   isPlaying = false;
+  setButtonBusy(playBtn, false);
+  playBtn.disabled = true;
 }
 
 async function playCurrentTrial(isAuto = false) {
@@ -450,6 +476,7 @@ async function playCurrentTrial(isAuto = false) {
   } catch (err) {
     console.error(err);
     statusEl.textContent = `${isAuto ? 'Auto-play' : 'Playback'} error: ${err.message || err}`;
+    setButtonBusy(playBtn, false);
     playBtn.disabled = false;
     setResponseDisabled(true);
     isPlaying = false;
@@ -911,14 +938,20 @@ async function openCalibration() {
   setCalibrationMessage('Loading calibration audio...');
 
   try {
+    setButtonBusy(calibrationConfirmBtn, true, 'Loading audio...');
+    setButtonBusy(calibrationPlayBtn, true, 'Loading audio...');
     if (audioCtx.state !== 'running') await audioCtx.resume();
     if (!buffers || buffers.lang !== pendingSettings.lang) {
       await loadAudio(pendingSettings.lang);
     }
     setCalibrationMessage('Play the noise and adjust the masker level. This value will be fixed for the test.');
+    setButtonBusy(calibrationConfirmBtn, false);
+    setButtonBusy(calibrationPlayBtn, false);
   } catch (err) {
     console.error(err);
     setCalibrationMessage(`Audio load failed: ${err.message || err}`, true);
+    setButtonBusy(calibrationConfirmBtn, false);
+    setButtonBusy(calibrationPlayBtn, false);
   }
 }
 
@@ -1095,20 +1128,28 @@ groupJsonFilesEl.addEventListener('change', () => {
 });
 
 preloadBtn.addEventListener('click', async () => {
+  setButtonBusy(preloadBtn, true, 'Loading audio...');
   try {
     if (audioCtx.state !== 'running') await audioCtx.resume();
     await loadAudio(stimLangEl.value);
   } catch (err) {
     console.error(err);
     setSetupMessage(`Audio preload failed: ${err.message || err}`, true);
+  } finally {
+    setButtonBusy(preloadBtn, false);
   }
 });
 
-startBtn.addEventListener('click', () => {
-  openCalibration().catch((err) => {
+startBtn.addEventListener('click', async () => {
+  setButtonBusy(startBtn, true, 'Preparing...');
+  try {
+    await openCalibration();
+  } catch (err) {
     console.error(err);
     setSetupMessage(`Calibration setup failed: ${err.message || err}`, true);
-  });
+  } finally {
+    setButtonBusy(startBtn, false);
+  }
 });
 calibrationPlayBtn.addEventListener('click', () => {
   startCalibrationNoise().catch((err) => {
@@ -1131,32 +1172,40 @@ calibrationGainEl.addEventListener('input', (e) => {
   setCalibrationMessage(`Masker level set to ${gain.toFixed(2)}. Confirm this level when ready.`);
 });
 calibrationConfirmBtn.addEventListener('click', async () => {
+  setButtonBusy(calibrationConfirmBtn, true, 'Starting test...');
   const gain = updateCalibrationGain(calibrationGainEl.value);
   if (!pendingSettings) {
     setCalibrationMessage('Setup information is missing. Return to setup and try again.', true);
+    setButtonBusy(calibrationConfirmBtn, false);
     return;
   }
 
-  stopCalibrationNoise();
-  rememberCalibrationGain(pendingSettings.lang, gain);
-  noiseGainEl.value = gain.toFixed(2);
-  const calibratedAt = new Date().toISOString();
-  const calibratedSettings = {
-    ...pendingSettings,
-    noiseGain: gain,
-    calibration: {
-      type: 'user_adjusted_noise_loop',
-      maskerGain: gain,
-      language: pendingSettings.lang,
-      calibratedAt,
-      note: 'Noise level was fixed from this calibration step for all subsequent formal trials.',
-    },
-  };
+  try {
+    stopCalibrationNoise();
+    rememberCalibrationGain(pendingSettings.lang, gain);
+    noiseGainEl.value = gain.toFixed(2);
+    const calibratedAt = new Date().toISOString();
+    const calibratedSettings = {
+      ...pendingSettings,
+      noiseGain: gain,
+      calibration: {
+        type: 'user_adjusted_noise_loop',
+        maskerGain: gain,
+        language: pendingSettings.lang,
+        calibratedAt,
+        note: 'Noise level was fixed from this calibration step for all subsequent formal trials.',
+      },
+    };
 
-  if (audioCtx.state !== 'running') {
-    try { await audioCtx.resume(); } catch {}
+    if (audioCtx.state !== 'running') {
+      try { await audioCtx.resume(); } catch {}
+    }
+    beginExperiment(calibratedSettings);
+  } catch (err) {
+    console.error(err);
+    setCalibrationMessage(`Could not start the test: ${err.message || err}`, true);
+    setButtonBusy(calibrationConfirmBtn, false);
   }
-  beginExperiment(calibratedSettings);
 });
 playBtn.addEventListener('click', () => playCurrentTrial(false));
 submitBtn.addEventListener('click', handleSubmit);
