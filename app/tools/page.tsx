@@ -1,4 +1,12 @@
 import { toolItems, toolStatusLegend, toolToneClasses } from "../data/tools";
+import { createPageMetadata } from "../data/site";
+
+export const metadata = createPageMetadata({
+  title: "Assessment Tools",
+  description:
+    "Digital hearing assessment tools from HK Audiology Group, including iDIN, digit optimization, and HFEQ-Mandarin research workflows.",
+  path: "/tools/",
+});
 
 function PlayIcon() {
   return (

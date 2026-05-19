@@ -1,6 +1,13 @@
 import Link from "next/link";
 import Image from "next/image";
 import { members, slugify, initials } from "@/data/team";
+import { createPageMetadata } from "../data/site";
+
+export const metadata = createPageMetadata({
+  title: "Team",
+  description: "Researchers and collaborators advancing hearing science, AI-enabled hearing care, and digital audiology at HK Audiology Group.",
+  path: "/teams/",
+});
 
 export default function TeamsPage() {
   return (

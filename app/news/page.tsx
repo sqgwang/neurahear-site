@@ -1,10 +1,12 @@
 import { NewsLink, NewsMeta } from "../components/NewsUi";
 import { RECENT_NEWS_MONTHS, getNewsTypeCounts, groupNewsByYear, newsItems } from "../data/news";
+import { createPageMetadata } from "../data/site";
 
-export const metadata = {
+export const metadata = createPageMetadata({
   title: "News | HK Audiology Group",
   description: "News, publications, tools, conferences, and seminar updates from HK Audiology Group.",
-};
+  path: "/news/",
+});
 
 export default function NewsPage() {
   const yearGroups = groupNewsByYear();

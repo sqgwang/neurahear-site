@@ -1,9 +1,45 @@
 import "./globals.css";
 import Link from "next/link";
+import type { Metadata } from "next";
+import { absoluteUrl, siteConfig } from "./data/site";
 
-export const metadata = {
-  title: "HK Audiology Group",
-  description: "Hearing science, clinical tools, and AI-enabled audiology research at The University of Hong Kong.",
+export const metadata: Metadata = {
+  metadataBase: new URL(siteConfig.url),
+  title: {
+    default: siteConfig.title,
+    template: `%s | ${siteConfig.name}`,
+  },
+  description: siteConfig.description,
+  applicationName: siteConfig.shortName,
+  keywords: siteConfig.keywords,
+  authors: [{ name: siteConfig.name, url: siteConfig.url }],
+  creator: siteConfig.name,
+  publisher: "The University of Hong Kong",
+  alternates: {
+    canonical: siteConfig.url,
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_HK",
+    url: siteConfig.url,
+    siteName: siteConfig.name,
+    title: siteConfig.title,
+    description: siteConfig.description,
+    images: [
+      {
+        url: siteConfig.image,
+        width: 1200,
+        height: 630,
+        alt: "HK Audiology Group: AI-enabled hearing care and digital assessment tools",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteConfig.title,
+    description: siteConfig.description,
+    images: [siteConfig.image],
+  },
   icons: {
     icon: [{ url: "/brand/neurahear-neural-ear-favicon.svg", type: "image/svg+xml" }],
     shortcut: "/brand/neurahear-neural-ear-favicon.svg",
@@ -21,9 +57,32 @@ const navItems = [
 ];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "ResearchOrganization",
+    name: siteConfig.name,
+    alternateName: siteConfig.shortName,
+    url: siteConfig.url,
+    logo: absoluteUrl("/brand/neurahear-neural-ear-logo.svg"),
+    parentOrganization: {
+      "@type": "CollegeOrUniversity",
+      name: "The University of Hong Kong",
+      url: "https://www.hku.hk/",
+    },
+    sameAs: [
+      absoluteUrl("/publications/"),
+      absoluteUrl("/tools/"),
+    ],
+  };
+
   return (
     <html lang="en">
       <body>
+        <script
+          type="application/ld+json"
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
         <header className="sticky top-0 z-50 border-b border-stone-200 bg-[rgba(246,247,243,0.88)] backdrop-blur-xl">
           <div className="container flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
             <Link href="/" className="group flex items-center gap-3 no-underline">

@@ -1,4 +1,12 @@
 import Link from "next/link";
+import { createPageMetadata } from "../../data/site";
+
+export const metadata = createPageMetadata({
+  title: "AI-Enabled Hearing Care",
+  description:
+    "Research on responsible AI systems for hearing-care education, assessment, counseling, triage, and clinical decision support.",
+  path: "/projects/ai-hearing-care/",
+});
 
 const workstreams = [
   {

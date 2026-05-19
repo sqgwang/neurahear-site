@@ -9,6 +9,14 @@ import {
   scholarProfiles,
   type ProfileKey,
 } from "../data/publications";
+import { createPageMetadata } from "../data/site";
+
+export const metadata = createPageMetadata({
+  title: "Publications",
+  description:
+    "Scholar-indexed publications from HK Audiology Group across AI-enabled hearing care, digital assessment, speech-in-noise testing, and hearing-care systems.",
+  path: "/publications/",
+});
 
 const profileStyles: Record<ProfileKey, string> = {
   Shang: "border-teal-200 bg-teal-50 text-teal-800",

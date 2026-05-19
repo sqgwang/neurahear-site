@@ -1,9 +1,11 @@
 import HfeqMandarinTool from "./HfeqMandarinTool";
+import { createPageMetadata } from "../../data/site";
 
-export const metadata = {
-  title: "HFEQ-Mandarin Research Preview | HK Audiology Group",
+export const metadata = createPageMetadata({
+  title: "HFEQ-Mandarin Research Preview",
   description: "Research-preview Mandarin questionnaire workflow for hearing and functioning in everyday life.",
-};
+  path: "/tools/hfeq-mandarin/",
+});
 
 export default function HfeqMandarinPage() {
   return (

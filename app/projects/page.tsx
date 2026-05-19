@@ -1,4 +1,12 @@
 import Link from "next/link";
+import { createPageMetadata } from "../data/site";
+
+export const metadata = createPageMetadata({
+  title: "Research Projects",
+  description:
+    "Research projects from HK Audiology Group across AI-enabled hearing care, digital assessment, everyday functioning, and hearing healthcare systems.",
+  path: "/projects/",
+});
 
 const projects = [
   {

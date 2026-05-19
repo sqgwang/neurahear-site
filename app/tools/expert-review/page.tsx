@@ -1,8 +1,16 @@
 import ExpertReviewTool from "./ExpertReviewTool";
+import { createPageMetadata } from "../../data/site";
 
 export const metadata = {
-  title: "Expert Review Console | HK Audiology Group",
-  description: "Browser-based expert review workflow for deidentified PTA and tympanometry LLM research packets.",
+  ...createPageMetadata({
+    title: "Expert Review Console",
+    description: "Browser-based expert review workflow for deidentified PTA and tympanometry LLM research packets.",
+    path: "/tools/expert-review/",
+  }),
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function ExpertReviewPage() {

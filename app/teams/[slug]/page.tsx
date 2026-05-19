@@ -1,12 +1,33 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import type { Metadata } from 'next'
 import { members, slugify } from '@/data/team'
 import { notFound } from 'next/navigation'
+import { createPageMetadata } from '@/app/data/site'
 
 export async function generateStaticParams() {
   return members
     .filter(m => !m.externalLink)  // Only generate pages for internal profiles
     .map((m) => ({ slug: m.slug ?? slugify(m.name) }))
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const resolvedParams = await params;
+  const member = members.find((m) => (m.slug ?? slugify(m.name)) === resolvedParams.slug);
+
+  if (!member || member.externalLink) {
+    return createPageMetadata({
+      title: "Team Member",
+      description: "HK Audiology Group team member profile.",
+      path: `/teams/${resolvedParams.slug}/`,
+    });
+  }
+
+  return createPageMetadata({
+    title: member.name,
+    description: `${member.name}${member.title ? `, ${member.title}` : ""}${member.affiliation ? ` at ${member.affiliation}` : ""}. HK Audiology Group team profile.`,
+    path: `/teams/${resolvedParams.slug}/`,
+  });
 }
 
 export default async function MemberPage({ params }: { params: Promise<{ slug: string }> }) {

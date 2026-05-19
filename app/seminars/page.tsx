@@ -1,3 +1,11 @@
+import { createPageMetadata } from "../data/site";
+
+export const metadata = createPageMetadata({
+  title: "Seminars",
+  description: "Online audiology seminar recordings and hearing-science learning resources from HK Audiology Group.",
+  path: "/seminars/",
+});
+
 export default function Seminars() {
   const seminars = [
     {
