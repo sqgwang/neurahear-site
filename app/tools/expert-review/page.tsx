@@ -2,7 +2,7 @@ import ExpertReviewTool from "./ExpertReviewTool";
 
 export const metadata = {
   title: "Expert Review Console | HK Audiology Group",
-  description: "Browser-based expert review workflow for deidentified AI hearing-clinic pilot cases.",
+  description: "Browser-based expert review workflow for deidentified PTA and tympanometry LLM research packets.",
 };
 
 export default function ExpertReviewPage() {
@@ -16,7 +16,8 @@ export default function ExpertReviewPage() {
           The case package stays in this browser session; the public webpage does not store study data.
         </p>
         <div className="mt-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-relaxed text-amber-900">
-          Use only with deidentified research packets. Lock the independent clinical judgment before viewing AI outputs.
+          Use only with deidentified research packets. Review the PTA and tympanometry images first, then lock the
+          independent judgment before viewing routine clinician or AI outputs.
         </div>
       </section>
 

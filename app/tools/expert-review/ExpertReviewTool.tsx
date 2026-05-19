@@ -22,6 +22,10 @@ type DiagnosticOutput = {
   content: unknown;
 };
 
+type ClinicianOutput = DiagnosticOutput;
+type RecognitionOutput = DiagnosticOutput;
+type InterpretationOutput = DiagnosticOutput;
+
 type PatientTextOutput = {
   id: string;
   displayName: string;
@@ -37,10 +41,15 @@ type PatientImageOutput = {
 
 type ReviewCase = {
   caseId: string;
+  analysisId?: string;
+  sourceCaseNo?: string;
   provisionalLabel?: string;
   broadGroup?: string;
   materials: Material[];
   images: ReviewImage[];
+  clinicianOutputs?: ClinicianOutput[];
+  recognitionOutputs?: RecognitionOutput[];
+  interpretationOutputs?: InterpretationOutput[];
   diagnosticOutputs?: DiagnosticOutput[];
   patientTextOutputs?: PatientTextOutput[];
   patientImageOutputs?: PatientImageOutput[];
@@ -80,6 +89,35 @@ type AiReview = {
   comments: string;
 };
 
+type ClinicianReview = {
+  originalClinicianDiagnosisReasonable: string;
+  comments: string;
+};
+
+type RecognitionReview = {
+  ptaThresholdsCorrect: string;
+  ptaDegreeRightCorrect: string;
+  ptaDegreeLeftCorrect: string;
+  ptaTypeRightCorrect: string;
+  ptaTypeLeftCorrect: string;
+  ptaAirBoneGapCorrect: string;
+  ptaLateralityAsymmetryCorrect: string;
+  tympTypeRightCorrect: string;
+  tympTypeLeftCorrect: string;
+  tympAbnormalityRightCorrect: string;
+  tympAbnormalityLeftCorrect: string;
+  tympReflexInterpretationCorrect: string;
+  ptaTympCrossCheckCorrect: string;
+  comments: string;
+};
+
+type InterpretationReview = {
+  researchInterpretationCorrect: string;
+  generalNextStepsReasonable: string;
+  safetyConcern: string;
+  comments: string;
+};
+
 type PatientReview = {
   medicalAccuracy: string;
   clarity: string;
@@ -92,6 +130,9 @@ type PatientReview = {
 type CaseReview = {
   goldLocked: boolean;
   gold: GoldReview;
+  clinician: Record<string, ClinicianReview>;
+  recognition: Record<string, RecognitionReview>;
+  interpretation: Record<string, InterpretationReview>;
   ai: Record<string, AiReview>;
   patientText: Record<string, PatientReview>;
   patientImage: Record<string, PatientReview>;
@@ -130,6 +171,35 @@ const emptyAi: AiReview = {
   managementQuality: "",
   safetyConcern: "",
   confidenceAppropriate: "",
+  comments: "",
+};
+
+const emptyClinician: ClinicianReview = {
+  originalClinicianDiagnosisReasonable: "",
+  comments: "",
+};
+
+const emptyRecognition: RecognitionReview = {
+  ptaThresholdsCorrect: "",
+  ptaDegreeRightCorrect: "",
+  ptaDegreeLeftCorrect: "",
+  ptaTypeRightCorrect: "",
+  ptaTypeLeftCorrect: "",
+  ptaAirBoneGapCorrect: "",
+  ptaLateralityAsymmetryCorrect: "",
+  tympTypeRightCorrect: "",
+  tympTypeLeftCorrect: "",
+  tympAbnormalityRightCorrect: "",
+  tympAbnormalityLeftCorrect: "",
+  tympReflexInterpretationCorrect: "",
+  ptaTympCrossCheckCorrect: "",
+  comments: "",
+};
+
+const emptyInterpretation: InterpretationReview = {
+  researchInterpretationCorrect: "",
+  generalNextStepsReasonable: "",
+  safetyConcern: "",
   comments: "",
 };
 
@@ -174,6 +244,18 @@ function cloneAi() {
   return { ...emptyAi };
 }
 
+function cloneClinician() {
+  return { ...emptyClinician };
+}
+
+function cloneRecognition() {
+  return { ...emptyRecognition };
+}
+
+function cloneInterpretation() {
+  return { ...emptyInterpretation };
+}
+
 function clonePatient() {
   return { ...emptyPatient };
 }
@@ -182,6 +264,9 @@ function createCaseReview(): CaseReview {
   return {
     goldLocked: false,
     gold: cloneGold(),
+    clinician: {},
+    recognition: {},
+    interpretation: {},
     ai: {},
     patientText: {},
     patientImage: {},
@@ -222,6 +307,21 @@ function flattenForCsv(state: ReviewState, pkg: ReviewPackage) {
     const caseReview = state.cases[reviewCase.caseId] || createCaseReview();
     Object.entries(caseReview.gold).forEach(([field, value]) => {
       rows.push([pkg.studyId, state.reviewerId, reviewCase.caseId, "gold", "", field, value].map(csvCell).join(","));
+    });
+    Object.entries(caseReview.clinician || {}).forEach(([outputId, review]) => {
+      Object.entries(review).forEach(([field, value]) => {
+        rows.push([pkg.studyId, state.reviewerId, reviewCase.caseId, "routine_clinician", outputId, field, value].map(csvCell).join(","));
+      });
+    });
+    Object.entries(caseReview.recognition || {}).forEach(([outputId, review]) => {
+      Object.entries(review).forEach(([field, value]) => {
+        rows.push([pkg.studyId, state.reviewerId, reviewCase.caseId, "recognition", outputId, field, value].map(csvCell).join(","));
+      });
+    });
+    Object.entries(caseReview.interpretation || {}).forEach(([outputId, review]) => {
+      Object.entries(review).forEach(([field, value]) => {
+        rows.push([pkg.studyId, state.reviewerId, reviewCase.caseId, "research_interpretation", outputId, field, value].map(csvCell).join(","));
+      });
     });
     Object.entries(caseReview.ai).forEach(([outputId, review]) => {
       Object.entries(review).forEach(([field, value]) => {
@@ -396,6 +496,39 @@ export default function ExpertReviewTool() {
       ai: {
         ...review.ai,
         [outputId]: { ...(review.ai[outputId] || cloneAi()), [field]: value },
+      },
+    }));
+  };
+
+  const updateClinician = (outputId: string, field: keyof ClinicianReview, value: string) => {
+    if (!activeCase) return;
+    updateCase(activeCase.caseId, (review) => ({
+      ...review,
+      clinician: {
+        ...review.clinician,
+        [outputId]: { ...(review.clinician?.[outputId] || cloneClinician()), [field]: value },
+      },
+    }));
+  };
+
+  const updateRecognition = (outputId: string, field: keyof RecognitionReview, value: string) => {
+    if (!activeCase) return;
+    updateCase(activeCase.caseId, (review) => ({
+      ...review,
+      recognition: {
+        ...review.recognition,
+        [outputId]: { ...(review.recognition?.[outputId] || cloneRecognition()), [field]: value },
+      },
+    }));
+  };
+
+  const updateInterpretation = (outputId: string, field: keyof InterpretationReview, value: string) => {
+    if (!activeCase) return;
+    updateCase(activeCase.caseId, (review) => ({
+      ...review,
+      interpretation: {
+        ...review.interpretation,
+        [outputId]: { ...(review.interpretation?.[outputId] || cloneInterpretation()), [field]: value },
       },
     }));
   };
@@ -591,6 +724,105 @@ export default function ExpertReviewTool() {
 
         <section className={`surface p-5 md:p-6 ${activeReview.goldLocked ? "" : "opacity-60"}`}>
           <p className="kicker">Step 2</p>
+          <h2 className="mt-2 text-2xl">Routine clinician reference</h2>
+          {!activeReview.goldLocked ? <p className="mt-3 text-sm text-amber-800">Lock the independent judgment before viewing or rating reference/model outputs.</p> : null}
+          {activeCase.clinicianOutputs?.length ? (
+            <div className="mt-5 space-y-5">
+              {activeCase.clinicianOutputs.map((output) => {
+                const review = activeReview.clinician?.[output.id] || cloneClinician();
+                return (
+                  <div key={output.id} className="rounded-lg border border-stone-200 bg-white p-4">
+                    <h3>{output.displayName}</h3>
+                    <pre className="mt-3 max-h-[240px] overflow-auto whitespace-pre-wrap rounded-md bg-stone-50 p-4 text-xs leading-relaxed text-neutral-700">
+                      {safeJson(output.content)}
+                    </pre>
+                    <div className="mt-4 grid gap-4 md:grid-cols-2">
+                      <FieldSelect label="Clinician diagnosis reasonable" value={review.originalClinicianDiagnosisReasonable} options={correctnessOptions} onChange={(value) => updateClinician(output.id, "originalClinicianDiagnosisReasonable", value)} />
+                      <TextField label="Reference comments" value={review.comments} onChange={(value) => updateClinician(output.id, "comments", value)} rows={3} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="mt-4 rounded-md border border-stone-200 bg-stone-50 p-4 text-sm text-neutral-600">No routine clinician reference included in this package.</p>
+          )}
+        </section>
+
+        <section className={`surface p-5 md:p-6 ${activeReview.goldLocked ? "" : "opacity-60"}`}>
+          <p className="kicker">Step 3</p>
+          <h2 className="mt-2 text-2xl">PTA and tympanometry recognition review</h2>
+          {!activeReview.goldLocked ? <p className="mt-3 text-sm text-amber-800">Lock the independent judgment before rating AI outputs.</p> : null}
+          {activeCase.recognitionOutputs?.length ? (
+            <div className="mt-5 space-y-5">
+              {activeCase.recognitionOutputs.map((output) => {
+                const review = activeReview.recognition?.[output.id] || cloneRecognition();
+                return (
+                  <div key={output.id} className="rounded-lg border border-stone-200 bg-white p-4">
+                    <h3>{output.displayName}</h3>
+                    <pre className="mt-3 max-h-[360px] overflow-auto whitespace-pre-wrap rounded-md bg-stone-50 p-4 text-xs leading-relaxed text-neutral-700">
+                      {safeJson(output.content)}
+                    </pre>
+                    <div className="mt-4 grid gap-4 md:grid-cols-3">
+                      <FieldSelect label="PTA thresholds" value={review.ptaThresholdsCorrect} options={correctnessOptions} onChange={(value) => updateRecognition(output.id, "ptaThresholdsCorrect", value)} />
+                      <FieldSelect label="Right degree" value={review.ptaDegreeRightCorrect} options={correctnessOptions} onChange={(value) => updateRecognition(output.id, "ptaDegreeRightCorrect", value)} />
+                      <FieldSelect label="Left degree" value={review.ptaDegreeLeftCorrect} options={correctnessOptions} onChange={(value) => updateRecognition(output.id, "ptaDegreeLeftCorrect", value)} />
+                      <FieldSelect label="Right type" value={review.ptaTypeRightCorrect} options={correctnessOptions} onChange={(value) => updateRecognition(output.id, "ptaTypeRightCorrect", value)} />
+                      <FieldSelect label="Left type" value={review.ptaTypeLeftCorrect} options={correctnessOptions} onChange={(value) => updateRecognition(output.id, "ptaTypeLeftCorrect", value)} />
+                      <FieldSelect label="Air-bone gap" value={review.ptaAirBoneGapCorrect} options={correctnessOptions} onChange={(value) => updateRecognition(output.id, "ptaAirBoneGapCorrect", value)} />
+                      <FieldSelect label="Laterality/asymmetry" value={review.ptaLateralityAsymmetryCorrect} options={correctnessOptions} onChange={(value) => updateRecognition(output.id, "ptaLateralityAsymmetryCorrect", value)} />
+                      <FieldSelect label="Right tymp type" value={review.tympTypeRightCorrect} options={correctnessOptions} onChange={(value) => updateRecognition(output.id, "tympTypeRightCorrect", value)} />
+                      <FieldSelect label="Left tymp type" value={review.tympTypeLeftCorrect} options={correctnessOptions} onChange={(value) => updateRecognition(output.id, "tympTypeLeftCorrect", value)} />
+                      <FieldSelect label="Right tymp abnormality" value={review.tympAbnormalityRightCorrect} options={correctnessOptions} onChange={(value) => updateRecognition(output.id, "tympAbnormalityRightCorrect", value)} />
+                      <FieldSelect label="Left tymp abnormality" value={review.tympAbnormalityLeftCorrect} options={correctnessOptions} onChange={(value) => updateRecognition(output.id, "tympAbnormalityLeftCorrect", value)} />
+                      <FieldSelect label="Acoustic reflex" value={review.tympReflexInterpretationCorrect} options={correctnessOptions} onChange={(value) => updateRecognition(output.id, "tympReflexInterpretationCorrect", value)} />
+                      <FieldSelect label="PTA-tymp cross-check" value={review.ptaTympCrossCheckCorrect} options={correctnessOptions} onChange={(value) => updateRecognition(output.id, "ptaTympCrossCheckCorrect", value)} />
+                      <div className="md:col-span-3">
+                        <TextField label="Recognition comments" value={review.comments} onChange={(value) => updateRecognition(output.id, "comments", value)} rows={3} />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="mt-4 rounded-md border border-stone-200 bg-stone-50 p-4 text-sm text-neutral-600">No recognition outputs included in this package yet.</p>
+          )}
+        </section>
+
+        <section className={`surface p-5 md:p-6 ${activeReview.goldLocked ? "" : "opacity-60"}`}>
+          <p className="kicker">Step 4</p>
+          <h2 className="mt-2 text-2xl">Research interpretation review</h2>
+          {!activeReview.goldLocked ? <p className="mt-3 text-sm text-amber-800">Lock the independent judgment before rating AI outputs.</p> : null}
+          {activeCase.interpretationOutputs?.length ? (
+            <div className="mt-5 space-y-5">
+              {activeCase.interpretationOutputs.map((output) => {
+                const review = activeReview.interpretation?.[output.id] || cloneInterpretation();
+                return (
+                  <div key={output.id} className="rounded-lg border border-stone-200 bg-white p-4">
+                    <h3>{output.displayName}</h3>
+                    <pre className="mt-3 max-h-[360px] overflow-auto whitespace-pre-wrap rounded-md bg-stone-50 p-4 text-xs leading-relaxed text-neutral-700">
+                      {safeJson(output.content)}
+                    </pre>
+                    <div className="mt-4 grid gap-4 md:grid-cols-3">
+                      <FieldSelect label="Research interpretation" value={review.researchInterpretationCorrect} options={correctnessOptions} onChange={(value) => updateInterpretation(output.id, "researchInterpretationCorrect", value)} />
+                      <FieldSelect label="General next steps" value={review.generalNextStepsReasonable} options={correctnessOptions} onChange={(value) => updateInterpretation(output.id, "generalNextStepsReasonable", value)} />
+                      <FieldSelect label="Safety concern" value={review.safetyConcern} options={yesNoOptions} onChange={(value) => updateInterpretation(output.id, "safetyConcern", value)} />
+                      <div className="md:col-span-3">
+                        <TextField label="Interpretation comments" value={review.comments} onChange={(value) => updateInterpretation(output.id, "comments", value)} rows={3} />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="mt-4 rounded-md border border-stone-200 bg-stone-50 p-4 text-sm text-neutral-600">No research interpretation outputs included in this package yet.</p>
+          )}
+        </section>
+
+        <section className={`surface p-5 md:p-6 ${activeReview.goldLocked ? "" : "opacity-60"}`}>
+          <p className="kicker">Legacy Step</p>
           <h2 className="mt-2 text-2xl">AI diagnostic output review</h2>
           {!activeReview.goldLocked ? <p className="mt-3 text-sm text-amber-800">Lock the independent judgment before rating AI outputs.</p> : null}
           {activeCase.diagnosticOutputs?.length ? (
@@ -624,7 +856,7 @@ export default function ExpertReviewTool() {
         </section>
 
         <section className={`surface p-5 md:p-6 ${activeReview.goldLocked ? "" : "opacity-60"}`}>
-          <p className="kicker">Step 3</p>
+          <p className="kicker">Step 5</p>
           <h2 className="mt-2 text-2xl">Patient explanation review</h2>
           <div className="mt-5 space-y-5">
             {activeCase.patientTextOutputs?.map((output) => {
