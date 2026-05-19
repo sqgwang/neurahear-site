@@ -12,14 +12,17 @@ const focusAreas = [
   {
     title: "AI-enabled hearing care",
     text: "Research on responsible AI systems for hearing-care education, assessment, counseling, and clinical decision support.",
+    href: "/projects/ai-hearing-care/",
   },
   {
     title: "Digital assessment tools",
     text: "A growing platform of browser-based assessment tools, including speech-in-noise tests and patient-reported outcomes.",
+    href: "/tools/",
   },
   {
     title: "Everyday functioning",
     text: "ICF-informed measures that connect hearing ability with communication, participation, support, and daily-life impact.",
+    href: "/tools/hfeq-mandarin/",
   },
 ];
 
@@ -89,13 +92,13 @@ export default function Home() {
 
         <div className="grid gap-4 md:grid-cols-3">
           {focusAreas.map((area, index) => (
-            <article key={area.title} className="card">
+            <Link key={area.title} href={area.href} className="card group block no-underline">
               <div className="mb-5 flex h-9 w-9 items-center justify-center rounded-md border border-stone-200 bg-stone-50 text-sm font-semibold text-brand-primary">
                 {String(index + 1).padStart(2, "0")}
               </div>
-              <h3 className="text-lg">{area.title}</h3>
+              <h3 className="text-lg transition-colors group-hover:text-brand-primary">{area.title}</h3>
               <p className="mt-3 text-sm text-neutral-600">{area.text}</p>
-            </article>
+            </Link>
           ))}
         </div>
       </section>
