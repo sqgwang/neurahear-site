@@ -22,6 +22,33 @@ const focusAreas = [
   },
 ];
 
+const platformPathway = [
+  {
+    step: "Evidence",
+    title: "Scholar-linked research record",
+    text: "Publications anchor the platform in AI, speech-in-noise testing, everyday functioning, and hearing-care systems.",
+    href: "/publications/",
+  },
+  {
+    step: "Measure",
+    title: "Browser-based assessment tools",
+    text: "iDIN, digit optimization, and HFEQ-Mandarin form the current assessment layer.",
+    href: "/tools/",
+  },
+  {
+    step: "Update",
+    title: "News and activity archive",
+    text: "Recent publications, conferences, tool releases, and group updates stay visible on the homepage and preserved in News.",
+    href: "/news/",
+  },
+  {
+    step: "Translate",
+    title: "AI-enabled care workflows",
+    text: "Future work can connect assessment outputs with AI-supported review, explanation, and clinical translation.",
+    href: "/projects/ai-hearing-care/",
+  },
+];
+
 function ArrowIcon() {
   return (
     <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -104,6 +131,39 @@ export default function Home() {
               <p className="mt-3 text-sm text-neutral-600">{area.text}</p>
             </Link>
           ))}
+        </div>
+      </section>
+
+      <section className="surface overflow-hidden">
+        <div className="grid gap-0 lg:grid-cols-[0.7fr_1.3fr]">
+          <div className="border-b border-stone-200 p-6 md:p-8 lg:border-b-0 lg:border-r">
+            <p className="kicker">Platform pathway</p>
+            <h2 className="mt-3 text-3xl md:text-4xl">From research evidence to usable assessment tools.</h2>
+            <p className="mt-5 text-sm text-neutral-700">
+              The site now works as a living front door for the group: publications provide the evidence base, tools provide
+              the measurement layer, and news keeps the activity record current.
+            </p>
+          </div>
+
+          <div className="grid gap-0 md:grid-cols-2">
+            {platformPathway.map((item, index) => (
+              <Link
+                key={item.step}
+                href={item.href}
+                className={`group block border-b border-stone-200 p-5 no-underline transition-colors hover:bg-stone-50 md:border-r ${
+                  index % 2 === 1 ? "md:border-r-0" : ""
+                } ${index >= 2 ? "md:border-b-0" : ""}`}
+              >
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-primary">{item.step}</div>
+                <h3 className="mt-3 text-xl transition-colors group-hover:text-brand-primary">{item.title}</h3>
+                <p className="mt-3 text-sm text-neutral-600">{item.text}</p>
+                <div className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-neutral-900 transition-colors group-hover:text-brand-primary">
+                  Open
+                  <ArrowIcon />
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 

@@ -130,3 +130,30 @@ export function getRecentNews(referenceDate = new Date(), months = RECENT_NEWS_M
   cutoff.setMonth(cutoff.getMonth() - months);
   return sortNews().filter((item) => new Date(`${item.date}T00:00:00`) >= cutoff);
 }
+
+export function getNewsTypeCounts(items: NewsItem[] = newsItems) {
+  return sortNews(items).reduce(
+    (counts, item) => {
+      counts[item.type] += 1;
+      return counts;
+    },
+    {
+      Publication: 0,
+      Tool: 0,
+      Conference: 0,
+      Seminar: 0,
+      "Group update": 0,
+    } satisfies Record<NewsType, number>,
+  );
+}
+
+export function groupNewsByYear(items: NewsItem[] = newsItems) {
+  const groups = new Map<string, NewsItem[]>();
+
+  sortNews(items).forEach((item) => {
+    const year = item.date.slice(0, 4);
+    groups.set(year, [...(groups.get(year) || []), item]);
+  });
+
+  return Array.from(groups.entries()).map(([year, entries]) => ({ year, entries }));
+}

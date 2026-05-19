@@ -38,6 +38,27 @@ export const scholarProfiles: Array<{
   },
 ];
 
+export const publicationSignals = [
+  {
+    key: "ai",
+    label: "AI-enabled hearing care",
+    description: "AI, chatbots, speech foundation models, speech enhancement, and model-evaluation work.",
+    pattern: /(artificial intelligence|generative|chatgpt|chatbots|ai\b|machine learning|foundation model|neural|asr|speech enhancers|intelligibility prediction)/i,
+  },
+  {
+    key: "assessment",
+    label: "Digital assessment",
+    description: "Hearing screening, DIN/iDIN, speech-in-noise, cognitive screening, monitoring, and PROM-related assessment.",
+    pattern: /(digit|idin|screening|assessment|measure|monitor|speech perception|speech recognition|reading span|functioning|questionnaire)/i,
+  },
+  {
+    key: "health-services",
+    label: "Hearing-care systems",
+    description: "Audiology education, workforce, professional identity, service roles, and hearing-health access.",
+    pattern: /(education|audiologists|professional identity|clinical role|hospitals|hearing care|health|workforce|resource gap)/i,
+  },
+];
+
 export const publications: Publication[] = [
   {
     title: "Democratizing Audiology Education: How Generative Artificial Intelligence Can Bridge the Global Resource Gap",
@@ -289,4 +310,27 @@ export function getPublicationStats(items: Publication[] = publications) {
     recentCount: items.filter((publication) => publication.year >= 2025).length,
     citationTotal: items.reduce((sum, publication) => sum + publication.citations, 0),
   };
+}
+
+export function getRecentPublications(limit = 6, items: Publication[] = publications) {
+  return items
+    .map((publication, index) => ({ publication, index }))
+    .sort((a, b) => b.publication.year - a.publication.year || a.index - b.index)
+    .slice(0, limit)
+    .map(({ publication }) => publication);
+}
+
+export function getPublicationSignalStats(items: Publication[] = publications) {
+  return publicationSignals.map((signal) => ({
+    ...signal,
+    count: items.filter((publication) => signal.pattern.test(`${publication.title} ${publication.venue}`)).length,
+  }));
+}
+
+export function getProfilePublicationCounts(items: Publication[] = publications) {
+  return scholarProfiles.map((profile) => ({
+    key: profile.key,
+    name: profile.name,
+    count: items.filter((publication) => publication.profiles.includes(profile.key)).length,
+  }));
 }

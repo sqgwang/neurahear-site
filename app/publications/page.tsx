@@ -1,7 +1,10 @@
 import {
   PUBLICATIONS_LAST_UPDATED,
+  getProfilePublicationCounts,
+  getPublicationSignalStats,
   getPublicationStats,
   getPublicationYears,
+  getRecentPublications,
   publications,
   scholarProfiles,
   type ProfileKey,
@@ -33,6 +36,9 @@ function AuthorText({ authors }: { authors: string }) {
 export default function Publications() {
   const years = getPublicationYears();
   const stats = getPublicationStats();
+  const recentPublications = getRecentPublications(6);
+  const signalStats = getPublicationSignalStats();
+  const profileCounts = getProfilePublicationCounts();
 
   return (
     <div className="space-y-12">
@@ -45,7 +51,7 @@ export default function Publications() {
         </p>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-4 md:grid-cols-4">
         <div className="surface p-5">
           <div className="text-3xl font-semibold text-neutral-950">{stats.total}</div>
           <div className="mt-1 text-sm text-neutral-500">Unique publication entries</div>
@@ -58,6 +64,71 @@ export default function Publications() {
           <div className="text-3xl font-semibold text-neutral-950">{stats.citationTotal}</div>
           <div className="mt-1 text-sm text-neutral-500">Citations across listed entries</div>
         </div>
+        <div className="surface p-5">
+          <div className="text-3xl font-semibold text-neutral-950">{profileCounts.length}</div>
+          <div className="mt-1 text-sm text-neutral-500">Scholar profiles tracked</div>
+        </div>
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="surface overflow-hidden">
+          <div className="border-b border-stone-200 px-5 py-4">
+            <p className="kicker">Recent outputs</p>
+            <h2 className="mt-3 text-2xl">Latest listed publications</h2>
+          </div>
+          <ol className="divide-y divide-stone-200">
+            {recentPublications.map((publication) => (
+              <li key={`recent-${publication.year}-${publication.title}`} className="px-5 py-4">
+                <article>
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <span className="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1 text-xs font-semibold text-neutral-600">
+                      {publication.year}
+                    </span>
+                    {publication.profiles.map((profileKey) => (
+                      <span key={profileKey} className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${profileStyles[profileKey]}`}>
+                        {profileKey}
+                      </span>
+                    ))}
+                  </div>
+                  <h3 className="text-base leading-snug">
+                    {publication.url ? (
+                      <a href={publication.url} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-brand-primary">
+                        {publication.title}
+                      </a>
+                    ) : (
+                      publication.title
+                    )}
+                  </h3>
+                  <p className="mt-2 text-sm text-neutral-600">
+                    <AuthorText authors={publication.authors} />
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-neutral-500">{publication.venue}</p>
+                </article>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <aside className="surface p-5">
+          <p className="kicker">Research signals</p>
+          <h2 className="mt-3 text-2xl">What the record is starting to say.</h2>
+          <div className="mt-5 space-y-4">
+            {signalStats.map((signal) => (
+              <div key={signal.key} className="rounded-md border border-stone-200 bg-stone-50 p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold text-neutral-950">{signal.label}</div>
+                    <p className="mt-2 text-xs text-neutral-600">{signal.description}</p>
+                  </div>
+                  <span className="shrink-0 text-2xl font-semibold text-neutral-950">{signal.count}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-5 text-xs leading-relaxed text-neutral-500">
+            Signal counts are keyword-assisted summaries for navigation, not formal bibliometric categories.
+          </p>
+        </aside>
       </section>
 
       <section className="grid gap-8 lg:grid-cols-[280px_minmax(0,1fr)]">
