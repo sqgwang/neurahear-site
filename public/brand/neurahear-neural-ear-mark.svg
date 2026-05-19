@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="mark-title mark-desc">
+  <title id="mark-title">NeuraHear neural ear mark</title>
+  <desc id="mark-desc">A refined neural ear symbol for AI-enabled hearing care and digital hearing assessment.</desc>
+  <rect width="128" height="128" rx="28" fill="#171717"/>
+  <path d="M47 95c-22-21-22-62 9-79 32-18 67 20 44 53-8 11-22 15-35 9" fill="none" stroke="#14b8a6" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M60 38c12 2 19 14 14 26-4 8-11 11-20 9" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>
+  <path d="M42 36l38 4M80 40L69 80M42 36l27 44" fill="none" stroke="#a7f3d0" stroke-width="3.5" stroke-linecap="round" opacity="0.55"/>
+  <circle cx="42" cy="36" r="6.5" fill="#d97706"/>
+  <circle cx="80" cy="40" r="6.5" fill="#38bdf8"/>
+  <circle cx="69" cy="80" r="6.5" fill="#f8fafc"/>
+  <path d="M27 91c20-11 40-11 60 0" fill="none" stroke="#14b8a6" stroke-width="5" stroke-linecap="round" opacity="0.75"/>
+</svg>
