@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getAssessmentToolHighlights, getToolStats, toolToneClasses } from "../data/tools";
 
 const waveformBars = [26, 44, 62, 36, 78, 52, 30, 72, 48, 84, 58, 34, 64, 46, 76, 40, 70, 54, 28, 62, 80, 38, 56, 72];
 
@@ -20,12 +21,6 @@ const platformPillars = [
   },
 ];
 
-const assessmentTools = [
-  { name: "iDIN", detail: "Integrated digit-in-noise testing", status: "Live" },
-  { name: "Digit Optimization", detail: "PI functions and correction levels", status: "Live" },
-  { name: "HFEQ-Mandarin", detail: "Everyday functioning PROM", status: "Validation" },
-];
-
 function ArrowIcon() {
   return (
     <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -35,6 +30,9 @@ function ArrowIcon() {
 }
 
 export default function PlatformResearchPanel() {
+  const assessmentTools = getAssessmentToolHighlights();
+  const toolStats = getToolStats();
+
   return (
     <div className="relative overflow-hidden rounded-lg border border-stone-200 bg-white shadow-[0_18px_60px_rgba(23,23,23,0.08)]">
       <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-teal-600 via-sky-500 to-amber-500" />
@@ -94,7 +92,7 @@ export default function PlatformResearchPanel() {
                   iDIN and HFEQ-Mandarin are early examples of a broader assessment platform.
                 </p>
               </div>
-              <span className="text-3xl font-semibold text-neutral-950">3</span>
+              <span className="text-3xl font-semibold text-neutral-950">{toolStats.platformHighlightCount}</span>
             </div>
 
             <div className="mt-5 space-y-2">
@@ -105,7 +103,7 @@ export default function PlatformResearchPanel() {
                       <div className="text-sm font-semibold text-neutral-950">{tool.name}</div>
                       <div className="mt-1 break-words text-xs text-neutral-500">{tool.detail}</div>
                     </div>
-                    <span className="shrink-0 rounded-full border border-teal-200 bg-teal-50 px-2 py-1 text-[11px] font-semibold text-teal-800">
+                    <span className={`shrink-0 rounded-full border px-2 py-1 text-[11px] font-semibold ${toolToneClasses[tool.tone]}`}>
                       {tool.status}
                     </span>
                   </div>

@@ -1,12 +1,8 @@
 import PlatformResearchPanel from "./components/PlatformResearchPanel";
 import LatestNews from "./components/LatestNews";
 import Link from "next/link";
-
-const stats = [
-  { value: "27", label: "Scholar-indexed outputs" },
-  { value: "3", label: "Assessment pathways" },
-  { value: "9", label: "DIN language tracks" },
-];
+import { getPublicationStats } from "./data/publications";
+import { getToolStats } from "./data/tools";
 
 const focusAreas = [
   {
@@ -43,6 +39,14 @@ function WaveIcon() {
 }
 
 export default function Home() {
+  const publicationStats = getPublicationStats();
+  const toolStats = getToolStats();
+  const stats = [
+    { value: String(publicationStats.total), label: "Scholar-indexed outputs" },
+    { value: String(toolStats.assessmentPathwayCount), label: "Assessment pathways" },
+    { value: "9", label: "DIN language tracks" },
+  ];
+
   return (
     <div className="space-y-16">
       <section className="grid min-h-[calc(100vh-220px)] gap-10 lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] lg:items-center">
