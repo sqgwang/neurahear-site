@@ -31,10 +31,6 @@ jobs:
       - name: Build static site
         run: npm run build
       
-      - name: Create deployment package
-        run: |
-          tar -czf site.tar.gz out
-      
       - name: Configure SSH
         shell: bash
         env:
@@ -63,7 +59,13 @@ jobs:
           : "${SSH_HOST:?Missing SSH_HOST secret}"
           : "${SSH_USER:?Missing SSH_USER secret}"
           SSH_PORT="${SSH_PORT:-22}"
-          scp -i ~/.ssh/neurahear_deploy_key -P "$SSH_PORT" -o BatchMode=yes site.tar.gz "$SSH_USER@$SSH_HOST:/tmp/site.tar.gz"
+          UPLOAD_DIR="/tmp/neurahear-site-upload"
+          SSH_CMD="ssh -i $HOME/.ssh/neurahear_deploy_key -p $SSH_PORT -o BatchMode=yes"
+          $SSH_CMD "$SSH_USER@$SSH_HOST" "mkdir -p '$UPLOAD_DIR'"
+          rsync -az --delete \
+            --exclude="tools/digit-in-noise-test/data/**" \
+            -e "$SSH_CMD" \
+            out/ "$SSH_USER@$SSH_HOST:$UPLOAD_DIR/"
       
       - name: Deploy static site to Nginx
         shell: bash
@@ -97,6 +99,7 @@ jobs:
           RELEASE_ID="$SHORT_SHA-$(date +%Y%m%d_%H%M%S)"
           RELEASE_DIR="$RELEASES_DIR/$RELEASE_ID"
           NEXT_LINK="$STATIC_PARENT/current.next"
+          UPLOAD_DIR="/tmp/neurahear-site-upload"
           PREVIOUS_TARGET=""
           LEGACY_OUT=""
 
@@ -117,13 +120,10 @@ jobs:
           find "$DIN_BACKUP_DIR" -name "din-data-predeploy-*.tar.gz" -mtime +30 -delete
           echo "DIN pre-deploy backup created: $PREDEPLOY_BACKUP"
 
-          echo "=== Extracting files to temp ==="
-          TEMP_DIR=$(mktemp -d /tmp/neurahear-static-XXXX)
-          tar -xzf /tmp/site.tar.gz -C "$TEMP_DIR"
-          rm -f /tmp/site.tar.gz
-          test -f "$TEMP_DIR/out/index.html"
-          test -d "$TEMP_DIR/out/_next/static"
-          test -f "$TEMP_DIR/out/tools/digit-in-noise-test/audio/american_english/corrections.json"
+          echo "=== Verifying uploaded static files ==="
+          test -f "$UPLOAD_DIR/index.html"
+          test -d "$UPLOAD_DIR/_next/static"
+          test -f "$UPLOAD_DIR/tools/digit-in-noise-test/audio/american_english/corrections.json"
 
           echo "=== Backing up current static output ==="
           mkdir -p "$OUT_BACKUP_DIR"
@@ -138,7 +138,7 @@ jobs:
           mkdir -p "$RELEASE_DIR"
           rsync -a --no-owner --no-group --delete \
             --exclude="tools/digit-in-noise-test/data/**" \
-            "$TEMP_DIR/out/" "$RELEASE_DIR/"
+            "$UPLOAD_DIR/" "$RELEASE_DIR/"
           test -f "$RELEASE_DIR/index.html"
           test -d "$RELEASE_DIR/_next/static"
           test -f "$RELEASE_DIR/tools/digit-in-noise-test/audio/american_english/corrections.json"
@@ -195,14 +195,13 @@ jobs:
           test -f "$STATIC_ROOT/tools/digit-in-noise-test/audio/american_english/corrections.json"
           wc -l "$DIN_DATA_DIR/results.jsonl"
 
-          echo "=== Cleaning up old releases and temp directory ==="
+          echo "=== Cleaning up old releases ==="
           find "$RELEASES_DIR" -mindepth 1 -maxdepth 1 -type d -printf "%T@ %p\n" \
             | sort -rn \
             | tail -n +8 \
             | cut -d' ' -f2- \
             | xargs -r rm -rf
           find "$STATIC_PARENT" -maxdepth 1 -type d -name "current-legacy-*" -mtime +14 -exec rm -rf {} +
-          rm -rf "$TEMP_DIR"
 
           echo "=== Deployment complete ==="
           REMOTE
