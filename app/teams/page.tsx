@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { members, slugify, initials } from "@/data/team";
-import { createPageMetadata } from "../data/site";
+import { createPageMetadata, siteConfig } from "../data/site";
 
 export const metadata = createPageMetadata({
   title: "Team",
@@ -9,17 +9,41 @@ export const metadata = createPageMetadata({
   path: "/teams/",
 });
 
+const identitySignals = [
+  "Scholar-linked publication record",
+  "Digital assessment and PROM development",
+  "AI-enabled hearing-care research focus",
+] as const;
+
 export default function TeamsPage() {
   return (
     <div className="space-y-10">
-      <section className="max-w-3xl">
-        <div className="eyebrow">People</div>
-        <h1>Our Team</h1>
-        <p className="mt-5 text-lg text-neutral-700">Researchers and collaborators advancing hearing science and digital audiology.</p>
+      <section className="grid gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(320px,0.55fr)] lg:items-end">
+        <div className="max-w-3xl">
+          <div className="eyebrow">People</div>
+          <h1>Our Team</h1>
+          <p className="mt-5 text-lg text-neutral-700">
+            Researchers and collaborators advancing hearing science, AI-enabled hearing care, and digital audiology.
+          </p>
+        </div>
+        <div className="surface p-5">
+          <p className="kicker">Research identity</p>
+          <p className="mt-3 text-sm text-neutral-700">
+            The platform is maintained as a research-facing site. Publication records, tool status labels, and contact routes are kept visible for traceability.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            {identitySignals.map((signal) => (
+              <span key={signal} className="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1 text-xs font-semibold text-neutral-600">
+                {signal}
+              </span>
+            ))}
+          </div>
+        </div>
       </section>
 
       <ul className="grid grid-cols-1 gap-5 p-0 sm:grid-cols-2 lg:grid-cols-3">
         {members.map((member) => {
+          const hasDirectContact = Boolean(member.email);
           const content = (
             <>
               {member.photo ? (
@@ -40,6 +64,14 @@ export default function TeamsPage() {
               <h3 className="text-xl transition-colors group-hover:text-brand-primary">{member.name}</h3>
               {member.title && <div className="mt-2 text-sm font-medium text-neutral-600">{member.title}</div>}
               {member.affiliation && <div className="mt-1 text-sm text-neutral-500">{member.affiliation}</div>}
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
+                {member.googleScholar ? (
+                  <span className="rounded-full border border-teal-200 bg-teal-50 px-2.5 py-1 text-xs font-semibold text-teal-800">Scholar profile</span>
+                ) : null}
+                {hasDirectContact ? (
+                  <span className="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1 text-xs font-semibold text-neutral-600">Direct contact</span>
+                ) : null}
+              </div>
             </>
           );
 
@@ -55,7 +87,7 @@ export default function TeamsPage() {
                   {content}
                 </a>
               ) : (
-                <Link href={`/teams/${slugify(member.name)}`} className="card group block h-full p-4 text-center no-underline">
+                <Link href={`/teams/${slugify(member.name)}/`} className="card group block h-full p-4 text-center no-underline">
                   {content}
                 </Link>
               )}
@@ -63,6 +95,26 @@ export default function TeamsPage() {
           );
         })}
       </ul>
+
+      <section className="grid gap-4 lg:grid-cols-3">
+        <div className="surface p-5 lg:col-span-2">
+          <p className="kicker">Platform responsibility</p>
+          <h2 className="mt-3 text-2xl">Tools should stay connected to the people and publications behind them.</h2>
+          <p className="mt-4 text-sm text-neutral-700">
+            NeuraHear is growing as a digital hearing assessment platform, so each public tool needs clear ownership, validation status, data boundaries,
+            and a route for research enquiries.
+          </p>
+        </div>
+        <div className="surface p-5">
+          <p className="kicker">Contact</p>
+          <p className="mt-3 text-sm text-neutral-700">
+            For collaboration or study workflow questions, contact the group at {siteConfig.email}.
+          </p>
+          <Link href="/contact/" className="btn-secondary mt-5">
+            Contact page
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }

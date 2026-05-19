@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { toolItems, toolStatusLegend, toolToneClasses } from "../data/tools";
 import { createPageMetadata } from "../data/site";
 
@@ -103,6 +104,21 @@ export default function Tools() {
           <p className="mt-3 text-sm text-neutral-700">
             Study-specific tools can remain URL-only until protocols, consent language, and review forms are finalized.
           </p>
+        </div>
+      </section>
+
+      <section className="surface p-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="max-w-3xl">
+            <p className="kicker">Study planning</p>
+            <h2 className="mt-3 text-2xl">Need a research workflow instead of a public demo?</h2>
+            <p className="mt-3 text-sm text-neutral-700">
+              Contact the group before using server-backed tools in a study so language versioning, calibration, export format, and backup expectations are clear.
+            </p>
+          </div>
+          <Link href="/contact/" className="btn shrink-0">
+            Contact us
+          </Link>
         </div>
       </section>
     </div>

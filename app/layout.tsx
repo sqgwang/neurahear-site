@@ -52,8 +52,8 @@ const navItems = [
   { href: "/projects/", label: "Projects" },
   { href: "/publications/", label: "Publications" },
   { href: "/news/", label: "News" },
-  { href: "/seminars/", label: "Seminars" },
   { href: "/tools/", label: "Tools" },
+  { href: "/contact/", label: "Contact" },
 ];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -63,15 +63,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     name: siteConfig.name,
     alternateName: siteConfig.shortName,
     url: siteConfig.url,
+    email: `mailto:${siteConfig.email}`,
     logo: absoluteUrl("/brand/neurahear-neural-ear-logo.svg"),
     parentOrganization: {
       "@type": "CollegeOrUniversity",
-      name: "The University of Hong Kong",
+      name: siteConfig.institution,
       url: "https://www.hku.hk/",
+    },
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "Research enquiries",
+      email: siteConfig.email,
+      availableLanguage: ["English", "Chinese"],
     },
     sameAs: [
       absoluteUrl("/publications/"),
       absoluteUrl("/tools/"),
+      absoluteUrl("/contact/"),
     ],
   };
 
@@ -117,10 +125,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="container py-8">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <p className="text-sm text-neutral-500">© 2026 HK Audiology Group / The University of Hong Kong</p>
-              <div className="flex gap-4 text-sm text-neutral-500">
+              <div className="flex flex-wrap gap-4 text-sm text-neutral-500">
                 <Link href="/publications/" className="hover:text-neutral-950 transition-colors">Publications</Link>
                 <Link href="/news/" className="hover:text-neutral-950 transition-colors">News</Link>
+                <Link href="/seminars/" className="hover:text-neutral-950 transition-colors">Seminars</Link>
                 <Link href="/tools/" className="hover:text-neutral-950 transition-colors">Assessment tools</Link>
+                <Link href="/contact/" className="hover:text-neutral-950 transition-colors">Contact</Link>
               </div>
             </div>
           </div>
