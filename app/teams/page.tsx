@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { members, slugify, initials } from "@/data/team";
 
 export default function TeamsPage() {
@@ -15,11 +16,13 @@ export default function TeamsPage() {
           const content = (
             <>
               {member.photo ? (
-                <div className="relative mb-4 overflow-hidden rounded-lg bg-stone-100">
-                  <img
+                <div className="relative mb-4 aspect-square overflow-hidden rounded-lg bg-stone-100">
+                  <Image
                     src={`/images/teams/${member.photo}`}
                     alt={`${member.name} photo`}
-                    className="aspect-square w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    fill
+                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 </div>
               ) : (

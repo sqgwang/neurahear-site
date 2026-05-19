@@ -51,6 +51,8 @@ export default function QuantumAcoustics() {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingProgress, setRecordingProgress] = useState(0);
   const [snapshotParticles, setSnapshotParticles] = useState<Particle[]>([]);
+  const isRecordingRef = useRef(isRecording);
+  const snapshotParticlesRef = useRef(snapshotParticles);
   const recordingRef = useRef<{ count: number; sums: Float32Array } | null>(null);
   // History for Time-based visualization (Flow mode)
   const historyRef = useRef<Uint8Array[]>([]);
@@ -122,6 +124,14 @@ export default function QuantumAcoustics() {
     link.href = canvasRef.current.toDataURL('image/png');
     link.click();
   };
+
+  useEffect(() => {
+    isRecordingRef.current = isRecording;
+  }, [isRecording]);
+
+  useEffect(() => {
+    snapshotParticlesRef.current = snapshotParticles;
+  }, [snapshotParticles]);
 
   // Auto-cycle modes
   useEffect(() => {
@@ -199,7 +209,7 @@ export default function QuantumAcoustics() {
         analyser.getByteFrequencyData(frequencyData);
         
         // Recording Logic
-        if (isRecording && recordingRef.current) {
+        if (isRecordingRef.current && recordingRef.current) {
             const rec = recordingRef.current;
             for(let i = 0; i < Math.min(rec.sums.length, bufferLength); i++) {
                 rec.sums[i] += frequencyData[i];
@@ -299,7 +309,7 @@ export default function QuantumAcoustics() {
       // --- 3D MODES ---
       if (['galaxy', 'warp', 'grid', 'snapshot', 'neural', 'blackhole', 'dna', 'flow', 'cymatic'].includes(mode)) {
         
-        const currentParticles = mode === 'snapshot' ? snapshotParticles : particles;
+        const currentParticles = mode === 'snapshot' ? snapshotParticlesRef.current : particles;
         const projectedParticles: {x: number, y: number, z: number, size: number, color: string, alpha: number}[] = [];
 
         currentParticles.forEach((p, i) => {

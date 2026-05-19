@@ -2,158 +2,12 @@
 const express = require('express');
 const path = require('path');
 const http = require('http');
-const fs = require('fs');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Increase payload limit for image uploads
+// Keep a generous payload limit for proxied API requests.
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-
-// --- Persistent Storage Setup ---
-const STORAGE_DIR = path.join(__dirname, 'server-storage');
-const UPLOADS_DIR = path.join(STORAGE_DIR, 'uploads');
-const DATA_DIR = path.join(STORAGE_DIR, 'data');
-const DB_FILE = path.join(DATA_DIR, 'zhanan-records.json');
-
-// Ensure directories exist
-[STORAGE_DIR, UPLOADS_DIR, DATA_DIR].forEach(dir => {
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-});
-
-// Initialize DB file if not exists
-if (!fs.existsSync(DB_FILE)) {
-    fs.writeFileSync(DB_FILE, JSON.stringify([]));
-}
-
-// Serve uploaded files
-app.use('/uploads', express.static(UPLOADS_DIR));
-
-// --- API Routes for Zhanan Page ---
-
-// Helper to safely read DB
-const readDb = () => {
-    try {
-        if (!fs.existsSync(DB_FILE)) {
-            return [];
-        }
-        const content = fs.readFileSync(DB_FILE, 'utf8');
-        if (!content.trim()) return [];
-        return JSON.parse(content);
-    } catch (err) {
-        console.error('Error reading DB:', err);
-        return [];
-    }
-};
-
-// Helper to safely write DB
-const writeDb = (data) => {
-    try {
-        fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
-        return true;
-    } catch (err) {
-        console.error('Error writing DB:', err);
-        return false;
-    }
-};
-
-// Upload Image Endpoint
-app.post('/zhanan-api/upload', (req, res) => {
-    try {
-        const { image } = req.body;
-        if (!image || !image.startsWith('data:image')) {
-            return res.status(400).json({ error: 'Invalid image data' });
-        }
-        
-        const matches = image.match(/^data:image\/([A-Za-z-+\/]+);base64,(.+)$/);
-        if (!matches) {
-            return res.status(400).json({ error: 'Invalid base64 format' });
-        }
-
-        const ext = matches[1].replace('jpeg', 'jpg'); // Normalize jpeg
-        const buffer = Buffer.from(matches[2], 'base64');
-        const filename = `img_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${ext}`;
-        const filePath = path.join(UPLOADS_DIR, filename);
-        
-        fs.writeFileSync(filePath, buffer);
-        res.json({ success: true, url: `/uploads/${filename}` });
-    } catch (err) {
-        console.error('Upload error:', err);
-        res.status(500).json({ error: 'Upload failed: ' + err.message });
-    }
-});
-
-// Get all records
-app.get('/zhanan-api/records', (req, res) => {
-    const data = readDb();
-    res.json(data);
-});
-
-// Add a new record
-app.post('/zhanan-api/records', (req, res) => {
-    try {
-        const newRecord = req.body;
-        const data = readDb();
-        
-        // Handle Image Upload (Base64 -> File) - Legacy support or direct upload
-        if (newRecord.image && newRecord.image.startsWith('data:image')) {
-            const matches = newRecord.image.match(/^data:image\/([A-Za-z-+\/]+);base64,(.+)$/);
-            if (matches) {
-                const ext = matches[1].replace('jpeg', 'jpg');
-                const buffer = Buffer.from(matches[2], 'base64');
-                const filename = `img_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${ext}`;
-                const filePath = path.join(UPLOADS_DIR, filename);
-                
-                fs.writeFileSync(filePath, buffer);
-                
-                // Replace base64 with URL path
-                newRecord.image = `/uploads/${filename}`;
-            }
-        }
-
-        const updatedData = [newRecord, ...data];
-        if (writeDb(updatedData)) {
-            res.json({ success: true, record: newRecord });
-        } else {
-            res.status(500).json({ error: 'Failed to write to database' });
-        }
-    } catch (err) {
-        console.error('Save record error:', err);
-        res.status(500).json({ error: 'Failed to save record: ' + err.message });
-    }
-});
-
-// Delete a record
-app.delete('/zhanan-api/records/:id', (req, res) => {
-    try {
-        const { id } = req.params;
-        const data = readDb();
-        
-        // Find record to delete image if exists
-        const recordToDelete = data.find(r => r.id === id);
-        if (recordToDelete && recordToDelete.image && recordToDelete.image.startsWith('/uploads/')) {
-            const filename = path.basename(recordToDelete.image);
-            const fullPath = path.join(UPLOADS_DIR, filename);
-            if (fs.existsSync(fullPath)) {
-                try {
-                    fs.unlinkSync(fullPath);
-                } catch (e) {
-                    console.error('Failed to delete image file:', e);
-                }
-            }
-        }
-
-        const updatedData = data.filter(r => r.id !== id);
-        if (writeDb(updatedData)) {
-            res.json({ success: true });
-        } else {
-            res.status(500).json({ error: 'Failed to update database' });
-        }
-    } catch (err) {
-        console.error('Delete error:', err);
-        res.status(500).json({ error: 'Failed to delete record: ' + err.message });
-    }
-});
 
 // Manual proxy for /api requests using http module
 app.all('/api/*', (req, res) => {
@@ -202,9 +56,9 @@ app.use(express.static(path.join(__dirname, 'out')));
 // Specific route for digit-in-noise-test
 app.use('/tools/digit-in-noise-test', express.static(path.join(__dirname, 'out/tools/digit-in-noise-test')));
 
-// For any other routes, serve index.html
+// For any other routes, serve the generated not-found page.
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'out/index.html'));
+  res.status(404).sendFile(path.join(__dirname, 'out/404.html'));
 });
 
 app.listen(port, () => {

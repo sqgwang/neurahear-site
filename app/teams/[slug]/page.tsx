@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { members, slugify } from '@/data/team'
 import { notFound } from 'next/navigation'
 
@@ -22,10 +23,13 @@ export default async function MemberPage({ params }: { params: Promise<{ slug: s
         <div className="flex flex-col md:flex-row gap-8 mb-12 p-8 bg-gradient-to-br from-slate-50 to-white rounded-lg border border-slate-200 shadow-lg relative overflow-hidden">
           
           <div className="relative">
-            <img
+            <Image
               src="/images/teams/shang_wang.jpg"
               alt="Shang Wang"
-              className="w-64 h-64 rounded-lg object-cover shadow-xl ring-4 ring-white"
+              width={256}
+              height={256}
+              priority
+              className="h-64 w-64 rounded-lg object-cover shadow-xl ring-4 ring-white"
             />
           </div>
           <div className="flex-1 relative z-10">
@@ -194,10 +198,13 @@ export default async function MemberPage({ params }: { params: Promise<{ slug: s
         <div className="flex flex-col md:flex-row gap-8 mb-12 p-8 bg-gradient-to-br from-slate-50 to-white rounded-lg border border-slate-200 shadow-lg relative overflow-hidden">
           
           <div className="relative">
-            <img
+            <Image
               src="/images/teams/dicky_mo.jpg"
               alt="Dicky Mo"
-              className="w-64 h-64 rounded-lg object-cover shadow-xl ring-4 ring-white"
+              width={256}
+              height={256}
+              priority
+              className="h-64 w-64 rounded-lg object-cover shadow-xl ring-4 ring-white"
             />
           </div>
           <div className="flex-1 relative z-10">
