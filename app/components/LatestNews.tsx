@@ -1,47 +1,6 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
-import { getRecentNews, type NewsItem, RECENT_NEWS_MONTHS } from "../data/news";
-
-const typeClasses = {
-  Publication: "border-sky-200 bg-sky-50 text-sky-800",
-  Tool: "border-teal-200 bg-teal-50 text-teal-800",
-  Conference: "border-amber-200 bg-amber-50 text-amber-800",
-  Seminar: "border-rose-200 bg-rose-50 text-rose-800",
-  "Group update": "border-stone-200 bg-stone-50 text-neutral-700",
-};
-
-function formatDate(date: string) {
-  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(`${date}T00:00:00`));
-}
-
-function NewsLink({ href, children, className }: { href: string; children: ReactNode; className: string }) {
-  if (href.startsWith("http")) {
-    return (
-      <a href={href} target="_blank" rel="noopener noreferrer" className={className}>
-        {children}
-      </a>
-    );
-  }
-
-  return (
-    <Link href={href} className={className}>
-      {children}
-    </Link>
-  );
-}
-
-function NewsMeta({ item }: { item: NewsItem }) {
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${typeClasses[item.type]}`}>
-        {item.type}
-      </span>
-      <time className="text-xs font-semibold text-neutral-500" dateTime={item.date}>
-        {item.dateLabel || formatDate(item.date)}
-      </time>
-    </div>
-  );
-}
+import { getRecentNews, RECENT_NEWS_MONTHS } from "../data/news";
+import { NewsLink, NewsMeta } from "./NewsUi";
 
 export default function LatestNews() {
   const recentNews = getRecentNews();
@@ -75,7 +34,7 @@ export default function LatestNews() {
               <li key={item.id} className="px-4 py-3 md:px-5">
                 <article className="grid gap-2 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
                   <div className="min-w-0">
-                    <NewsMeta item={item} />
+                    <NewsMeta item={item} compact />
                     <h4 className="mt-2 text-sm font-semibold leading-snug text-neutral-950">{item.title}</h4>
                     <p className="mt-1 text-xs leading-relaxed text-neutral-600">{item.summary}</p>
                   </div>
@@ -98,7 +57,7 @@ export default function LatestNews() {
             {groupUpdates.map((item) => (
               <li key={item.id} className="px-4 py-3">
                 <article>
-                  <NewsMeta item={item} />
+                  <NewsMeta item={item} compact />
                   <h4 className="mt-2 text-sm font-semibold leading-snug text-neutral-950">{item.title}</h4>
                   {item.href ? (
                     <NewsLink href={item.href} className="mt-2 inline-flex text-xs font-semibold text-brand-primary hover:text-neutral-950">
