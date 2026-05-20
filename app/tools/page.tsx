@@ -33,6 +33,9 @@ export default function Tools() {
           <p className="mt-3 text-sm text-neutral-700">
             Each tool should make its purpose, data handling, export format, and validation status visible before a researcher or participant begins.
           </p>
+          <Link href="/tools/version-log/" className="btn-secondary mt-5">
+            View version log
+          </Link>
         </div>
       </section>
 
@@ -104,6 +107,9 @@ export default function Tools() {
           <p className="mt-3 text-sm text-neutral-700">
             Study-specific tools can remain URL-only until protocols, consent language, and review forms are finalized.
           </p>
+          <Link href="/tools/version-log/" className="link mt-4 inline-flex text-sm font-semibold">
+            See version notes
+          </Link>
         </div>
       </section>
 

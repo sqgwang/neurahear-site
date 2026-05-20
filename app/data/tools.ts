@@ -1,5 +1,6 @@
 export type ToolStatus = "Live" | "In validation" | "In development" | "Restricted";
 export type ToolTone = "teal" | "amber" | "sky" | "neutral";
+export type ReleaseStatus = "Released" | "Baseline" | "Planned";
 
 export type ToolItem = {
   title: string;
@@ -17,6 +18,19 @@ export type ToolItem = {
   version: string;
   assessmentPathway: boolean;
   platformHighlight: boolean;
+};
+
+export type ToolReleaseNote = {
+  date: string;
+  title: string;
+  tool: string;
+  version: string;
+  status: ReleaseStatus;
+  tone: ToolTone;
+  summary: string;
+  changes: string[];
+  dataBoundary: string;
+  href?: string;
 };
 
 export const toolItems: ToolItem[] = [
@@ -106,6 +120,75 @@ export const toolStatusLegend: Array<{ label: ToolStatus; text: string }> = [
   { label: "In development", text: "Research direction is active, public workflow is still being designed." },
   { label: "Restricted", text: "URL-only study workflow, not listed until protocols are finalized." },
 ];
+
+export const toolReleaseNotes: ToolReleaseNote[] = [
+  {
+    date: "2026-05-20",
+    title: "Public version log established",
+    tool: "NeuraHear platform",
+    version: "Site release 2026.05.20",
+    status: "Released",
+    tone: "teal",
+    summary:
+      "A public version and credibility layer now records the current tool baseline, release notes, contact route, and data-boundary statements.",
+    changes: [
+      "Added a research contact page and connected it to navigation, footer, sitemap, and structured data.",
+      "Added tool study-planning cues so researchers can check versioning, calibration, export format, and backup expectations before use.",
+      "Established this version log as the place to record future tool-facing releases.",
+    ],
+    dataBoundary: "Static website content only; the iDIN server data directory and study records are not modified by this release.",
+    href: "/contact/",
+  },
+  {
+    date: "2026-05-20",
+    title: "Current assessment-tool baseline captured",
+    tool: "Assessment tools",
+    version: "Baseline 2026.05",
+    status: "Baseline",
+    tone: "amber",
+    summary:
+      "The public tool registry now makes each tool's stage, validation status, data handling, outputs, and version note visible from the Tools page.",
+    changes: [
+      "iDIN remains the operational server-backed speech-in-noise workflow.",
+      "Digit Optimization is listed as a live stimulus-development workflow with noise calibration enabled.",
+      "HFEQ-Mandarin is listed as an in-validation PROM research preview.",
+    ],
+    dataBoundary: "The baseline is a documentation snapshot; individual tool behavior remains governed by each tool page and deployment route.",
+    href: "/tools/",
+  },
+  {
+    date: "2026-05-20",
+    title: "Discovery metadata and sitemap hardened",
+    tool: "NeuraHear platform",
+    version: "SEO release 2026.05",
+    status: "Released",
+    tone: "sky",
+    summary:
+      "The site now publishes route metadata, canonical URLs, robots rules, sitemap entries, and social-card metadata for better indexing and sharing.",
+    changes: [
+      "Added site-wide metadata defaults and page-level metadata helpers.",
+      "Added robots and sitemap generation for primary public routes.",
+      "Added public social-card metadata for shared links.",
+    ],
+    dataBoundary: "Static discovery metadata only; no participant records or test data are touched.",
+    href: "/sitemap.xml",
+  },
+];
+
+export const versionLogPrinciples = [
+  {
+    label: "Document the current baseline",
+    text: "Each public research tool should show its stage, status, data handling, outputs, and version note before use.",
+  },
+  {
+    label: "Separate interface updates from study data",
+    text: "Static site releases should not overwrite server-backed records such as iDIN participant results.",
+  },
+  {
+    label: "Record meaningful behavior changes",
+    text: "Calibration, stimuli, scoring, export format, and backend changes should be logged before a tool is used for new data collection.",
+  },
+] as const;
 
 export function getToolStats(items: ToolItem[] = toolItems) {
   return {
