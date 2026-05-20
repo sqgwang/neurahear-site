@@ -36,6 +36,7 @@ export const primarySiteRoutes = [
   { path: "/teams/dicky-mo/", priority: 0.6, changeFrequency: "monthly" },
   { path: "/contact/", priority: 0.7, changeFrequency: "monthly" },
   { path: "/tools/", priority: 0.9, changeFrequency: "weekly" },
+  { path: "/tools/study-workflow/", priority: 0.7, changeFrequency: "monthly" },
   { path: "/tools/version-log/", priority: 0.6, changeFrequency: "monthly" },
   { path: "/tools/hfeq-mandarin/", priority: 0.7, changeFrequency: "monthly" },
   { path: "/tools/digit-in-noise-test/", priority: 0.7, changeFrequency: "monthly" },

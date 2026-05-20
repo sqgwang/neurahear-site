@@ -142,8 +142,8 @@ export default function ToolVersionLogPage() {
               Calibration flow, audio stimuli, scoring, export fields, server routes, and backup assumptions should be recorded here before a protocol uses a new version.
             </p>
           </div>
-          <Link href="/contact/" className="btn shrink-0">
-            Study planning
+          <Link href="/tools/study-workflow/" className="btn shrink-0">
+            Study workflow
           </Link>
         </div>
       </section>

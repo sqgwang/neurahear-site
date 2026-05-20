@@ -36,6 +36,9 @@ export default function Tools() {
           <Link href="/tools/version-log/" className="btn-secondary mt-5">
             View version log
           </Link>
+          <Link href="/tools/study-workflow/" className="link mt-4 inline-flex text-sm font-semibold">
+            Study workflow guide
+          </Link>
         </div>
       </section>
 
@@ -122,9 +125,14 @@ export default function Tools() {
               Contact the group before using server-backed tools in a study so language versioning, calibration, export format, and backup expectations are clear.
             </p>
           </div>
-          <Link href="/contact/" className="btn shrink-0">
-            Contact us
-          </Link>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Link href="/tools/study-workflow/" className="btn shrink-0">
+              Open guide
+            </Link>
+            <Link href="/contact/" className="btn-secondary shrink-0">
+              Contact us
+            </Link>
+          </div>
         </div>
       </section>
     </div>
