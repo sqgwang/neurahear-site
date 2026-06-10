@@ -8,7 +8,7 @@
     <title data-i18n="infoTitle">Participant Information</title>
 
     <!-- Shared styles for the iDIN pages. -->
-    <link rel="stylesheet" href="css/styles.css?v=idin-20260610-calibration-ready-state-2">
+    <link rel="stylesheet" href="css/styles.css?v=idin-20260610-readiness-check-1">
   </head>
 
   <body>
@@ -80,6 +80,25 @@
           </select>
         </div>
 
+        <fieldset class="form-row setup-card readiness-card">
+          <legend data-i18n="readinessTitle">Before continuing</legend>
+          <p class="note" data-i18n="readinessIntro">Please confirm the testing setup. These checks help keep the online test data reliable.</p>
+          <div class="readiness-grid">
+            <label class="readiness-option">
+              <input type="checkbox" name="readinessCheck" value="headphones" data-readiness-key="headphones">
+              <span data-i18n="readinessHeadphones">I am using headphones or earphones.</span>
+            </label>
+            <label class="readiness-option">
+              <input type="checkbox" name="readinessCheck" value="quiet" data-readiness-key="quiet">
+              <span data-i18n="readinessQuiet">I am in a quiet environment.</span>
+            </label>
+            <label class="readiness-option">
+              <input type="checkbox" name="readinessCheck" value="audio" data-readiness-key="audio">
+              <span data-i18n="readinessAudio">My device volume is on and browser audio is allowed.</span>
+            </label>
+          </div>
+        </fieldset>
+
         <fieldset class="form-row setup-card">
           <legend data-i18n="chooseConditions">Select test conditions (check any)</legend>
           <div class="condition-grid">
@@ -108,8 +127,8 @@
       </form>
     </main>
 
-    <script src="js/i18n.js?v=idin-20260610-calibration-ready-state-2"></script>
-    <script src="js/app.js?v=idin-20260610-calibration-ready-state-2"></script>
+    <script src="js/i18n.js?v=idin-20260610-readiness-check-1"></script>
+    <script src="js/app.js?v=idin-20260610-readiness-check-1"></script>
 
     <script>
       // Language initialization.
@@ -134,6 +153,7 @@
         const byId = id => document.getElementById(id);
         const safeSet = (id, v) => { const el = byId(id); if (el) el.value = v; };
         safeSet('pid',''); safeSet('age',''); safeSet('edu',''); safeSet('gender','');
+        document.querySelectorAll('input[name="readinessCheck"]').forEach(cb => cb.checked = false);
         document.querySelectorAll('input[name="testCond"]').forEach(cb => cb.checked = false);
         const randomize = document.getElementById('randomizeConditions');
         if (randomize) randomize.checked = false;
@@ -170,6 +190,8 @@
         const stimLang = document.getElementById('stimLang').value;
         const ageInvalid = isNaN(age) || age < 0 || age > 100;
         const eduInvalid = isNaN(edu) || edu < 0 || edu > 30;
+        const readinessBoxes = Array.from(document.querySelectorAll('input[name="readinessCheck"]'));
+        const missingReadiness = readinessBoxes.find(cb => !cb.checked);
         if (!pid || !gender || ageInvalid || eduInvalid || !stimLang) {
           setSetupMessage(typeof t === 'function' ? t('setupRequired') : 'Please complete required fields (*).', 'warning');
           const firstMissing = !pid
@@ -184,11 +206,17 @@
           if (firstMissing) firstMissing.focus();
           return;
         }
+        if (missingReadiness) {
+          setSetupMessage(typeof t === 'function' ? t('readinessRequired') : 'Please confirm the testing setup before continuing.', 'warning');
+          missingReadiness.focus();
+          return;
+        }
         setSetupMessage('');
         const selected = Array.from(document.querySelectorAll('input[name="testCond"]:checked')).map(i => i.value);
         const conditionOrderOriginal = selected.length ? selected : ['3f'];
         const randomizeConditions = !!document.getElementById('randomizeConditions')?.checked;
         const testConditions = randomizeConditions ? shuffledCopy(conditionOrderOriginal) : conditionOrderOriginal.slice();
+        const readinessChecks = Object.fromEntries(readinessBoxes.map(cb => [cb.dataset.readinessKey || cb.value, !!cb.checked]));
         const userInfo = {
           pid,
           gender,
@@ -196,6 +224,8 @@
           education: edu,
           stimLang,
           testConditions,
+          readinessChecks,
+          readinessConfirmedAt: new Date().toISOString(),
           conditionOrderOriginal,
           randomizeConditions,
           conditionOrderMode: randomizeConditions ? 'randomized_once_at_setup' : 'selected_order',

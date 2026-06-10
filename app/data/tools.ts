@@ -48,7 +48,7 @@ export const toolItems: ToolItem[] = [
     tone: "teal",
     data: "Responses are submitted to the project backend for study use.",
     output: "Participant-level DIN records and server-side study exports.",
-    version: "Calibration ready-state feedback",
+    version: "Pre-test readiness check",
     assessmentPathway: true,
     platformHighlight: true,
   },
@@ -122,6 +122,24 @@ export const toolStatusLegend: Array<{ label: ToolStatus; text: string }> = [
 ];
 
 export const toolReleaseNotes: ToolReleaseNote[] = [
+  {
+    date: "2026-06-10",
+    title: "iDIN pre-test readiness check added",
+    tool: "integrated Digit-in-Noise Test",
+    version: "iDIN 2026.06 readiness-check UX",
+    status: "Released",
+    tone: "teal",
+    summary:
+      "The iDIN setup flow now asks participants to confirm key device and environment conditions before calibration begins.",
+    changes: [
+      "Added required headphone, quiet-environment, and browser-audio readiness confirmations before calibration.",
+      "Stored readiness confirmations and timestamp in participant setup metadata and result meta.",
+      "Added inline validation so participants cannot continue until readiness checks are confirmed.",
+    ],
+    dataBoundary:
+      "Front-end setup metadata changed only; audio files, SNR logic, adaptive scoring, randomization behavior, and existing server-side result records are unchanged.",
+    href: "/tools/digit-in-noise-test/",
+  },
   {
     date: "2026-06-10",
     title: "iDIN calibration audio readiness added",
