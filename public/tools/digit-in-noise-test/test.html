@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <title>iDIN Test</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet" href="css/styles.css?v=idin-20260610-flow-dashboard-ux-1" />
+  <link rel="stylesheet" href="css/styles.css?v=idin-20260610-stable-keypad-4" />
 </head>
 <body>
   <header class="topbar">
@@ -24,8 +24,8 @@
     <div class="progress-row">
       <div id="phaseBadge" class="phase-badge">Practice</div>
       <div id="progress">Trial 0/0</div>
-      <div id="statusMsg" class="note"></div>
     </div>
+    <div id="statusMsg" class="note status-panel" aria-live="polite"></div>
 
     <div class="audiocontrol center">
       <button id="playTrial" class="primary" data-i18n="play">Play</button>
@@ -56,13 +56,12 @@
         <button class="keypad-button" id="clear"
                 data-i18n-title="backspace" title="Backspace"
                 aria-label="Backspace" type="button">
-          <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"
                stroke="currentColor" fill="none" stroke-width="2"
                stroke-linecap="round" stroke-linejoin="round">
-            <!-- 键帽外形（圆角楔形） -->
-            <path d="M20 10h18a4 4 0 0 1 4 4v20a4 4 0 0 1-4 4H20L8 24 20 10Z"></path>
-            <!-- 删除的 X -->
-            <path d="M27 19l10 10M37 19l-10 10"></path>
+            <path d="M20 5H9.5L3 12l6.5 7H20a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Z"></path>
+            <path d="m14 9 4 4"></path>
+            <path d="m18 9-4 4"></path>
           </svg>
         </button>
         <button class="keypad-button" data-val="0">0</button>
@@ -75,8 +74,8 @@
     </div>
   </main>
 
-  <script src="js/i18n.js?v=idin-20260610-flow-dashboard-ux-1"></script>
-  <script src="js/app.js?v=idin-20260610-flow-dashboard-ux-1"></script>
+  <script src="js/i18n.js?v=idin-20260610-stable-keypad-4"></script>
+  <script src="js/app.js?v=idin-20260610-stable-keypad-4"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       const sel = document.getElementById('uiLang');

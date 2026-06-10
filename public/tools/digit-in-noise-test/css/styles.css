@@ -135,12 +135,76 @@ input[type="text"]:focus, input[type="number"]:focus, select:focus {
 
 /* form layout helpers */
 .form-row { margin-bottom: var(--space-md) !important; }
+.setup-form label,
+.setup-form legend {
+  font-weight: 700;
+}
+.required {
+  color: var(--brand-accent);
+  font-weight: 800;
+}
+.setup-card {
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  padding: 14px;
+  background: var(--surface);
+}
+.setup-card legend {
+  padding: 0 6px;
+}
+.condition-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+.condition-option,
+.toggle-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+  background: var(--surface-weak);
+}
+.condition-option input,
+.toggle-row input {
+  flex: 0 0 auto;
+  width: auto;
+  margin-top: 2px;
+  accent-color: var(--ios-blue);
+}
+.toggle-row {
+  margin-top: 12px;
+}
+.inline-message {
+  min-height: 24px;
+  text-align: center;
+}
+.inline-message[data-tone="warning"] {
+  color: #b45309 !important;
+  font-weight: 700;
+}
+.form-actions {
+  display: flex;
+  justify-content: center;
+}
 
 /* ---------- Buttons ---------- */
 button {
   font: inherit;
   cursor: pointer;
   border: none;
+}
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  text-decoration: none;
+  white-space: nowrap;
 }
 .primary {
   background: var(--ios-blue) !important;
@@ -149,22 +213,32 @@ button {
   border-radius: 14px !important;
   padding: 12px 16px !important;
   font-weight: 700;
-  box-shadow: 0 2px 8px rgba(10,132,255,.28);
+  box-shadow: 0 2px 8px rgba(15,118,110,.22);
   transition: transform .06s ease, filter .2s ease, box-shadow .2s ease;
 }
 .primary:hover { filter: saturate(110%); }
-.primary:active { transform: translateY(1px) scale(0.98); box-shadow: 0 1px 4px rgba(10,132,255,.24); }
+.primary:active { transform: translateY(1px) scale(0.98); box-shadow: 0 1px 4px rgba(15,118,110,.20); }
 
 .secondary {
   background: var(--surface-weak) !important;
   color: var(--text) !important;
   border: 1px solid var(--hairline) !important;
-  border-radius: 12px !important;
-  padding: 10px 14px !important;
+  border-radius: 14px !important;
+  padding: 12px 16px !important;
 }
 .small {
   font-size: 0.9rem;
   padding: 8px 11px !important;
+}
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 22px;
+}
+.action-button {
+  width: 204px;
 }
 
 /* ---------- Calibration controls ---------- */
@@ -267,7 +341,14 @@ button {
 }
 
 /* ---------- Progress / badges ---------- */
-.progress-row { display:flex; align-items:center; justify-content:center; gap: var(--space-sm); }
+.progress-row {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  min-height: 34px;
+}
 #progress {
   display: inline-flex;
   align-items: center;
@@ -283,18 +364,55 @@ button {
 .test-page{
   display: grid;
   justify-items: center;
-  row-gap: 14px;
+  row-gap: 10px;
 }
 .test-page #condTitle,
 .test-page #condText,
 .test-page .progress-row,
 .test-page #statusMsg,
 .test-page #playHint{ text-align:center; }
+.test-page #condTitle {
+  min-height: 32px;
+}
+.test-page #condText {
+  min-height: 20px;
+  margin: 0;
+}
 .test-page .audiocontrol{
-  display:flex; flex-direction:column; align-items:center; gap:8px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  gap:8px;
+  min-height: 94px;
 }
 #playTrial, #nextConditionBtn{ display:inline-flex; margin:0 auto; }
-.test-page .keypad{ margin:10px auto 0 auto !important; }
+#playHint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  max-width: 520px;
+}
+.status-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(100%, 560px);
+  min-height: 46px;
+  line-height: 1.35;
+  margin: 0 auto;
+}
+.display.center {
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.test-page .keypad{
+  width: min(100%, 380px);
+  margin:0 auto !important;
+}
 
 /* ---------- Keypad ---------- */
 .keypad { max-width: 380px !important; }
@@ -329,15 +447,23 @@ button {
 
 /* Backspace SVG: single, consistent size + look */
 #clear.keypad-button svg{
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   stroke: currentColor;
   fill: none;
-  stroke-width: 2;
+  stroke-width: 2.25;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 #clear::before { content: none !important; } /* ensure no '⌫' from pseudo */
+#clear.keypad-button {
+  color: var(--text-dim);
+  background: var(--surface-weak);
+}
+#clear.keypad-button:hover {
+  color: var(--text);
+  background: var(--surface);
+}
 
 /* ---------- Input digit boxes (horizontal) ---------- */
 #input.display-box{
@@ -384,8 +510,15 @@ button {
     order: -1;
   }
   .progress-row {
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
+  }
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .action-button {
+    width: 100%;
   }
 }
 

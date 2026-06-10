@@ -8,7 +8,7 @@
     <title data-i18n="infoTitle">Participant Information</title>
 
     <!-- Shared styles for the iDIN pages. -->
-    <link rel="stylesheet" href="css/styles.css?v=idin-20260610-flow-dashboard-ux-1">
+    <link rel="stylesheet" href="css/styles.css?v=idin-20260610-stable-keypad-4">
   </head>
 
   <body>
@@ -25,7 +25,7 @@
     
     <main class="container">
       <h1 class="large-title" data-i18n="infoHeading">Participant Information</h1>
-      <form id="infoForm">
+      <form id="infoForm" class="setup-form" novalidate>
         <div class="form-row">
           <label for="pid">
             <span data-i18n="participantId">Participant ID</span>
@@ -80,15 +80,17 @@
           </select>
         </div>
 
-        <fieldset class="form-row">
+        <fieldset class="form-row setup-card">
           <legend data-i18n="chooseConditions">Select test conditions (check any)</legend>
-          <label><input type="checkbox" name="testCond" value="2f"> 2-digit forward</label><br>
-          <label><input type="checkbox" name="testCond" value="2b"> 2-digit backward</label><br>
-          <label><input type="checkbox" name="testCond" value="3f" checked> 3-digit forward</label><br>
-          <label><input type="checkbox" name="testCond" value="3b" checked> 3-digit backward</label><br>
-          <label><input type="checkbox" name="testCond" value="5f"> 5-digit forward</label><br>
+          <div class="condition-grid">
+            <label class="condition-option"><input type="checkbox" name="testCond" value="2f"> <span>2-digit forward</span></label>
+            <label class="condition-option"><input type="checkbox" name="testCond" value="2b"> <span>2-digit backward</span></label>
+            <label class="condition-option"><input type="checkbox" name="testCond" value="3f" checked> <span>3-digit forward</span></label>
+            <label class="condition-option"><input type="checkbox" name="testCond" value="3b" checked> <span>3-digit backward</span></label>
+            <label class="condition-option"><input type="checkbox" name="testCond" value="5f"> <span>5-digit forward</span></label>
+          </div>
           <p class="note" data-i18n="condHelp">You may select one or more conditions.</p>
-          <label style="display:block; margin-top:12px;">
+          <label class="toggle-row">
             <input type="checkbox" id="randomizeConditions" name="randomizeConditions">
             <span data-i18n="randomizeConditions">Randomize selected condition order</span>
           </label>
@@ -97,7 +99,8 @@
           </p>
         </fieldset>
 
-        <div class="form-row">
+        <div id="setupMsg" class="note inline-message" aria-live="polite"></div>
+        <div class="form-row form-actions">
           <button type="submit" id="proceedBtn" class="primary" data-i18n="proceed">
             Proceed to calibration
           </button>
@@ -105,8 +108,8 @@
       </form>
     </main>
 
-    <script src="js/i18n.js?v=idin-20260610-flow-dashboard-ux-1"></script>
-    <script src="js/app.js?v=idin-20260610-flow-dashboard-ux-1"></script>
+    <script src="js/i18n.js?v=idin-20260610-stable-keypad-4"></script>
+    <script src="js/app.js?v=idin-20260610-stable-keypad-4"></script>
 
     <script>
       // Language initialization.
@@ -149,6 +152,14 @@
         return next;
       }
 
+      function setSetupMessage(message, tone = '') {
+        const msg = document.getElementById('setupMsg');
+        if (!msg) return;
+        msg.textContent = message || '';
+        if (tone) msg.dataset.tone = tone;
+        else delete msg.dataset.tone;
+      }
+
       // Save setup information and continue.
       document.getElementById('infoForm').addEventListener('submit', function(ev){
         ev.preventDefault();
@@ -157,10 +168,23 @@
         const age = parseInt(document.getElementById('age').value, 10);
         const edu = parseInt(document.getElementById('edu').value, 10);
         const stimLang = document.getElementById('stimLang').value;
-        if (!pid || !gender || isNaN(age) || isNaN(edu) || !stimLang) {
-          alert('Please complete required fields (*).');
+        const ageInvalid = isNaN(age) || age < 0 || age > 100;
+        const eduInvalid = isNaN(edu) || edu < 0 || edu > 30;
+        if (!pid || !gender || ageInvalid || eduInvalid || !stimLang) {
+          setSetupMessage(typeof t === 'function' ? t('setupRequired') : 'Please complete required fields (*).', 'warning');
+          const firstMissing = !pid
+            ? document.getElementById('pid')
+            : !gender
+              ? document.getElementById('gender')
+              : ageInvalid
+                ? document.getElementById('age')
+                : eduInvalid
+                  ? document.getElementById('edu')
+                  : document.getElementById('stimLang');
+          if (firstMissing) firstMissing.focus();
           return;
         }
+        setSetupMessage('');
         const selected = Array.from(document.querySelectorAll('input[name="testCond"]:checked')).map(i => i.value);
         const conditionOrderOriginal = selected.length ? selected : ['3f'];
         const randomizeConditions = !!document.getElementById('randomizeConditions')?.checked;

@@ -48,7 +48,7 @@ export const toolItems: ToolItem[] = [
     tone: "teal",
     data: "Responses are submitted to the project backend for study use.",
     output: "Participant-level DIN records and server-side study exports.",
-    version: "Calibration and dashboard UX refinement",
+    version: "Stable keypad and unified iDIN actions",
     assessmentPathway: true,
     platformHighlight: true,
   },
@@ -122,6 +122,25 @@ export const toolStatusLegend: Array<{ label: ToolStatus; text: string }> = [
 ];
 
 export const toolReleaseNotes: ToolReleaseNote[] = [
+  {
+    date: "2026-06-10",
+    title: "iDIN test-page layout stabilized",
+    tool: "integrated Digit-in-Noise Test",
+    version: "iDIN 2026.06 stable keypad UX",
+    status: "Released",
+    tone: "teal",
+    summary:
+      "The iDIN landing and test pages now use more consistent controls, with a stabilized response keypad that stays in place during playback and answer entry.",
+    changes: [
+      "Unified the iDIN landing-page test launch and researcher dashboard controls into one action group.",
+      "Separated changing playback/status messages from the progress row and reserved stable layout space for the test interaction.",
+      "Refined the keypad backspace control with a cleaner icon and clearer button state.",
+      "Bumped the iDIN static asset version so deployed browsers fetch the updated interface.",
+    ],
+    dataBoundary:
+      "Front-end interaction and styling changed only; audio mixing, SNR logic, adaptive scoring, randomization behavior, and existing server-side result records are unchanged.",
+    href: "/tools/digit-in-noise-test/",
+  },
   {
     date: "2026-06-10",
     title: "iDIN calibration and dashboard workflow refined",
