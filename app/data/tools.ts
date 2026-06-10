@@ -48,7 +48,7 @@ export const toolItems: ToolItem[] = [
     tone: "teal",
     data: "Responses are submitted to the project backend for study use.",
     output: "Participant-level DIN records and server-side study exports.",
-    version: "Required participant ID",
+    version: "Sequence-level SNR documented",
     assessmentPathway: true,
     platformHighlight: true,
   },
@@ -122,6 +122,24 @@ export const toolStatusLegend: Array<{ label: ToolStatus; text: string }> = [
 ];
 
 export const toolReleaseNotes: ToolReleaseNote[] = [
+  {
+    date: "2026-06-10",
+    title: "iDIN sequence-level SNR definition documented",
+    tool: "integrated Digit-in-Noise Test",
+    version: "iDIN 2026.06 SNR documentation",
+    status: "Released",
+    tone: "teal",
+    summary:
+      "The iDIN implementation notes now explicitly define SNR matching as a corrected sequence-level operation, not per-digit SNR matching.",
+    changes: [
+      "Documented that digit waveforms are RMS-normalized before digit-specific correction levels are applied.",
+      "Clarified that corrected digits are synthesized into a sequence before global SNR matching against noise.",
+      "Clarified that identical digits may have different realized single-digit SNRs across sequences, by design.",
+    ],
+    dataBoundary:
+      "Documentation and version metadata changed only; the mixing algorithm, adaptive rule, and existing server-side results are unchanged.",
+    href: "/tools/digit-in-noise-test/",
+  },
   {
     date: "2026-06-10",
     title: "iDIN setup and dashboard wording refined",

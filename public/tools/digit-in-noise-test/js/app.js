@@ -4,7 +4,7 @@
 // 重要：不要在此文件覆盖 setUILanguage（i18n.js 提供翻译功能）
 
 /* ========== CONFIG ========== */
-const APP_VERSION = 'iDIN-2026-06-stability-1';
+const APP_VERSION = 'iDIN-2026-06-sequence-snr-docs-1';
 const STEP_DB = 2;
 const START_SNR = 0;
 const SNR_MIN = -30;
@@ -268,6 +268,10 @@ async function renderMixedBufferAndPlay(digits, targetSNR, lang, options = {}) {
     digitMonos.push(mono);
   }
 
+  // SNR definition: digit files are RMS-normalized, digit-specific correction
+  // levels are applied, and then the corrected digits are treated as one speech
+  // sequence for SNR matching. We intentionally do not force each digit to have
+  // the same realized single-digit SNR inside every possible sequence.
   let signalConcLen = 0;
   for (const m of digitMonos) signalConcLen += m.length;
   const signalConc = new Float32Array(signalConcLen);
@@ -291,6 +295,9 @@ async function renderMixedBufferAndPlay(digits, targetSNR, lang, options = {}) {
   const rmsSignal = rms(signalConc) || 1e-9;
   const rmsNoise = rms(noiseSlice) || 1e-9;
   let desiredSignalScale = 1.0;
+  // The global scale below targets the corrected sequence-level SNR. Because it
+  // is a sequence-level adjustment, the same digit can have a slightly different
+  // realized single-digit SNR when it appears in different digit sequences.
   if (noiseEnabled) {
     const currentSNR = 20 * Math.log10(rmsSignal / rmsNoise);
     const delta = targetSNR - currentSNR;
