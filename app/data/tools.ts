@@ -48,7 +48,7 @@ export const toolItems: ToolItem[] = [
     tone: "teal",
     data: "Responses are submitted to the project backend for study use.",
     output: "Participant-level DIN records and server-side study exports.",
-    version: "Calibration confirmation guard",
+    version: "Test-state safeguards",
     assessmentPathway: true,
     platformHighlight: true,
   },
@@ -122,6 +122,25 @@ export const toolStatusLegend: Array<{ label: ToolStatus; text: string }> = [
 ];
 
 export const toolReleaseNotes: ToolReleaseNote[] = [
+  {
+    date: "2026-06-11",
+    title: "iDIN test interaction state safeguards added",
+    tool: "integrated Digit-in-Noise Test",
+    version: "iDIN 2026.06 test-state UX",
+    status: "Released",
+    tone: "teal",
+    summary:
+      "The iDIN test page now uses clearer playback and response states so participants cannot enter responses before audio playback is complete.",
+    changes: [
+      "Added a compact state badge for Ready, Preparing, Listening, Enter response, Saving, and playback error states.",
+      "Blocked physical-keyboard digit entry before playback has finished, matching the disabled on-screen keypad behavior.",
+      "Kept the response keypad visually disabled in ready/error states while preserving Play retry behavior.",
+      "Changed GitHub Actions so pushes run lint/build checks only; production deployment now runs only when the workflow is manually dispatched, avoiding overlap with manual safe deploys.",
+    ],
+    dataBoundary:
+      "Front-end interaction safeguards and deployment trigger behavior changed only; audio files, fixed-noise-gain application, SNR logic, adaptive scoring, randomization behavior, and existing server-side result records are unchanged.",
+    href: "/tools/digit-in-noise-test/",
+  },
   {
     date: "2026-06-11",
     title: "iDIN calibration confirmation guard added",

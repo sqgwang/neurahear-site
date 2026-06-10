@@ -409,6 +409,40 @@ button:disabled,
   background: rgba(217,119,6,.12);
   color: var(--brand-accent);
 }
+.test-state-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 6px 10px;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-dim);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.test-state-badge[data-state="preparing"],
+.test-state-badge[data-state="saving"] {
+  border-color: rgba(217,119,6,.30);
+  background: rgba(217,119,6,.12);
+  color: var(--brand-accent);
+}
+.test-state-badge[data-state="playing"] {
+  border-color: rgba(22,163,74,.28);
+  background: rgba(22,163,74,.12);
+  color: #15803d;
+}
+.test-state-badge[data-state="responding"] {
+  border-color: rgba(15,118,110,.24);
+  background: rgba(15,118,110,.10);
+  color: var(--ios-blue);
+}
+.test-state-badge[data-state="error"] {
+  border-color: rgba(180,83,9,.30);
+  background: rgba(245,158,11,.10);
+  color: #b45309;
+}
 #statusMsg[data-tone="warning"] {
   color: #b45309 !important;
   font-weight: 700;

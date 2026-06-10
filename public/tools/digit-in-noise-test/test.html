@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <title>iDIN Test</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet" href="css/styles.css?v=idin-20260611-calibration-confirmation-1" />
+  <link rel="stylesheet" href="css/styles.css?v=idin-20260611-test-state-machine-1" />
 </head>
 <body>
   <header class="topbar">
@@ -24,6 +24,7 @@
     <div class="progress-row">
       <div id="phaseBadge" class="phase-badge">Practice</div>
       <div id="progress">Trial 0/0</div>
+      <div id="testStateBadge" class="test-state-badge" data-state="ready">Ready</div>
     </div>
     <div id="statusMsg" class="note status-panel" aria-live="polite"></div>
 
@@ -74,8 +75,8 @@
     </div>
   </main>
 
-  <script src="js/i18n.js?v=idin-20260611-calibration-confirmation-1"></script>
-  <script src="js/app.js?v=idin-20260611-calibration-confirmation-1"></script>
+  <script src="js/i18n.js?v=idin-20260611-test-state-machine-1"></script>
+  <script src="js/app.js?v=idin-20260611-test-state-machine-1"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       const sel = document.getElementById('uiLang');

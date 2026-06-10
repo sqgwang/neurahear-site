@@ -96,6 +96,12 @@ Object.assign(translations.english, {
   progressTrial: "Trial {i}/{N}",
   introPractice: "{label} — Practice {p}/3. Click Play to start.",
   introFormal: "{label} — Trial {i}/{N}. Click Play to start.",
+  testStateReady: "Ready",
+  testStatePreparing: "Preparing",
+  testStatePlaying: "Listening",
+  testStateResponding: "Enter response",
+  testStateSaving: "Saving",
+  testStateError: "Check playback",
 
   // condition labels (for UI 展示)
   cond_2f: "2-digit forward",
@@ -169,6 +175,12 @@ Object.assign(translations.mandarin, {
   progressTrial: "第 {i}/{N} 条",
   introPractice: "{label} — 练习 {p}/3。点击“播放”开始。",
   introFormal: "{label} — 第 {i}/{N} 条。点击“播放”开始。",
+  testStateReady: "准备",
+  testStatePreparing: "准备音频",
+  testStatePlaying: "聆听",
+  testStateResponding: "输入答案",
+  testStateSaving: "保存",
+  testStateError: "检查播放",
 
   // condition labels
   cond_2f: "2位顺背",

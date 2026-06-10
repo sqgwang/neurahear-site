@@ -4,7 +4,7 @@
 // 重要：不要在此文件覆盖 setUILanguage（i18n.js 提供翻译功能）
 
 /* ========== CONFIG ========== */
-const APP_VERSION = 'iDIN-2026-06-calibration-confirmation-1';
+const APP_VERSION = 'iDIN-2026-06-test-state-machine-1';
 const STEP_DB = 2;
 const START_SNR = 0;
 const SNR_MIN = -30;
@@ -75,6 +75,7 @@ function setStatusMessage(message, tone = '') {
 
 async function startAfterMessage(message, delayMs = 1200, tone = 'success') {
   setStatusMessage(message, tone);
+  setTestStage('saving');
   setInputLock(true);
   setPlayButtonEnabled(false);
   await sleep(delayMs);
@@ -83,7 +84,9 @@ async function startAfterMessage(message, delayMs = 1200, tone = 'success') {
   } catch (e) {
     console.error('Auto-start failed', e);
     setStatusMessage('Playback failed. Click Play to retry.', 'warning');
+    setTestStage('error');
     setInputLock(false);
+    disableKeypad(true);
     setPlayButtonEnabled(true);
   }
 }
@@ -283,6 +286,39 @@ window.dinUI = window.dinUI || {};
 window.dinUI.inputLocked = false;
 window.dinUI.playbackActive = false;
 window.dinUI.awaitingResponse = false;
+window.dinUI.stage = 'ready';
+
+const TEST_STAGE_KEYS = {
+  ready: 'testStateReady',
+  preparing: 'testStatePreparing',
+  playing: 'testStatePlaying',
+  responding: 'testStateResponding',
+  saving: 'testStateSaving',
+  error: 'testStateError'
+};
+
+const TEST_STAGE_FALLBACKS = {
+  ready: 'Ready',
+  preparing: 'Preparing',
+  playing: 'Listening',
+  responding: 'Enter response',
+  saving: 'Saving',
+  error: 'Check playback'
+};
+
+function setTestStage(stage) {
+  window.dinUI.stage = stage;
+  const badge = document.getElementById('testStateBadge');
+  if (!badge) return;
+  const key = TEST_STAGE_KEYS[stage] || TEST_STAGE_KEYS.ready;
+  const fallback = TEST_STAGE_FALLBACKS[stage] || TEST_STAGE_FALLBACKS.ready;
+  badge.dataset.state = stage;
+  badge.textContent = typeof t === 'function' ? t(key) : fallback;
+}
+
+function canAcceptResponseInput() {
+  return !!(window.dinUI?.awaitingResponse && !window.dinUI?.inputLocked && !window.dinUI?.playbackActive);
+}
 
 function setPlayButtonEnabled(enabled) {
   const playBtn = document.getElementById('playTrial');
@@ -301,9 +337,6 @@ function setInputLock(locked) {
 }
 
 function disableKeypad(disabled) {
-  // 记录锁态
-  window.dinUI.inputLocked = !!disabled;
-
   // 禁用按钮
   document.querySelectorAll('.keypad-button, #clear, #ok').forEach(btn => { if (btn) btn.disabled = !!disabled; });
 
@@ -566,6 +599,7 @@ function showConditionIntro() {
   updateBoxesFromString(''); // 清空方框显示
   window.dinUI.playbackActive = false;
   window.dinUI.awaitingResponse = false;
+  setTestStage('ready');
   setInputLock(false);       // Intro 阶段允许点击 Play，但不允许提前输入（由初始键盘状态决定）
   disableKeypad(true);       // 初始：不让输入，等点击 Play 开始
   setPlayButtonEnabled(true);
@@ -597,6 +631,7 @@ function showConditionIntro() {
 
 /* ========== KEYPAD HELPERS ========== */
 function appendInput(v) {
+  if (!canAcceptResponseInput()) return;
   const k = getCurrentNDigits();
   const cur = getCurrentInput();
   if (cur.length >= k) return;           // 超出位数直接忽略
@@ -604,6 +639,7 @@ function appendInput(v) {
 }
 
 function clearInput() {
+  if (!canAcceptResponseInput()) return;
   const cur = getCurrentInput();
   if (!cur) { updateBoxesFromString(''); return; }
   updateBoxesFromString(cur.slice(0, -1)); // 单字符退格
@@ -614,10 +650,12 @@ async function startTrialPlay() {
   if (window.dinUI?.playbackActive) return;
   if (window.dinUI?.awaitingResponse) {
     setStatusMessage('Please enter the digits you heard and press OK.');
+    setTestStage('responding');
     return;
   }
 
   window.dinUI.playbackActive = true;
+  setTestStage('preparing');
   setInputLock(true);
   setStatusMessage('Preparing audio...');
 
@@ -626,9 +664,11 @@ async function startTrialPlay() {
   } catch(e) {
     console.warn('AudioContext resume failed', e);
     setStatusMessage('Audio device is not ready. Click Play again and check browser sound permissions.', 'warning');
+    setTestStage('error');
     window.dinUI.playbackActive = false;
     window.dinUI.awaitingResponse = false;
     setInputLock(false);
+    disableKeypad(true);
     setPlayButtonEnabled(true);
     return;
   }
@@ -637,6 +677,8 @@ async function startTrialPlay() {
     window.dinUI.playbackActive = false;
     window.dinUI.awaitingResponse = false;
     setInputLock(false);
+    disableKeypad(true);
+    setTestStage('error');
     setStatusMessage('Missing user info. Returning to the start...', 'warning');
     location.href = 'index.html';
     return;
@@ -659,10 +701,12 @@ async function startTrialPlay() {
       await loadLanguageAudio(userInfo.stimLang);
     } catch(e) {
       setStatusMessage('Failed to load stimuli. Check the audio files and reload the page.', 'warning');
+      setTestStage('error');
       console.error(e);
       window.dinUI.playbackActive = false;
       window.dinUI.awaitingResponse = false;
       setInputLock(false);
+      disableKeypad(true);
       return;
     }
   }
@@ -696,9 +740,11 @@ async function startTrialPlay() {
   const condDef = COND_DEFS[currCond];
   if (!condDef) {
     setStatusMessage('Unknown condition: ' + currCond, 'warning');
+    setTestStage('error');
     window.dinUI.playbackActive = false;
     window.dinUI.awaitingResponse = false;
     setInputLock(false);
+    disableKeypad(true);
     return;
   }
 
@@ -742,6 +788,7 @@ async function startTrialPlay() {
 
   // === 播放前：锁定输入（虚拟键盘禁用 + 实体键盘屏蔽），禁用 Play 避免重复点击
   setInputLock(true);
+  setTestStage('playing');
   setStatusMessage('Playing...');
 
   try {
@@ -751,14 +798,17 @@ async function startTrialPlay() {
     // === 播放结束：解除锁定，允许输入与提交
     window.dinUI.playbackActive = false;
     window.dinUI.awaitingResponse = true;
+    setTestStage('responding');
     setInputLock(false);
     setPlayButtonEnabled(false);
   } catch (e) {
     console.error('Playback error', e);
     setStatusMessage('Playback error. Click Play to retry.', 'warning');
+    setTestStage('error');
     window.dinUI.playbackActive = false;
     window.dinUI.awaitingResponse = false;
     setInputLock(false);
+    disableKeypad(true);
     setPlayButtonEnabled(true);
   }
 }
@@ -770,19 +820,26 @@ async function submitInput() {
 
   const inputEl = document.getElementById('input');
   const input = getCurrentInput();
-  if (input.length === 0) { setStatusMessage('Please enter the digits before pressing OK.', 'warning'); return; }
+  if (input.length === 0) {
+    setTestStage('responding');
+    setStatusMessage('Please enter the digits before pressing OK.', 'warning');
+    return;
+  }
   if (!window.dinUI?.awaitingResponse) {
+    setTestStage('ready');
     setStatusMessage('Click Play first, then enter the digits you heard.', 'warning');
     return;
   }
 
   const expectedLen = getCurrentNDigits();
   if (input.length !== expectedLen) {
+    setTestStage('responding');
     setStatusMessage(`Please enter ${expectedLen} digit${expectedLen > 1 ? 's' : ''}.`, 'warning');
     return;
   }
 
   window.dinUI.awaitingResponse = false;
+  setTestStage('saving');
   setInputLock(true);
 
   const rtMs = session.playbackEndedAt ? (Date.now() - session.playbackEndedAt) : null;
@@ -1013,6 +1070,10 @@ function updateBoxesFromString(s) {
 document.addEventListener('DOMContentLoaded', () => {
   // 只在有 keypad 的页面启用
   if (!document.getElementById('keypad')) return;
+
+  document.addEventListener('uiLanguageChanged', () => {
+    setTestStage(window.dinUI?.stage || 'ready');
+  });
 
   document.addEventListener('keydown', (e) => {
     // 播放锁定中：屏蔽输入

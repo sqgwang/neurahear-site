@@ -32,6 +32,7 @@ jobs:
         run: npm run build
       
       - name: Configure SSH
+        if: github.event_name == 'workflow_dispatch'
         shell: bash
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
@@ -49,6 +50,7 @@ jobs:
           ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts
 
       - name: Transfer site files
+        if: github.event_name == 'workflow_dispatch'
         shell: bash
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
@@ -68,6 +70,7 @@ jobs:
             out/ "$SSH_USER@$SSH_HOST:$UPLOAD_DIR/"
       
       - name: Deploy static site to Nginx
+        if: github.event_name == 'workflow_dispatch'
         shell: bash
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
