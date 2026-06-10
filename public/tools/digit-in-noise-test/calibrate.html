@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <title>DIN Test Calibration</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/styles.css?v=idin-20260610-stability-1" />
 </head>
 <body>
   <header class="topbar">
@@ -12,7 +12,7 @@
     <div class="lang-switch">
       <select id="uiLang">
         <option value="english">English</option>
-        <option value="mandarin">普通话</option>
+        <option value="mandarin">普通话</option>
       </select>
     </div>
   </header>
@@ -39,8 +39,8 @@
     <div id="calibMsg" class="note"></div>
   </main>
 
-  <script src="js/i18n.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/i18n.js?v=idin-20260610-stability-1"></script>
+  <script src="js/app.js?v=idin-20260610-stability-1"></script>
   <script>
     // calibration wiring
     document.addEventListener('DOMContentLoaded', async () => {
@@ -84,7 +84,16 @@
 
       document.getElementById('confirmCalib').addEventListener('click', () => {
         const v = parseFloat(gainSlider.value);
+        setFixedNoiseGain(v);
         localStorage.setItem('fixedNoiseGain', v);
+        localStorage.setItem('din_calibration', JSON.stringify({
+          type: 'user_adjusted_noise_loop',
+          noiseGain: v,
+          stimLang: userInfo.stimLang,
+          calibratedAt: new Date().toISOString(),
+          note: 'Noise level was fixed from this calibration step for all subsequent formal trials.'
+        }));
+        stopNoiseLoop();
         // go to test page
         location.href = 'test.html';
       });

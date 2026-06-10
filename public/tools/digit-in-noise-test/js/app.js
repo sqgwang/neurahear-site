@@ -4,14 +4,18 @@
 // 重要：不要在此文件覆盖 setUILanguage（i18n.js 提供翻译功能）
 
 /* ========== CONFIG ========== */
+const APP_VERSION = 'iDIN-2026-06-stability-1';
 const STEP_DB = 2;
 const START_SNR = 0;
 const SNR_MIN = -30;
 const SNR_MAX = 30;
 const N_FORMAL = 24;
+const N_PRACTICE = 3;
 const PRE_PAD = 0.5; // seconds
 const POST_PAD = 0.5;
 const GAP = 0.2; // seconds between digits
+
+window.APP_VERSION = APP_VERSION;
 
 /* ========== CONDITION DEFINITIONS ========== */
 const COND_DEFS = {
@@ -27,11 +31,23 @@ const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 let langBuffers = {}; // { lang: { digitBuffers: [], noiseBuffer, corrections: [] } }
 let noiseLoopSource = null;
 let noiseLoopGain = null;
-let fixedNoiseGain = parseFloat(localStorage.getItem('fixedNoiseGain') || '1.0');
+
+function createSessionId() {
+  const rand = Math.random().toString(36).slice(2, 8);
+  return `din_${Date.now()}_${rand}`;
+}
+
+function readStoredNoiseGain() {
+  const value = Number.parseFloat(localStorage.getItem('fixedNoiseGain') || '1.0');
+  return Number.isFinite(value) && value > 0 ? value : 1.0;
+}
+
+let fixedNoiseGain = readStoredNoiseGain();
 
 /* ========== SESSION ========== */
 function initEmptySession() {
   return {
+    sessionId: createSessionId(),
     userInfo: null,
     conditionOrder: [],
     currentCondIdx: 0,
@@ -62,6 +78,7 @@ let session = initEmptySession();
       session.phase = session.phase || {};
       session.practiceIdx = session.practiceIdx || {};
       session.formalIdx = session.formalIdx || {};
+      session.sessionId = session.sessionId || createSessionId();
     }
   } catch (e) {
     console.warn('restoreSession failed', e);
@@ -180,7 +197,8 @@ function stopNoiseLoop() {
   }
 }
 function setFixedNoiseGain(v) {
-  fixedNoiseGain = v;
+  const next = Number.parseFloat(v);
+  fixedNoiseGain = Number.isFinite(next) && next > 0 ? next : 1.0;
   localStorage.setItem('fixedNoiseGain', fixedNoiseGain.toString());
   if (noiseLoopGain) noiseLoopGain.gain.value = fixedNoiseGain;
 }
@@ -188,17 +206,23 @@ function setFixedNoiseGain(v) {
 /* ========== UI INPUT LOCK (播放时锁定输入) ========== */
 window.dinUI = window.dinUI || {};
 window.dinUI.inputLocked = false;
+window.dinUI.playbackActive = false;
+window.dinUI.awaitingResponse = false;
+
+function setPlayButtonEnabled(enabled) {
+  const playBtn = document.getElementById('playTrial');
+  if (!playBtn) return;
+  playBtn.disabled = !enabled;
+  if (enabled) playBtn.classList.remove('disabled');
+  else playBtn.classList.add('disabled');
+}
 
 function setInputLock(locked) {
   window.dinUI.inputLocked = !!locked;
   // 虚拟键盘禁用/灰化
   disableKeypad(locked);
   // 播放按钮也禁用，避免重复点击
-  const playBtn = document.getElementById('playTrial');
-  if (playBtn) {
-    playBtn.disabled = locked;
-    if (locked) playBtn.classList.add('disabled'); else playBtn.classList.remove('disabled');
-  }
+  setPlayButtonEnabled(!locked);
 }
 
 function disableKeypad(disabled) {
@@ -395,7 +419,7 @@ function updateProgressUI() {
   if (!progressEl) return;
   if (!isFormal) {
     const pidx = session.practiceIdx[currCond] != null ? session.practiceIdx[currCond] : 0;
-    progressEl.textContent = `${def.label} — Practice ${pidx + 1}/3`;
+    progressEl.textContent = `${def.label} — Practice ${pidx + 1}/${N_PRACTICE}`;
   } else {
     const fidx = session.formalIdx[currCond] != null ? session.formalIdx[currCond] : 0;
     progressEl.textContent = `${def.label} — Trial ${fidx + 1}/${N_FORMAL}`;
@@ -449,18 +473,21 @@ function showConditionIntro() {
   const def = COND_DEFS[currCond] || { label: currCond, nDigits: 3 };
   setInputBoxes(def.nDigits);
   updateBoxesFromString(''); // 清空方框显示
+  window.dinUI.playbackActive = false;
+  window.dinUI.awaitingResponse = false;
   setInputLock(false);       // Intro 阶段允许点击 Play，但不允许提前输入（由初始键盘状态决定）
   disableKeypad(true);       // 初始：不让输入，等点击 Play 开始
+  setPlayButtonEnabled(true);
 
   // 3) 进度显示（顶端进度条文本）
   updateProgressUI();
 
   // 4) Intro 提示文案 + 按钮状态
-  const inPractice = (session.phase[currCond] !== 'formal') && ((session.practiceIdx[currCond] || 0) < 3);
+  const inPractice = (session.phase[currCond] !== 'formal') && ((session.practiceIdx[currCond] || 0) < N_PRACTICE);
   let intro;
   if (inPractice) {
     const pidx = session.practiceIdx[currCond] || 0;
-    intro = `${def.label} — Practice ${pidx + 1}/3. Click Play to start.`;
+    intro = `${def.label} — Practice ${pidx + 1}/${N_PRACTICE}. Click Play to start.`;
   } else {
     const fidx = session.formalIdx[currCond] || 0;
     intro = `${def.label} — Trial ${fidx + 1}/${N_FORMAL}. Click Play to start.`;
@@ -468,8 +495,7 @@ function showConditionIntro() {
   if (status) status.textContent = intro;
 
   // Play 按钮显示，Next Condition 隐藏（只有某些阶段在 submit 中才显示/跳转）
-  const playBtn = document.getElementById('playTrial');
-  if (playBtn) playBtn.disabled = false;
+  setPlayButtonEnabled(true);
 
   const nextBtn = document.getElementById('nextConditionBtn');
   if (nextBtn) nextBtn.style.display = 'none';
@@ -494,9 +520,27 @@ function clearInput() {
 
 /* ========== TRIAL FLOW ========== */
 async function startTrialPlay() {
+  const status = document.getElementById('statusMsg');
+  if (window.dinUI?.playbackActive) return;
+  if (window.dinUI?.awaitingResponse) {
+    if (status) status.textContent = 'Please enter the digits you heard and press OK.';
+    return;
+  }
+
+  window.dinUI.playbackActive = true;
+  setInputLock(true);
+  if (status) status.textContent = 'Preparing audio...';
+
   try { await audioContext.resume(); } catch(e) {}
   const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-  if (!userInfo || !userInfo.stimLang) { alert('Missing user info'); location.href = 'index.html'; return; }
+  if (!userInfo || !userInfo.stimLang) {
+    window.dinUI.playbackActive = false;
+    window.dinUI.awaitingResponse = false;
+    setInputLock(false);
+    alert('Missing user info');
+    location.href = 'index.html';
+    return;
+  }
 
   // if user changed participant or language, reset session
   if (session.userInfo) {
@@ -511,7 +555,16 @@ async function startTrialPlay() {
   }
 
   if (!langBuffers[userInfo.stimLang]) {
-    try { await loadLanguageAudio(userInfo.stimLang); } catch(e) { alert('Failed to load stimuli'); console.error(e); return; }
+    try {
+      await loadLanguageAudio(userInfo.stimLang);
+    } catch(e) {
+      alert('Failed to load stimuli');
+      console.error(e);
+      window.dinUI.playbackActive = false;
+      window.dinUI.awaitingResponse = false;
+      setInputLock(false);
+      return;
+    }
   }
 
   // init per-condition structures
@@ -541,11 +594,17 @@ async function startTrialPlay() {
 
   const currCond = session.conditionOrder[session.currentCondIdx];
   const condDef = COND_DEFS[currCond];
-  if (!condDef) { alert('Unknown condition: ' + currCond); return; }
+  if (!condDef) {
+    alert('Unknown condition: ' + currCond);
+    window.dinUI.playbackActive = false;
+    window.dinUI.awaitingResponse = false;
+    setInputLock(false);
+    return;
+  }
 
   const kDigits = condDef.nDigits;
   setInputBoxes(kDigits);
-  const inPractice = (session.phase && session.phase[currCond] !== 'formal') && (session.practiceIdx[currCond] < 3);
+  const inPractice = (session.phase && session.phase[currCond] !== 'formal') && (session.practiceIdx[currCond] < N_PRACTICE);
 
   let digits = null;
   let noiseEnabled = true;
@@ -583,7 +642,6 @@ async function startTrialPlay() {
 
   // === 播放前：锁定输入（虚拟键盘禁用 + 实体键盘屏蔽），禁用 Play 避免重复点击
   setInputLock(true);
-  const status = document.getElementById('statusMsg');
   if (status) status.textContent = 'Playing...';
 
   try {
@@ -591,11 +649,17 @@ async function startTrialPlay() {
     session._lastEffectiveSNR = r.effectiveSNR;
     if (status) status.textContent = 'Playback finished. Please type digits and press OK.';
     // === 播放结束：解除锁定，允许输入与提交
+    window.dinUI.playbackActive = false;
+    window.dinUI.awaitingResponse = true;
     setInputLock(false);
+    setPlayButtonEnabled(false);
   } catch (e) {
     console.error('Playback error', e);
     if (status) status.textContent = 'Playback error. Click Play to retry.';
+    window.dinUI.playbackActive = false;
+    window.dinUI.awaitingResponse = false;
     setInputLock(false);
+    setPlayButtonEnabled(true);
   }
 }
 
@@ -607,11 +671,26 @@ async function submitInput() {
   const inputEl = document.getElementById('input');
   const input = getCurrentInput();
   if (input.length === 0) { alert('Please enter the digits before pressing OK.'); return; }
+  if (!window.dinUI?.awaitingResponse) {
+    const status = document.getElementById('statusMsg');
+    if (status) status.textContent = 'Click Play first, then enter the digits you heard.';
+    return;
+  }
+
+  const expectedLen = getCurrentNDigits();
+  if (input.length !== expectedLen) {
+    const status = document.getElementById('statusMsg');
+    if (status) status.textContent = `Please enter ${expectedLen} digit${expectedLen > 1 ? 's' : ''}.`;
+    return;
+  }
+
+  window.dinUI.awaitingResponse = false;
+  setInputLock(true);
 
   const rtMs = session.playbackEndedAt ? (Date.now() - session.playbackEndedAt) : null;
   const currCond = session.conditionOrder[session.currentCondIdx];
   const condDef = COND_DEFS[currCond];
-  const inPractice = (session.phase && session.phase[currCond] !== 'formal') && (session.practiceIdx[currCond] < 3);
+  const inPractice = (session.phase && session.phase[currCond] !== 'formal') && (session.practiceIdx[currCond] < N_PRACTICE);
   const expectedDigits = session.currentDigits ? session.currentDigits.slice() : [];
   const recallMode = condDef.dir === 'forward' ? 'forward' : 'backward';
   const expectedResponse = recallMode === 'forward' ? expectedDigits.join('') : expectedDigits.slice().reverse().join('');
@@ -662,7 +741,7 @@ async function submitInput() {
     updateProgressUI();
     localStorage.setItem('din_session', JSON.stringify(session));
 
-    if (session.practiceIdx[currCond] >= 3) {
+    if (session.practiceIdx[currCond] >= N_PRACTICE) {
       session.phase[currCond] = 'formal';
       session.formalIdx[currCond] = 0;
       session.currentPresentedSNR = START_SNR;
@@ -734,13 +813,17 @@ function finalizeAndGetResults() {
     const last20 = effs.slice(-20);
     const SRT = last20.length ? Math.round(mean(last20)*100)/100 : null;
     const trials = (s.trials || []).filter(t => t.condition === c);
-    const rtsAll = trials.map(t => t.rt_ms).filter(x=>x!=null);
-    const rtsCorrect = trials.filter(t=>t.correct).map(t=>t.rt_ms).filter(x=>x!=null);
+    const formalTrials = trials.filter(t => !t.practice);
+    const rtsAll = formalTrials.map(t => t.rt_ms).filter(x=>x!=null);
+    const rtsCorrect = formalTrials.filter(t=>t.correct).map(t=>t.rt_ms).filter(x=>x!=null);
     condResults[c] = {
       SRT,
       RT_all_mean_ms: rtsAll.length ? Math.round(mean(rtsAll)*100)/100 : null,
       RT_correct_mean_ms: rtsCorrect.length ? Math.round(mean(rtsCorrect)*100)/100 : null,
-      trials
+      nPracticeTrials: trials.length - formalTrials.length,
+      nFormalTrials: formalTrials.length,
+      trials,
+      formalTrials
     };
   }
 

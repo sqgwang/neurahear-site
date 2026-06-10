@@ -38,7 +38,7 @@
   // CSV 生成（与 results 页面一致）
   function trialsToCSV(trials){
     const headers = [
-      'participantId','condition','nDigits','digitsPresented',
+      'participantId','language','condition','nDigits','practice','trialIndexInCond','digitsPresented',
       'presentedSNR','effectiveSNR','response','correct','rt_ms','timestamp'
     ];
     const rows = [headers.join(',')].concat(

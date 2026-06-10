@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title data-i18n="resultsTitle2">Results</title>
-  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/styles.css?v=idin-20260610-stability-1" />
 </head>
 <body>
   <header class="topbar">
@@ -65,8 +65,8 @@
     </div>
   </main>
 
-  <script src="js/i18n.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/i18n.js?v=idin-20260610-stability-1"></script>
+  <script src="js/app.js?v=idin-20260610-stability-1"></script>
   <script>
     // —— 同域 API 辅助：不依赖 API_BASE，一律发到 /api/... ——
     function apiUrl(path) {
@@ -85,6 +85,12 @@
       const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
       const uiLang = localStorage.getItem('uiLang') || 'english';
       const fixedNoiseGain = parseFloat(localStorage.getItem('fixedNoiseGain') || '1');
+      let calibration = null;
+      try {
+        calibration = JSON.parse(localStorage.getItem('din_calibration') || 'null');
+      } catch {
+        calibration = null;
+      }
 
       // per-condition（兼容 res.condResults 或 din.perCondition）
       let perCondition = [];
@@ -108,16 +114,22 @@
 
       // trials：优先 din_session.trials，再退 res.trials
       const trials = Array.isArray(din.trials) ? din.trials : (Array.isArray(res?.trials) ? res.trials : []);
+      const nPracticeTrials = trials.filter(t => t && t.practice).length;
+      const nFormalTrials = trials.filter(t => t && !t.practice).length;
 
       const meta = {
         appVersion: window.APP_VERSION || 'v1',
         uiLang,
         stimLang: userInfo.stimLang,
         fixedNoiseGain: isFinite(fixedNoiseGain) ? fixedNoiseGain : null,
+        calibration,
         conditionOrder: din.conditionOrder || userInfo.testConditions || [],
         phase: din.phase || null,
         practiceIdx: din.practiceIdx || null,
         formalIdx: din.formalIdx || null,
+        nPracticeTrials,
+        nFormalTrials,
+        nTrialsTotal: trials.length,
       };
 
       return {
@@ -128,7 +140,10 @@
           userInfo,
           perCondition,
           diffs,
-          snrTracks: din.snrTracks || {},   // 若无则空对象
+          snrTracks: {
+            presentedSNRs: din.presentedSNRs || {},
+            effectiveSNRs: din.effectiveSNRs || {}
+          },
           trials,                            // 必须是数组
           meta,
           createdAt: new Date().toISOString()
@@ -241,7 +256,7 @@
       document.getElementById('downloadCsv').addEventListener('click', () => {
         const trials = Array.isArray(payload.trials) ? payload.trials : [];
         const headers = [
-          'participantId','condition','nDigits','digitsPresented',
+          'participantId','language','condition','nDigits','practice','trialIndexInCond','digitsPresented',
           'presentedSNR','effectiveSNR','response','correct','rt_ms','timestamp'
         ];
         const rows = [headers.join(',')].concat(
