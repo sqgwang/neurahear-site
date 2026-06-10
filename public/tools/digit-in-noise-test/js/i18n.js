@@ -78,6 +78,13 @@ Object.assign(translations.english, {
     resetNoise: "Reset",
     noiseDbInput: "Noise adjustment (dB)",
     calibNumericHelp: "The value is saved for the rest of this test and applied equally to speech and noise.",
+    calibAudibleConfirm: "I can hear the noise clearly and comfortably at this level.",
+    calibRequirementLoading: "Wait until the calibration audio is ready.",
+    calibRequirementPlay: "Play the noise once before confirming calibration.",
+    calibRequirementConfirm: "Confirm that this level is clearly and comfortably audible.",
+    calibRequirementComplete: "Calibration is confirmed. You can start the test.",
+    calibRequirementMissing: "Please play the noise and confirm the calibrated level before continuing.",
+    calibReconfirmAfterAdjustment: "Noise level changed. Please confirm the new level before continuing.",
 
     // test page
   condTitle: "Condition",
@@ -144,6 +151,13 @@ Object.assign(translations.mandarin, {
     resetNoise: "重置",
     noiseDbInput: "噪声调整（dB）",
     calibNumericHelp: "该数值会用于本次测试后续所有试次，并同时作用于语音和噪声。",
+    calibAudibleConfirm: "我能清楚且舒适地听到当前噪声音量。",
+    calibRequirementLoading: "请等待校准音频准备好。",
+    calibRequirementPlay: "请先播放一次噪声，再确认校准。",
+    calibRequirementConfirm: "请确认当前音量清楚且舒适可听。",
+    calibRequirementComplete: "校准已确认，可以开始测试。",
+    calibRequirementMissing: "请先播放噪声并确认校准音量，然后再继续。",
+    calibReconfirmAfterAdjustment: "噪声音量已改变。继续前请重新确认当前音量。",
 
   // test page
   condTitle: "测试条件",

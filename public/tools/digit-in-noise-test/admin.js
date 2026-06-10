@@ -109,6 +109,30 @@
     return gain && gain > 0 ? Math.round(20 * Math.log10(gain) * 10) / 10 : null;
   }
 
+  function getCalibration(rec) {
+    return rec.meta?.calibration || {};
+  }
+
+  function getCalibrationConfirmed(rec) {
+    const calibration = getCalibration(rec);
+    return calibration.audibleConfirmed == null ? '' : (calibration.audibleConfirmed ? 'yes' : 'no');
+  }
+
+  function getCalibrationPlayCount(rec) {
+    const count = Number(getCalibration(rec).playCount);
+    return Number.isFinite(count) ? count : '';
+  }
+
+  function getCalibrationListenSeconds(rec) {
+    const ms = Number(getCalibration(rec).cumulativeNoisePlaybackMs);
+    return Number.isFinite(ms) ? Math.round((ms / 1000) * 10) / 10 : '';
+  }
+
+  function getCalibrationAdjustmentCount(rec) {
+    const count = Number(getCalibration(rec).adjustmentCount);
+    return Number.isFinite(count) ? count : '';
+  }
+
   function applyDashboardFilters(items) {
     const lang = $('#filterLang')?.value || '';
     const completion = $('#filterCompletion')?.value || '';
@@ -160,7 +184,8 @@
     }
     const headers = [
       'id','createdAt','participantId','gender','age','education','stimLang','conditions',
-      'nFormalTrials','expectedFormalTrials','complete','randomized','fixedNoiseGain','calibrationDb','SRTs'
+      'nFormalTrials','expectedFormalTrials','complete','randomized','fixedNoiseGain','calibrationDb',
+      'calibrationConfirmed','calibrationPlayCount','calibrationListenSeconds','calibrationAdjustmentCount','SRTs'
     ];
     const rows = currentItems.map(rec => {
       const ui = getUserInfo(rec);
@@ -181,6 +206,10 @@
         isRandomizedRecord(rec) ? 'yes' : 'no',
         getCalibrationGain(rec),
         getCalibrationDb(rec),
+        getCalibrationConfirmed(rec),
+        getCalibrationPlayCount(rec),
+        getCalibrationListenSeconds(rec),
+        getCalibrationAdjustmentCount(rec),
         srtSummary(perC)
       ];
     });
@@ -321,6 +350,12 @@
     const edu = esc(ui.educationYears ?? ui.education ?? '');
     const stim = esc(doc.meta?.stimLang || ui.stimLang || '');
     const conds = esc((doc.meta?.conditionOrder || ui.testConditions || []).join(','));
+    const calibrationGain = getCalibrationGain(doc);
+    const calibrationDb = getCalibrationDb(doc);
+    const calibrationConfirmed = getCalibrationConfirmed(doc) || '—';
+    const calibrationPlayCount = getCalibrationPlayCount(doc) || '—';
+    const calibrationListenSeconds = getCalibrationListenSeconds(doc) || '—';
+    const calibrationAdjustmentCount = getCalibrationAdjustmentCount(doc) || '—';
     const perC = Array.isArray(doc.perCondition) ? doc.perCondition : [];
     const summary = doc.diffs || doc.summary || {};
 
@@ -356,6 +391,7 @@
         <div class="note small mono">ID: ${uid}</div>
         <div class="small"><b>PID:</b> ${pid} &nbsp; <b>Gender:</b> ${sex} &nbsp; <b>Age:</b> ${age} &nbsp; <b>Edu(yrs):</b> ${edu} &nbsp; <b>StimLang:</b> ${stim}</div>
         <div class="small"><b>Conditions:</b> ${conds}</div>
+        <div class="small"><b>Calibration:</b> ${esc(calibrationGain == null ? '—' : `${calibrationGain.toFixed(2)}x`)} / ${esc(calibrationDb == null ? '—' : `${calibrationDb} dB`)} &nbsp; <b>Confirmed:</b> ${esc(calibrationConfirmed)} &nbsp; <b>Plays:</b> ${esc(calibrationPlayCount)} &nbsp; <b>Listen(s):</b> ${esc(calibrationListenSeconds)} &nbsp; <b>Adjustments:</b> ${esc(calibrationAdjustmentCount)}</div>
 
         <h3 style="margin-bottom:6px;">Per-condition</h3>
         <table class="table small">

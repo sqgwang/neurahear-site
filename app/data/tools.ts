@@ -48,7 +48,7 @@ export const toolItems: ToolItem[] = [
     tone: "teal",
     data: "Responses are submitted to the project backend for study use.",
     output: "Participant-level DIN records and server-side study exports.",
-    version: "Pre-test readiness check",
+    version: "Calibration confirmation guard",
     assessmentPathway: true,
     platformHighlight: true,
   },
@@ -122,6 +122,25 @@ export const toolStatusLegend: Array<{ label: ToolStatus; text: string }> = [
 ];
 
 export const toolReleaseNotes: ToolReleaseNote[] = [
+  {
+    date: "2026-06-11",
+    title: "iDIN calibration confirmation guard added",
+    tool: "integrated Digit-in-Noise Test",
+    version: "iDIN 2026.06 calibration-confirmation UX",
+    status: "Released",
+    tone: "teal",
+    summary:
+      "The iDIN calibration flow now requires participants to play the noise and explicitly confirm audibility before starting the formal test.",
+    changes: [
+      "Added a required audibility confirmation after noise playback on the calibration page.",
+      "Disabled test start until audio is loaded, noise has been played at least once, and the calibrated level is confirmed.",
+      "Reset the audibility confirmation when participants adjust the noise level after confirming.",
+      "Stored calibration quality-control metadata including play count, first playback timestamp, cumulative noise-listening time, and adjustment count.",
+    ],
+    dataBoundary:
+      "Front-end calibration gating and metadata changed only; audio files, fixed-noise-gain application, SNR logic, adaptive scoring, randomization behavior, and existing server-side result records are unchanged.",
+    href: "/tools/digit-in-noise-test/",
+  },
   {
     date: "2026-06-10",
     title: "iDIN pre-test readiness check added",

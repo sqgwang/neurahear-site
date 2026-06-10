@@ -311,6 +311,21 @@ button:disabled,
   0%, 100% { transform: scale(0.85); opacity: 0.55; }
   50% { transform: scale(1.15); opacity: 1; }
 }
+.calibration-progress {
+  height: 6px;
+  margin: -6px 0 18px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-weak);
+}
+.calibration-progress span {
+  display: block;
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--ios-blue), var(--brand-accent));
+  transition: width .25s ease;
+}
 .calibration-readout {
   display: flex;
   align-items: baseline;
@@ -347,6 +362,34 @@ button:disabled,
 }
 .calibration-note {
   margin-top: 10px;
+}
+.calibration-confirmation {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 2px 0 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  font-weight: 700;
+}
+.calibration-confirmation input {
+  width: auto;
+  flex: 0 0 auto;
+  margin-top: 2px;
+  accent-color: var(--ios-blue);
+}
+.calibration-requirement {
+  min-height: 24px;
+  margin: 0 0 16px;
+}
+.calibration-requirement[data-tone="warning"] {
+  color: #b45309 !important;
+}
+.calibration-requirement[data-tone="success"] {
+  color: var(--ios-blue) !important;
+  font-weight: 700;
 }
 .phase-badge {
   display: inline-flex;
