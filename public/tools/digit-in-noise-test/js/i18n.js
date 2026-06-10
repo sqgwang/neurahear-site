@@ -122,7 +122,14 @@ Object.assign(translations.english, {
   thRTCorrect: "RT (correct) ms",
   dlJson: "Download JSON",
   dlCsv: "Download CSV (trials)",
-  returnHome: "Return Home"
+  returnHome: "Return Home",
+  uploadStatusTitle: "Server save status",
+  retryUpload: "Retry upload",
+  uploadPending: "Result is safely stored in this browser and waiting to upload.",
+  uploadSaving: "Saving to server... Attempt {attempts}.",
+  uploadSaved: "Saved to server. Record ID: {serverId}",
+  uploadFailed: "Upload failed. The complete result is still stored in this browser.",
+  uploadLeaveWarning: "The result has not been saved to the server yet. It is stored locally in this browser, but leaving now may make retry harder. Leave anyway?"
 });
 Object.assign(translations.mandarin, {
   languageLabel: "语言",
@@ -201,7 +208,14 @@ Object.assign(translations.mandarin, {
   thRTCorrect: "平均反应时（正确）ms",
   dlJson: "下载 JSON",
   dlCsv: "下载 CSV（试次）",
-  returnHome: "返回首页"
+  returnHome: "返回首页",
+  uploadStatusTitle: "服务器保存状态",
+  retryUpload: "重新上传",
+  uploadPending: "结果已安全保存在本浏览器中，等待上传。",
+  uploadSaving: "正在保存到服务器... 第 {attempts} 次尝试。",
+  uploadSaved: "已保存到服务器。记录 ID：{serverId}",
+  uploadFailed: "上传失败。完整结果仍保存在本浏览器中。",
+  uploadLeaveWarning: "结果还没有保存到服务器。目前它保存在本浏览器中，但现在离开会增加之后重试的难度。仍然离开吗？"
 });
 
 // 2) 简单取词 + 占位符替换

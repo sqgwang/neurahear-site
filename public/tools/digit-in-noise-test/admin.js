@@ -133,6 +133,19 @@
     return Number.isFinite(count) ? count : '';
   }
 
+  function getUploadMeta(rec) {
+    return rec.meta?.upload || {};
+  }
+
+  function getUploadClientId(rec) {
+    return getUploadMeta(rec).uploadClientId || '';
+  }
+
+  function getUploadAttemptCount(rec) {
+    const count = Number(getUploadMeta(rec).attemptCount);
+    return Number.isFinite(count) ? count : '';
+  }
+
   function applyDashboardFilters(items) {
     const lang = $('#filterLang')?.value || '';
     const completion = $('#filterCompletion')?.value || '';
@@ -185,7 +198,8 @@
     const headers = [
       'id','createdAt','participantId','gender','age','education','stimLang','conditions',
       'nFormalTrials','expectedFormalTrials','complete','randomized','fixedNoiseGain','calibrationDb',
-      'calibrationConfirmed','calibrationPlayCount','calibrationListenSeconds','calibrationAdjustmentCount','SRTs'
+      'calibrationConfirmed','calibrationPlayCount','calibrationListenSeconds','calibrationAdjustmentCount',
+      'uploadClientId','uploadAttemptCount','SRTs'
     ];
     const rows = currentItems.map(rec => {
       const ui = getUserInfo(rec);
@@ -210,6 +224,8 @@
         getCalibrationPlayCount(rec),
         getCalibrationListenSeconds(rec),
         getCalibrationAdjustmentCount(rec),
+        getUploadClientId(rec),
+        getUploadAttemptCount(rec),
         srtSummary(perC)
       ];
     });
@@ -356,6 +372,8 @@
     const calibrationPlayCount = getCalibrationPlayCount(doc) || '—';
     const calibrationListenSeconds = getCalibrationListenSeconds(doc) || '—';
     const calibrationAdjustmentCount = getCalibrationAdjustmentCount(doc) || '—';
+    const uploadClientId = getUploadClientId(doc) || '—';
+    const uploadAttemptCount = getUploadAttemptCount(doc) || '—';
     const perC = Array.isArray(doc.perCondition) ? doc.perCondition : [];
     const summary = doc.diffs || doc.summary || {};
 
@@ -392,6 +410,7 @@
         <div class="small"><b>PID:</b> ${pid} &nbsp; <b>Gender:</b> ${sex} &nbsp; <b>Age:</b> ${age} &nbsp; <b>Edu(yrs):</b> ${edu} &nbsp; <b>StimLang:</b> ${stim}</div>
         <div class="small"><b>Conditions:</b> ${conds}</div>
         <div class="small"><b>Calibration:</b> ${esc(calibrationGain == null ? '—' : `${calibrationGain.toFixed(2)}x`)} / ${esc(calibrationDb == null ? '—' : `${calibrationDb} dB`)} &nbsp; <b>Confirmed:</b> ${esc(calibrationConfirmed)} &nbsp; <b>Plays:</b> ${esc(calibrationPlayCount)} &nbsp; <b>Listen(s):</b> ${esc(calibrationListenSeconds)} &nbsp; <b>Adjustments:</b> ${esc(calibrationAdjustmentCount)}</div>
+        <div class="small"><b>Upload ID:</b> ${esc(uploadClientId)} &nbsp; <b>Upload attempts:</b> ${esc(uploadAttemptCount)}</div>
 
         <h3 style="margin-bottom:6px;">Per-condition</h3>
         <table class="table small">

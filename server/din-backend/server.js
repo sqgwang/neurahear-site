@@ -144,6 +144,25 @@ async function readAllResults() {
     .map(l => { try { return JSON.parse(l); } catch { return null; } })
     .filter(Boolean);
 }
+function getUploadClientId(rec) {
+  return rec && rec.meta && rec.meta.upload && rec.meta.upload.uploadClientId
+    ? String(rec.meta.upload.uploadClientId)
+    : '';
+}
+function findExistingResult(incoming, allResults) {
+  const uploadClientId = getUploadClientId(incoming);
+  if (uploadClientId) {
+    const byUploadId = allResults.find(r => getUploadClientId(r) === uploadClientId);
+    if (byUploadId) return byUploadId;
+  }
+
+  const sessionId = incoming && incoming.sessionId ? String(incoming.sessionId) : '';
+  if (sessionId) {
+    return allResults.find(r => String(r.sessionId || '') === sessionId) || null;
+  }
+
+  return null;
+}
 
 // ----------- Middleware -----------
 ensureDirs();
@@ -273,6 +292,18 @@ app.post('/api/results', async (req, res) => {
   if (!rec || !Array.isArray(rec.trials)) {
     return res.status(400).json({ error: 'invalid payload' });
   }
+
+  const all = await readAllResults();
+  const existing = findExistingResult(rec, all);
+  if (existing) {
+    return res.json({
+      ok: true,
+      id: existing._id,
+      duplicate: true,
+      matchedBy: getUploadClientId(rec) ? 'uploadClientId' : 'sessionId'
+    });
+  }
+
   rec._id = genId('r');
   rec._ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
   rec._ua = req.headers['user-agent'] || '';

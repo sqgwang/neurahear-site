@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title data-i18n="resultsTitle2">Results</title>
-  <link rel="stylesheet" href="css/styles.css?v=idin-20260611-test-state-machine-1" />
+  <link rel="stylesheet" href="css/styles.css?v=idin-20260611-upload-queue-1" />
 </head>
 <body>
   <header class="topbar">
@@ -20,7 +20,15 @@
 
   <main class="container stack" style="max-width: 960px;">
     <h1 id="pageTitle" class="large-title" data-i18n="resultsTitle2">Results</h1>
-    <div id="uploadBadge" class="note" style="margin-top:-4px;"></div>
+    <section id="uploadPanel" class="result-upload-panel" data-state="pending" aria-live="polite">
+      <div>
+        <h2 id="uploadTitle" data-i18n="uploadStatusTitle">Server save status</h2>
+        <div id="uploadBadge" class="note"></div>
+      </div>
+      <button id="retryUpload" class="secondary small" type="button" data-i18n="retryUpload" style="display:none;">
+        Retry upload
+      </button>
+    </section>
 
     <!-- Per-condition metrics -->
     <section id="condWrap" style="display:none;">
@@ -65,13 +73,132 @@
     </div>
   </main>
 
-  <script src="js/i18n.js?v=idin-20260611-test-state-machine-1"></script>
-  <script src="js/app.js?v=idin-20260611-test-state-machine-1"></script>
+  <script src="js/i18n.js?v=idin-20260611-upload-queue-1"></script>
+  <script src="js/app.js?v=idin-20260611-upload-queue-1"></script>
   <script>
     // —— 同域 API 辅助：不依赖 API_BASE，一律发到 /api/... ——
     function apiUrl(path) {
       let p = String(path || '').trim().replace(/^\/+/, '').replace(/^api\/+/, '');
       return '/api/' + p;
+    }
+
+    const UPLOAD_RECORD_PREFIX = 'idin_result_upload_v1:';
+    let currentUploadRecord = null;
+
+    function uploadKeyFor(payload) {
+      return `${UPLOAD_RECORD_PREFIX}${payload.sessionId || 'unknown-session'}`;
+    }
+
+    function readUploadRecord(key) {
+      try {
+        return JSON.parse(localStorage.getItem(key) || 'null');
+      } catch {
+        return null;
+      }
+    }
+
+    function writeUploadRecord(record) {
+      record.updatedAt = new Date().toISOString();
+      localStorage.setItem(record.storageKey, JSON.stringify(record));
+      currentUploadRecord = record;
+      return record;
+    }
+
+    function makeUploadClientId(payload) {
+      const base = String(payload.sessionId || payload.participantId || Date.now()).replace(/[^a-zA-Z0-9_-]/g, '_');
+      return `idin_upload_${base}`;
+    }
+
+    function cloneJson(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function decoratePayload(record, status) {
+      const payload = cloneJson(record.payload);
+      payload.meta = payload.meta || {};
+      payload.meta.upload = Object.assign({}, payload.meta.upload || {}, {
+        uploadClientId: record.uploadClientId,
+        uploadRecordVersion: 1,
+        status,
+        queuedAt: record.queuedAt,
+        attemptCount: record.attemptCount,
+        lastAttemptAt: record.lastAttemptAt || null,
+        savedAt: record.savedAt || null,
+        serverId: record.serverId || null,
+        lastError: record.lastError || null
+      });
+      return payload;
+    }
+
+    function ensureUploadRecord(resultsView, payload) {
+      const storageKey = uploadKeyFor(payload);
+      const existing = readUploadRecord(storageKey);
+      const now = new Date().toISOString();
+      const uploadClientId = existing?.uploadClientId || makeUploadClientId(payload);
+
+      if (existing?.status === 'saved') {
+        return writeUploadRecord(Object.assign(existing, {
+          resultsView: resultsView || existing.resultsView || null
+        }));
+      }
+
+      const queuedAt = existing?.queuedAt || now;
+      const nextPayload = cloneJson(payload);
+      nextPayload.createdAt = existing?.payload?.createdAt || nextPayload.createdAt || now;
+      nextPayload.meta = nextPayload.meta || {};
+      nextPayload.meta.upload = Object.assign({}, nextPayload.meta.upload || {}, {
+        uploadClientId,
+        uploadRecordVersion: 1,
+        status: existing?.status || 'pending',
+        queuedAt,
+        attemptCount: existing?.attemptCount || 0,
+        lastAttemptAt: existing?.lastAttemptAt || null,
+        savedAt: existing?.savedAt || null,
+        serverId: existing?.serverId || null,
+        lastError: existing?.lastError || null
+      });
+
+      return writeUploadRecord({
+        version: 1,
+        storageKey,
+        sessionId: nextPayload.sessionId,
+        participantId: nextPayload.participantId || '',
+        uploadClientId,
+        status: existing?.status || 'pending',
+        attemptCount: existing?.attemptCount || 0,
+        queuedAt,
+        lastAttemptAt: existing?.lastAttemptAt || null,
+        savedAt: existing?.savedAt || null,
+        serverId: existing?.serverId || null,
+        lastError: existing?.lastError || null,
+        payload: nextPayload,
+        resultsView: resultsView || null
+      });
+    }
+
+    function renderUploadState(record) {
+      const panel = document.getElementById('uploadPanel');
+      const badge = document.getElementById('uploadBadge');
+      const retryBtn = document.getElementById('retryUpload');
+      if (!panel || !badge || !retryBtn || !record) return;
+
+      panel.dataset.state = record.status || 'pending';
+      retryBtn.style.display = (record.status === 'saved' || record.status === 'uploading') ? 'none' : '';
+      retryBtn.disabled = record.status === 'uploading';
+
+      const attempts = record.attemptCount || 0;
+      const vars = { attempts, serverId: record.serverId || '' };
+      if (record.status === 'saved') {
+        badge.textContent = t('uploadSaved', vars);
+      } else if (record.status === 'uploading') {
+        badge.textContent = t('uploadSaving', vars);
+      } else if (record.status === 'failed') {
+        badge.textContent = record.lastError
+          ? `${t('uploadFailed', vars)} ${record.lastError}`
+          : t('uploadFailed', vars);
+      } else {
+        badge.textContent = t('uploadPending', vars);
+      }
     }
 
     // —— 从 localStorage / finalizeAndGetResults 组 payload ——
@@ -173,6 +300,39 @@
       try { return JSON.parse(text); } catch { return { ok:true, raw:text }; }
     }
 
+    async function uploadRecord(record) {
+      if (!record || record.status === 'saved') {
+        renderUploadState(record);
+        return record;
+      }
+
+      record.status = 'uploading';
+      record.attemptCount = (record.attemptCount || 0) + 1;
+      record.lastAttemptAt = new Date().toISOString();
+      record.lastError = null;
+      writeUploadRecord(record);
+      renderUploadState(record);
+
+      try {
+        const response = await upload(decoratePayload(record, 'uploading'));
+        record.status = 'saved';
+        record.serverId = response.id || response.existingId || record.serverId || null;
+        record.savedAt = new Date().toISOString();
+        record.lastError = null;
+        record.payload = decoratePayload(record, response.duplicate ? 'duplicate_acknowledged' : 'saved');
+        writeUploadRecord(record);
+        renderUploadState(record);
+        return record;
+      } catch (e) {
+        record.status = 'failed';
+        record.lastError = e?.message || 'Unknown upload error';
+        record.payload = decoratePayload(record, 'failed');
+        writeUploadRecord(record);
+        renderUploadState(record);
+        return record;
+      }
+    }
+
     function renderTables(res) {
       const condResults = (res && res.condResults) || {};
       const summary = (res && res.summary) || {};
@@ -236,21 +396,20 @@
       // 收集并渲染
       const { resultsView, payload } = collectResults();
       renderTables(resultsView || {});
+      currentUploadRecord = ensureUploadRecord(resultsView, payload);
+      renderUploadState(currentUploadRecord);
 
-      // 上传
-      const badge = document.getElementById('uploadBadge');
-      try {
-        badge.textContent = 'Saving…';
-        await upload(payload);
-        badge.textContent = 'Saved to server ✔';
-      } catch (e) {
-        console.warn('Upload failed:', e);
-        badge.textContent = 'Local only (server save failed).';
+      document.getElementById('retryUpload').addEventListener('click', async () => {
+        await uploadRecord(currentUploadRecord);
+      });
+
+      if (currentUploadRecord.status !== 'saved') {
+        await uploadRecord(currentUploadRecord);
       }
 
       // 下载 JSON
       document.getElementById('downloadJson').addEventListener('click', () => {
-        const data = resultsView || payload;
+        const data = currentUploadRecord?.payload || resultsView || payload;
         const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
@@ -277,6 +436,10 @@
 
       // 返回首页
       document.getElementById('returnHome').addEventListener('click', () => {
+        if (currentUploadRecord?.status !== 'saved') {
+          const ok = confirm(t('uploadLeaveWarning'));
+          if (!ok) return;
+        }
         location.href = 'index.html';
       });
     });

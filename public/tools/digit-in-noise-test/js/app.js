@@ -4,7 +4,7 @@
 // 重要：不要在此文件覆盖 setUILanguage（i18n.js 提供翻译功能）
 
 /* ========== CONFIG ========== */
-const APP_VERSION = 'iDIN-2026-06-test-state-machine-1';
+const APP_VERSION = 'iDIN-2026-06-upload-queue-1';
 const STEP_DB = 2;
 const START_SNR = 0;
 const SNR_MIN = -30;

@@ -48,7 +48,7 @@ export const toolItems: ToolItem[] = [
     tone: "teal",
     data: "Responses are submitted to the project backend for study use.",
     output: "Participant-level DIN records and server-side study exports.",
-    version: "Test-state safeguards",
+    version: "Reliable result upload",
     assessmentPathway: true,
     platformHighlight: true,
   },
@@ -122,6 +122,26 @@ export const toolStatusLegend: Array<{ label: ToolStatus; text: string }> = [
 ];
 
 export const toolReleaseNotes: ToolReleaseNote[] = [
+  {
+    date: "2026-06-11",
+    title: "iDIN reliable result upload added",
+    tool: "integrated Digit-in-Noise Test",
+    version: "iDIN 2026.06 upload queue",
+    status: "Released",
+    tone: "teal",
+    summary:
+      "The iDIN results page now protects completed test records from being lost when server upload is interrupted.",
+    changes: [
+      "Added a browser-side pending upload record before the first server save attempt.",
+      "Added clear Saved, Saving, Pending, and Failed states on the results page with a Retry upload action.",
+      "Stored a stable uploadClientId with each completed session for audit and duplicate protection.",
+      "Added backend idempotency so repeated uploads with the same uploadClientId or sessionId return the existing record instead of appending another JSONL row.",
+      "Added upload metadata to researcher dashboard detail view and summary CSV export.",
+    ],
+    dataBoundary:
+      "Result upload reliability and metadata changed only; audio files, fixed-noise-gain application, SNR logic, adaptive scoring, randomization behavior, and existing server-side result records are unchanged.",
+    href: "/tools/digit-in-noise-test/",
+  },
   {
     date: "2026-06-11",
     title: "iDIN test interaction state safeguards added",
