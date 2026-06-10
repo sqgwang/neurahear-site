@@ -7,12 +7,12 @@
       content="width=device-width,initial-scale=1,viewport-fit=cover">
     <title data-i18n="infoTitle">Participant Information</title>
 
-    <!-- 引入全局样式：让它和其他页面风格一致 -->
-    <link rel="stylesheet" href="css/styles.css?v=idin-20260610-randomize-1">
+    <!-- Shared styles for the iDIN pages. -->
+    <link rel="stylesheet" href="css/styles.css?v=idin-20260610-required-pid-1">
   </head>
 
   <body>
-    <!-- 顶部栏，和其他页面一致 -->
+    <!-- Top bar shared with the other iDIN pages. -->
     <header class="topbar">
       <div class="brand">integrated Digit-in-Noise Test</div>
       <div class="lang-switch" style="margin-left:auto;">
@@ -29,8 +29,9 @@
         <div class="form-row">
           <label for="pid">
             <span data-i18n="participantId">Participant ID</span>
+            <span class="required" aria-hidden="true">*</span>
           </label>
-          <input id="pid" name="pid" type="text" placeholder="optional">
+          <input id="pid" name="pid" type="text" placeholder="required" required autocomplete="off">
         </div>
 
         <div class="form-row">
@@ -104,12 +105,11 @@
       </form>
     </main>
 
-    <!-- 脚本：保持你的实际路径（你说在 js/ 目录） -->
-    <script src="js/i18n.js?v=idin-20260610-randomize-1"></script>
-    <script src="js/app.js?v=idin-20260610-randomize-1"></script>
+    <script src="js/i18n.js?v=idin-20260610-required-pid-1"></script>
+    <script src="js/app.js?v=idin-20260610-required-pid-1"></script>
 
     <script>
-      // 语言初始化
+      // Language initialization.
       (function(){
         const sel = document.getElementById('uiLang');
         const saved = localStorage.getItem('uiLang') || 'english';
@@ -124,7 +124,7 @@
         if (typeof setUILanguage === 'function') setUILanguage(saved);
       })();
 
-      // 每次进入都重置为默认
+      // Reset the setup form each time the page is entered.
       (function(){
         const form = document.getElementById('infoForm');
         if (form && typeof form.reset === 'function') form.reset();
@@ -149,7 +149,7 @@
         return next;
       }
 
-      // 提交保存并跳转
+      // Save setup information and continue.
       document.getElementById('infoForm').addEventListener('submit', function(ev){
         ev.preventDefault();
         const pid = document.getElementById('pid').value.trim();
@@ -157,7 +157,7 @@
         const age = parseInt(document.getElementById('age').value, 10);
         const edu = parseInt(document.getElementById('edu').value, 10);
         const stimLang = document.getElementById('stimLang').value;
-        if (!gender || isNaN(age) || isNaN(edu) || !stimLang) {
+        if (!pid || !gender || isNaN(age) || isNaN(edu) || !stimLang) {
           alert('Please complete required fields (*).');
           return;
         }
@@ -166,7 +166,7 @@
         const randomizeConditions = !!document.getElementById('randomizeConditions')?.checked;
         const testConditions = randomizeConditions ? shuffledCopy(conditionOrderOriginal) : conditionOrderOriginal.slice();
         const userInfo = {
-          pid: pid || '',
+          pid,
           gender,
           age,
           education: edu,
@@ -183,6 +183,6 @@
       });
     </script>
 
-    <!-- 不再需要页面内联样式，统一交给 styles.css -->
+    <!-- Inline page styles are intentionally avoided; shared styling lives in styles.css. -->
   </body>
 </html>

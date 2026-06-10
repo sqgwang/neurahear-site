@@ -1,5 +1,5 @@
 // admin.js — DIN Admin (extended fields + per-record CSV/JSON download + detail modal)
-// 同域 '/api/...'; 强制凭证；列表展示 PID/性别/年龄/教育年限/语言/SRT 概览；支持 CSV 下载
+// Same-origin '/api/...'; includes credentials; lists PID, demographics, language, and SRT summary; supports CSV download.
 
 (function(){
   // ===== Helpers =====
@@ -7,7 +7,7 @@
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
   function ts(x){ try{ return new Date(x).toLocaleString(); }catch{ return ''; } }
 
-  // 强制把任何 path 重写成 "/api/..."
+  // Force every path into the "/api/..." namespace.
   function buildUrl(path){
     let p = String(path||'').trim().replace(/^\/+/, '').replace(/^api\/+/, '');
     const url = '/api/' + p;
@@ -35,7 +35,7 @@
     $('#dashPane').style.display  = show ? 'none' : '';
   }
 
-  // CSV 生成（与 results 页面一致）
+  // CSV generation aligned with the results page.
   function trialsToCSV(trials){
     const headers = [
       'participantId','language','condition','nDigits','practice','trialIndexInCond','digitsPresented',
@@ -87,7 +87,7 @@
       const edu = (eduVal != null && eduVal !== '') ? eduVal : '—';
       const stim = it.meta?.stimLang || ui.stimLang || '—';
       const conds = (it.meta?.conditionOrder || ui.testConditions || []).join(',');
-      // SRT 概览：优先后端聚合的 perCondition；没有就显示“—”
+      // SRT overview: prefer server-side perCondition aggregates; fall back to "—".
       const perC = Array.isArray(it.perCondition) ? it.perCondition : [];
       const srtStr = srtSummary(perC);
       const created = ts(it.createdAt || Date.now());
@@ -102,7 +102,7 @@
         <td class="small">${esc(conds)}</td>
         <td class="small">${esc(srtStr)}</td>
         <td>
-          <button class="secondary small" data-act="detail" data-id="${id}">详情</button>
+          <button class="secondary small" data-act="detail" data-id="${id}">Detail</button>
           <button class="secondary small" data-act="json" data-id="${id}">JSON</button>
           <button class="secondary small" data-act="csv" data-id="${id}">CSV</button>
           ${isAdmin ? `<button class="danger small" data-act="del" data-id="${id}">Delete</button>` : ''}
@@ -129,7 +129,7 @@
       </table>
     `;
 
-    // 事件绑定
+    // Event binding.
     $('#list').querySelectorAll('button[data-act="json"]').forEach(b=>{
       b.addEventListener('click', async ()=>{
         const one = await api('results/' + b.dataset.id);
@@ -189,7 +189,7 @@
     const perC = Array.isArray(doc.perCondition) ? doc.perCondition : [];
     const summary = doc.diffs || doc.summary || {};
 
-    // per-condition 表
+    // Per-condition table.
     const pcRows = perC.map(r => `
       <tr>
         <td>${esc(r.condition)}</td>

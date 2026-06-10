@@ -48,7 +48,7 @@ export const toolItems: ToolItem[] = [
     tone: "teal",
     data: "Responses are submitted to the project backend for study use.",
     output: "Participant-level DIN records and server-side study exports.",
-    version: "Randomized condition order option",
+    version: "Required participant ID",
     assessmentPathway: true,
     platformHighlight: true,
   },
@@ -122,6 +122,24 @@ export const toolStatusLegend: Array<{ label: ToolStatus; text: string }> = [
 ];
 
 export const toolReleaseNotes: ToolReleaseNote[] = [
+  {
+    date: "2026-06-10",
+    title: "iDIN setup and dashboard wording refined",
+    tool: "integrated Digit-in-Noise Test",
+    version: "iDIN 2026.06 setup refinement",
+    status: "Released",
+    tone: "teal",
+    summary:
+      "The integrated DIN setup page now requires participant IDs, and the researcher dashboard has fully English action wording.",
+    changes: [
+      "Made Participant ID a required setup field with both browser-level and script-level validation.",
+      "Changed the dashboard result action button from Chinese wording to English.",
+      "Bumped the iDIN static asset version so deployed browsers pick up the updated files.",
+    ],
+    dataBoundary:
+      "Static iDIN front-end files changed only; existing server-side JSONL results and backend storage are not modified by this release.",
+    href: "/tools/digit-in-noise-test/",
+  },
   {
     date: "2026-06-10",
     title: "iDIN condition order randomization added",

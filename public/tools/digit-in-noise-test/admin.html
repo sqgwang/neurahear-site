@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>DIN Admin</title>
-  <link rel="stylesheet" href="css/styles.css?v=idin-20260610-randomize-1">
+  <link rel="stylesheet" href="css/styles.css?v=idin-20260610-required-pid-1">
   <style>
     .card { background: var(--surface,#fff); border-radius: 20px; box-shadow: 0 6px 24px rgba(0,0,0,.08); padding: 24px; }
     .stack > * + * { margin-top: 12px; }
@@ -29,7 +29,7 @@
 </header>
 
 <main class="container stack" id="appRoot" style="max-width: 1200px;">
-  <!-- 登录 -->
+  <!-- Login -->
   <section id="loginPane" class="card" style="max-width:720px; margin:40px auto;">
     <h1 class="large-title" style="margin:0 0 8px;">Sign in</h1>
     <p class="note" id="httpsHint" style="margin:0 0 12px;"></p>
@@ -49,7 +49,7 @@
     </div>
   </section>
 
-  <!-- 仪表盘 -->
+  <!-- Dashboard -->
   <section id="dashPane" style="display:none;">
     <section class="card">
       <div class="toolbar">
@@ -73,7 +73,7 @@
       </div>
     </section>
 
-    <!-- 仅管理员可见：用户管理 -->
+    <!-- Admin-only user management -->
     <section id="userAdmin" class="card" style="margin-top:16px; display:none;">
       <h2 style="margin-top:0;">Users</h2>
       <div id="userList" class="note" style="margin-bottom:8px;">—</div>
@@ -100,7 +100,7 @@
   </section>
 </main>
 
-<!-- 详情弹窗 -->
+<!-- Detail dialog -->
 <dialog id="detailDialog">
   <div class="modal">
     <header>
@@ -109,11 +109,11 @@
       <button id="dlgClose" class="secondary">Close</button>
     </header>
     <main id="dlgMain">
-      <!-- 动态填充 -->
+      <!-- Filled dynamically -->
     </main>
   </div>
 </dialog>
 
-<script src="admin.js?v=idin-20260610-randomize-1"></script>
+<script src="admin.js?v=idin-20260610-required-pid-1"></script>
 </body>
 </html>
