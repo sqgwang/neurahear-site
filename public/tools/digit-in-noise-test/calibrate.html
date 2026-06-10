@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <title>DIN Test Calibration</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet" href="css/styles.css?v=idin-20260610-sequence-snr-docs-1" />
+  <link rel="stylesheet" href="css/styles.css?v=idin-20260610-flow-dashboard-ux-1" />
 </head>
 <body>
   <header class="topbar">
@@ -17,8 +17,8 @@
     </div>
   </header>
 
-  <main class="container">
-    <h1 id="calibTitle" class="large-title" data-i18n="calibTitle">Calibration</h1>    
+  <main class="container calibration-page">
+    <h1 id="calibTitle" class="large-title" data-i18n="calibTitle">Calibration</h1>
     <p data-i18n="calibText">Please connect wired headphones. Use the slider to adjust the background noise until the noise is comfortably audible.</p>
 
     <div class="center">
@@ -29,8 +29,21 @@
 
     <div class="form-row">
       <label for="noiseGain" data-i18n="noiseGainLabel">Noise level</label>
-      <input type="range" id="noiseGain" min="0" max="2" step="0.01" value="1" />
-      <div id="gainValue">1.00</div>
+      <input type="range" id="noiseGain" min="0.05" max="2" step="0.01" value="1" />
+      <div class="calibration-readout" aria-live="polite">
+        <span id="gainValue">1.00x</span>
+        <span id="gainDbValue">0.0 dB</span>
+      </div>
+      <div class="calibration-controls">
+        <button type="button" class="secondary small" id="noiseDown" data-i18n="noiseDown">-1 dB</button>
+        <label class="numeric-field" for="noiseDbInput">
+          <span data-i18n="noiseDbInput">Noise adjustment (dB)</span>
+          <input type="number" id="noiseDbInput" min="-26" max="6" step="0.5" value="0">
+        </label>
+        <button type="button" class="secondary small" id="noiseUp" data-i18n="noiseUp">+1 dB</button>
+        <button type="button" class="secondary small" id="noiseReset" data-i18n="resetNoise">Reset</button>
+      </div>
+      <p class="note calibration-note" data-i18n="calibNumericHelp">The value is saved for the rest of this test and applied equally to speech and noise.</p>
     </div>
 
     <div class="center">
@@ -39,8 +52,8 @@
     <div id="calibMsg" class="note"></div>
   </main>
 
-  <script src="js/i18n.js?v=idin-20260610-sequence-snr-docs-1"></script>
-  <script src="js/app.js?v=idin-20260610-sequence-snr-docs-1"></script>
+  <script src="js/i18n.js?v=idin-20260610-flow-dashboard-ux-1"></script>
+  <script src="js/app.js?v=idin-20260610-flow-dashboard-ux-1"></script>
   <script>
     // calibration wiring
     document.addEventListener('DOMContentLoaded', async () => {
@@ -68,27 +81,57 @@
       const stopBtn = document.getElementById('stopNoise');
       const gainSlider = document.getElementById('noiseGain');
       const gainValue = document.getElementById('gainValue');
+      const gainDbValue = document.getElementById('gainDbValue');
+      const noiseDbInput = document.getElementById('noiseDbInput');
+      const minGain = parseFloat(gainSlider.min);
+      const maxGain = parseFloat(gainSlider.max);
+      const clampGain = value => Math.min(maxGain, Math.max(minGain, value));
+      const gainToDb = value => 20 * Math.log10(Math.max(value, minGain));
+      const dbToGain = value => Math.pow(10, value / 20);
 
-      gainSlider.value = localStorage.getItem('fixedNoiseGain') || 1.0;
-      gainValue.textContent = parseFloat(gainSlider.value).toFixed(2);
+      function renderGain(value, options = {}) {
+        const gain = clampGain(Number.isFinite(value) ? value : 1.0);
+        const db = gainToDb(gain);
+        gainSlider.value = gain.toFixed(2);
+        gainValue.textContent = `${gain.toFixed(2)}x`;
+        gainDbValue.textContent = `${db.toFixed(1)} dB`;
+        if (!options.keepDbInputFocus || document.activeElement !== noiseDbInput) {
+          noiseDbInput.value = db.toFixed(1);
+        }
+        setFixedNoiseGain(gain);
+      }
+
+      renderGain(parseFloat(localStorage.getItem('fixedNoiseGain') || '1.0'));
 
       playBtn.addEventListener('click', async () => {
         await startNoiseLoop(); // from app.js
       });
       stopBtn.addEventListener('click', () => stopNoiseLoop());
       gainSlider.addEventListener('input', (e) => {
-        const v = parseFloat(e.target.value);
-        document.getElementById('gainValue').textContent = v.toFixed(2);
-        setFixedNoiseGain(v); // app.js
+        renderGain(parseFloat(e.target.value));
+      });
+      noiseDbInput.addEventListener('input', (e) => {
+        const db = parseFloat(e.target.value);
+        if (Number.isFinite(db)) renderGain(dbToGain(db), { keepDbInputFocus: true });
+      });
+      document.getElementById('noiseDown').addEventListener('click', () => {
+        renderGain(dbToGain(gainToDb(parseFloat(gainSlider.value)) - 1));
+      });
+      document.getElementById('noiseUp').addEventListener('click', () => {
+        renderGain(dbToGain(gainToDb(parseFloat(gainSlider.value)) + 1));
+      });
+      document.getElementById('noiseReset').addEventListener('click', () => {
+        renderGain(1.0);
       });
 
       document.getElementById('confirmCalib').addEventListener('click', () => {
-        const v = parseFloat(gainSlider.value);
+        const v = clampGain(parseFloat(gainSlider.value));
         setFixedNoiseGain(v);
         localStorage.setItem('fixedNoiseGain', v);
         localStorage.setItem('din_calibration', JSON.stringify({
           type: 'user_adjusted_noise_loop',
           noiseGain: v,
+          noiseGainDb: Math.round(gainToDb(v) * 10) / 10,
           stimLang: userInfo.stimLang,
           calibratedAt: new Date().toISOString(),
           note: 'Noise level was fixed from this calibration step for all subsequent formal trials.'

@@ -4,7 +4,7 @@
 // 重要：不要在此文件覆盖 setUILanguage（i18n.js 提供翻译功能）
 
 /* ========== CONFIG ========== */
-const APP_VERSION = 'iDIN-2026-06-sequence-snr-docs-1';
+const APP_VERSION = 'iDIN-2026-06-flow-dashboard-ux-1';
 const STEP_DB = 2;
 const START_SNR = 0;
 const SNR_MIN = -30;
@@ -43,6 +43,33 @@ function readStoredNoiseGain() {
 }
 
 let fixedNoiseGain = readStoredNoiseGain();
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function setStatusMessage(message, tone = '') {
+  const status = document.getElementById('statusMsg');
+  if (!status) return;
+  status.textContent = message;
+  if (tone) status.dataset.tone = tone;
+  else delete status.dataset.tone;
+}
+
+async function startAfterMessage(message, delayMs = 1200, tone = 'success') {
+  setStatusMessage(message, tone);
+  setInputLock(true);
+  setPlayButtonEnabled(false);
+  await sleep(delayMs);
+  try {
+    await startTrialPlay();
+  } catch (e) {
+    console.error('Auto-start failed', e);
+    setStatusMessage('Playback failed. Click Play to retry.', 'warning');
+    setInputLock(false);
+    setPlayButtonEnabled(true);
+  }
+}
 
 /* ========== SESSION ========== */
 function initEmptySession() {
@@ -423,13 +450,22 @@ function updateProgressUI() {
   const def = COND_DEFS[currCond] || { label: currCond, nDigits: 3 };
   const isFormal = session.phase && session.phase[currCond] === 'formal';
   const progressEl = document.getElementById('progress');
+  const phaseBadge = document.getElementById('phaseBadge');
   if (!progressEl) return;
   if (!isFormal) {
     const pidx = session.practiceIdx[currCond] != null ? session.practiceIdx[currCond] : 0;
     progressEl.textContent = `${def.label} — Practice ${pidx + 1}/${N_PRACTICE}`;
+    if (phaseBadge) {
+      phaseBadge.textContent = 'Practice';
+      phaseBadge.classList.remove('is-formal');
+    }
   } else {
     const fidx = session.formalIdx[currCond] != null ? session.formalIdx[currCond] : 0;
     progressEl.textContent = `${def.label} — Trial ${fidx + 1}/${N_FORMAL}`;
+    if (phaseBadge) {
+      phaseBadge.textContent = 'Formal';
+      phaseBadge.classList.add('is-formal');
+    }
   }
 }
 
@@ -499,7 +535,7 @@ function showConditionIntro() {
     const fidx = session.formalIdx[currCond] || 0;
     intro = `${def.label} — Trial ${fidx + 1}/${N_FORMAL}. Click Play to start.`;
   }
-  if (status) status.textContent = intro;
+  setStatusMessage(intro);
 
   // Play 按钮显示，Next Condition 隐藏（只有某些阶段在 submit 中才显示/跳转）
   setPlayButtonEnabled(true);
@@ -527,16 +563,15 @@ function clearInput() {
 
 /* ========== TRIAL FLOW ========== */
 async function startTrialPlay() {
-  const status = document.getElementById('statusMsg');
   if (window.dinUI?.playbackActive) return;
   if (window.dinUI?.awaitingResponse) {
-    if (status) status.textContent = 'Please enter the digits you heard and press OK.';
+    setStatusMessage('Please enter the digits you heard and press OK.');
     return;
   }
 
   window.dinUI.playbackActive = true;
   setInputLock(true);
-  if (status) status.textContent = 'Preparing audio...';
+  setStatusMessage('Preparing audio...');
 
   try { await audioContext.resume(); } catch(e) {}
   const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
@@ -544,7 +579,7 @@ async function startTrialPlay() {
     window.dinUI.playbackActive = false;
     window.dinUI.awaitingResponse = false;
     setInputLock(false);
-    alert('Missing user info');
+    setStatusMessage('Missing user info. Returning to the start...', 'warning');
     location.href = 'index.html';
     return;
   }
@@ -565,7 +600,7 @@ async function startTrialPlay() {
     try {
       await loadLanguageAudio(userInfo.stimLang);
     } catch(e) {
-      alert('Failed to load stimuli');
+      setStatusMessage('Failed to load stimuli. Check the audio files and reload the page.', 'warning');
       console.error(e);
       window.dinUI.playbackActive = false;
       window.dinUI.awaitingResponse = false;
@@ -602,7 +637,7 @@ async function startTrialPlay() {
   const currCond = session.conditionOrder[session.currentCondIdx];
   const condDef = COND_DEFS[currCond];
   if (!condDef) {
-    alert('Unknown condition: ' + currCond);
+    setStatusMessage('Unknown condition: ' + currCond, 'warning');
     window.dinUI.playbackActive = false;
     window.dinUI.awaitingResponse = false;
     setInputLock(false);
@@ -649,12 +684,12 @@ async function startTrialPlay() {
 
   // === 播放前：锁定输入（虚拟键盘禁用 + 实体键盘屏蔽），禁用 Play 避免重复点击
   setInputLock(true);
-  if (status) status.textContent = 'Playing...';
+  setStatusMessage('Playing...');
 
   try {
     const r = await renderMixedBufferAndPlay(digits, targetSNR, session.userInfo.stimLang, { noiseEnabled });
     session._lastEffectiveSNR = r.effectiveSNR;
-    if (status) status.textContent = 'Playback finished. Please type digits and press OK.';
+    setStatusMessage('Playback finished. Please type digits and press OK.');
     // === 播放结束：解除锁定，允许输入与提交
     window.dinUI.playbackActive = false;
     window.dinUI.awaitingResponse = true;
@@ -662,7 +697,7 @@ async function startTrialPlay() {
     setPlayButtonEnabled(false);
   } catch (e) {
     console.error('Playback error', e);
-    if (status) status.textContent = 'Playback error. Click Play to retry.';
+    setStatusMessage('Playback error. Click Play to retry.', 'warning');
     window.dinUI.playbackActive = false;
     window.dinUI.awaitingResponse = false;
     setInputLock(false);
@@ -677,17 +712,15 @@ async function submitInput() {
 
   const inputEl = document.getElementById('input');
   const input = getCurrentInput();
-  if (input.length === 0) { alert('Please enter the digits before pressing OK.'); return; }
+  if (input.length === 0) { setStatusMessage('Please enter the digits before pressing OK.', 'warning'); return; }
   if (!window.dinUI?.awaitingResponse) {
-    const status = document.getElementById('statusMsg');
-    if (status) status.textContent = 'Click Play first, then enter the digits you heard.';
+    setStatusMessage('Click Play first, then enter the digits you heard.', 'warning');
     return;
   }
 
   const expectedLen = getCurrentNDigits();
   if (input.length !== expectedLen) {
-    const status = document.getElementById('statusMsg');
-    if (status) status.textContent = `Please enter ${expectedLen} digit${expectedLen > 1 ? 's' : ''}.`;
+    setStatusMessage(`Please enter ${expectedLen} digit${expectedLen > 1 ? 's' : ''}.`, 'warning');
     return;
   }
 
@@ -737,10 +770,7 @@ async function submitInput() {
     const pSpec = (function(k){ const p1 = { digits: Array.from({length:k}, (_,i) => (i+1)%10 || 0), mustCorrect: true, noiseDb: null }; const sample2=[6,8,5,3,2].slice(0,k); const p2={digits:sample2,mustCorrect:true,noiseDb:null}; const sample3=[5,9,2,7,1].slice(0,k); const p3={digits:sample3,mustCorrect:false,noiseDb:5}; return [p1,p2,p3]; })(condDef.nDigits)[pIdx];
 
     if (pSpec && pSpec.mustCorrect && !correct) {
-      alert(`Incorrect. The correct answer is ${expectedResponse}. The trial will be replayed until answered correctly.`);
-      // 立即开始重播：先锁定
-      setInputLock(true);
-      try { await startTrialPlay(); } catch(e){ setInputLock(false); const status=document.getElementById('statusMsg'); if (status) status.textContent='Playback failed. Click Play to retry.'; }
+      await startAfterMessage(`Incorrect. The correct answer is ${expectedResponse}. Replaying in 2 seconds.`, 2000, 'warning');
       return;
     }
 
@@ -755,13 +785,10 @@ async function submitInput() {
       session._lastEffectiveSNR = null;
       updateProgressUI();
       localStorage.setItem('din_session', JSON.stringify(session));
-      alert('Practice completed for this condition. Formal trials will begin.');
-      setInputLock(true);
-      try { await startTrialPlay(); } catch(e){ console.error('Start formal failed', e); const status=document.getElementById('statusMsg'); if (status) status.textContent='Playback failed. Click Play to retry.'; setInputLock(false); }
+      await startAfterMessage('Practice completed. Formal trials will begin in 2 seconds.', 2000, 'success');
       return;
     } else {
-      setInputLock(true);
-      try { await startTrialPlay(); } catch(e){ console.error('Start next practice failed', e); const status=document.getElementById('statusMsg'); if (status) status.textContent='Playback failed. Click Play to retry.'; setInputLock(false); }
+      await startAfterMessage('Next practice trial will begin in 1 second.', 1000, 'success');
       return;
     }
   }
@@ -778,24 +805,24 @@ async function submitInput() {
   if (session.formalIdx[currCond] >= N_FORMAL) {
     session.currentCondIdx++;
     if (session.currentCondIdx >= session.conditionOrder.length) {
-      alert('All conditions completed. Redirecting to results.');
       localStorage.setItem('din_session', JSON.stringify(session));
+      setStatusMessage('All conditions completed. Redirecting to results...', 'success');
+      await sleep(1200);
       location.href = 'results.html';
       return;
     } else {
       const nextCond = session.conditionOrder[session.currentCondIdx];
+      const nextDef = COND_DEFS[nextCond] || { label: nextCond };
       session.phase[nextCond] = 'practice';
       session.practiceIdx[nextCond] = session.practiceIdx[nextCond] || 0;
       session.formalIdx[nextCond] = session.formalIdx[nextCond] || 0;
       localStorage.setItem('din_session', JSON.stringify(session));
-      alert(`Proceeding to next condition: ${nextCond}. Practice will start now.`);
-      setInputLock(true);
-      try { await startTrialPlay(); } catch(e){ console.error('Start next condition failed', e); const status=document.getElementById('statusMsg'); if (status) status.textContent='Playback failed. Click Play to retry.'; setInputLock(false); }
+      updateProgressUI();
+      await startAfterMessage(`Next condition: ${nextDef.label}. Practice will start in 2 seconds.`, 2000, 'success');
       return;
     }
   } else {
-    setInputLock(true);
-    try { await startTrialPlay(); } catch(e){ console.error('Start next formal failed', e); const status=document.getElementById('statusMsg'); if (status) status.textContent='Playback failed. Click Play to retry.'; setInputLock(false); }
+    await startAfterMessage('Next trial will begin in 1 second.', 1000, 'success');
     return;
   }
 }

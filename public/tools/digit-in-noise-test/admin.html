@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>DIN Admin</title>
-  <link rel="stylesheet" href="css/styles.css?v=idin-20260610-sequence-snr-docs-1">
+  <link rel="stylesheet" href="css/styles.css?v=idin-20260610-flow-dashboard-ux-1">
   <style>
     .card { background: var(--surface,#fff); border-radius: 20px; box-shadow: 0 6px 24px rgba(0,0,0,.08); padding: 24px; }
     .stack > * + * { margin-top: 12px; }
@@ -20,6 +20,14 @@
     .modal { padding: 20px; max-width: 920px; }
     .modal header { display:flex; align-items:center; gap:12px; padding:16px 20px; border-bottom:1px solid rgba(0,0,0,.08); }
     .modal main { padding: 20px; }
+    .admin-filters { display:grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap:10px; align-items:end; margin-top:14px; }
+    .admin-filters label { display:grid; gap:5px; font-size:.82rem; color:var(--text-dim,#667085); }
+    .admin-metrics { display:grid; grid-template-columns: repeat(4, minmax(120px, 1fr)); gap:10px; margin-top:14px; }
+    .metric-tile { border:1px solid var(--hairline,rgba(0,0,0,.12)); border-radius:12px; background:var(--surface-weak,rgba(118,118,128,.10)); padding:10px 12px; }
+    .metric-tile b { display:block; font-size:1.15rem; color:var(--text,#111315); }
+    .metric-tile span { color:var(--text-dim,#667085); font-size:.8rem; }
+    @media (max-width: 760px) { .admin-filters, .admin-metrics { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 520px) { .admin-filters, .admin-metrics { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -66,8 +74,43 @@
         <div style="margin-left:auto"></div>
         <input id="q" class="input" placeholder="Search PID / stimLang / gender / age…" />
         <button id="btnReload" class="secondary">Reload</button>
+        <button id="btnExportSummary" class="secondary">Export current CSV</button>
         <div id="count" class="note"></div>
       </div>
+      <div class="admin-filters">
+        <label>Language
+          <select id="filterLang" class="input">
+            <option value="">All</option>
+            <option value="mandarin">Mandarin</option>
+            <option value="cantonese">Cantonese</option>
+            <option value="british_english">British English</option>
+            <option value="american_english">American English</option>
+            <option value="taiwanese">Taiwanese</option>
+            <option value="ningboese">Ningboese</option>
+            <option value="hangzhouese">Hangzhouese</option>
+            <option value="min">Min</option>
+            <option value="fuzhouese">Fuzhouese</option>
+          </select>
+        </label>
+        <label>Completion
+          <select id="filterCompletion" class="input">
+            <option value="">All</option>
+            <option value="complete">Complete</option>
+            <option value="incomplete">Incomplete</option>
+          </select>
+        </label>
+        <label>Randomization
+          <select id="filterRandomized" class="input">
+            <option value="">All</option>
+            <option value="yes">Randomized</option>
+            <option value="no">Selected order</option>
+          </select>
+        </label>
+        <label>Minimum formal trials
+          <input id="filterMinFormal" class="input" type="number" min="0" max="200" step="1" placeholder="Any">
+        </label>
+      </div>
+      <div id="qcSummary" class="admin-metrics" aria-live="polite"></div>
       <div id="list" style="margin-top:10px;">
         <p class="note">Loading…</p>
       </div>
@@ -114,6 +157,6 @@
   </div>
 </dialog>
 
-<script src="admin.js?v=idin-20260610-sequence-snr-docs-1"></script>
+<script src="admin.js?v=idin-20260610-flow-dashboard-ux-1"></script>
 </body>
 </html>

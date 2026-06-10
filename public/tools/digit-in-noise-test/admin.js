@@ -2,6 +2,9 @@
 // Same-origin '/api/...'; includes credentials; lists PID, demographics, language, and SRT summary; supports CSV download.
 
 (function(){
+  const N_FORMAL_PER_CONDITION = 24;
+  let currentItems = [];
+
   // ===== Helpers =====
   const $ = sel => document.querySelector(sel);
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
@@ -55,6 +58,135 @@
     return parts.length ? parts.join(' ') : '—';
   }
 
+  function getUserInfo(rec) {
+    return rec.userInfo || {};
+  }
+
+  function getStimLang(rec) {
+    const ui = getUserInfo(rec);
+    return rec.meta?.stimLang || ui.stimLang || rec.language || '';
+  }
+
+  function getConditionOrder(rec) {
+    const ui = getUserInfo(rec);
+    const order = rec.meta?.conditionOrder || ui.testConditions || [];
+    return Array.isArray(order) ? order : [];
+  }
+
+  function getFormalCount(rec) {
+    if (rec.meta?.nFormalTrials != null) return Number(rec.meta.nFormalTrials) || 0;
+    if (Array.isArray(rec.trials)) return rec.trials.filter(t => t && !t.practice).length;
+    const perC = Array.isArray(rec.perCondition) ? rec.perCondition : [];
+    return perC.reduce((sum, row) => sum + (Number(row.nFormalTrials) || 0), 0);
+  }
+
+  function getExpectedFormalCount(rec) {
+    const nConds = getConditionOrder(rec).length || (Array.isArray(rec.perCondition) ? rec.perCondition.length : 0);
+    return nConds ? nConds * N_FORMAL_PER_CONDITION : 0;
+  }
+
+  function isCompleteRecord(rec) {
+    const expected = getExpectedFormalCount(rec);
+    return expected > 0 && getFormalCount(rec) >= expected;
+  }
+
+  function isRandomizedRecord(rec) {
+    const ui = getUserInfo(rec);
+    return !!(rec.meta?.randomizeConditions || ui.randomizeConditions);
+  }
+
+  function getCalibrationGain(rec) {
+    const v = rec.meta?.fixedNoiseGain ?? rec.meta?.calibration?.noiseGain;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function getCalibrationDb(rec) {
+    const direct = rec.meta?.calibration?.noiseGainDb;
+    const directN = Number(direct);
+    if (Number.isFinite(directN)) return directN;
+    const gain = getCalibrationGain(rec);
+    return gain && gain > 0 ? Math.round(20 * Math.log10(gain) * 10) / 10 : null;
+  }
+
+  function applyDashboardFilters(items) {
+    const lang = $('#filterLang')?.value || '';
+    const completion = $('#filterCompletion')?.value || '';
+    const randomized = $('#filterRandomized')?.value || '';
+    const minFormalRaw = $('#filterMinFormal')?.value || '';
+    const minFormal = minFormalRaw === '' ? null : Number(minFormalRaw);
+
+    return (items || []).filter(rec => {
+      if (lang && getStimLang(rec) !== lang) return false;
+      if (completion === 'complete' && !isCompleteRecord(rec)) return false;
+      if (completion === 'incomplete' && isCompleteRecord(rec)) return false;
+      if (randomized === 'yes' && !isRandomizedRecord(rec)) return false;
+      if (randomized === 'no' && isRandomizedRecord(rec)) return false;
+      if (Number.isFinite(minFormal) && getFormalCount(rec) < minFormal) return false;
+      return true;
+    });
+  }
+
+  function renderQcSummary(items, backendTotal) {
+    const total = items.length;
+    const complete = items.filter(isCompleteRecord).length;
+    const randomized = items.filter(isRandomizedRecord).length;
+    const gains = items.map(getCalibrationGain).filter(v => v != null);
+    const avgGain = gains.length ? gains.reduce((a,b)=>a+b,0) / gains.length : null;
+    const langs = Array.from(new Set(items.map(getStimLang).filter(Boolean)));
+    $('#qcSummary').innerHTML = [
+      ['Shown records', `${total}`, `${backendTotal} matched search`],
+      ['Complete', `${complete}`, `${Math.max(0, total - complete)} incomplete`],
+      ['Randomized', `${randomized}`, `${Math.max(0, total - randomized)} selected order`],
+      ['Avg calibration', avgGain == null ? '—' : `${avgGain.toFixed(2)}x`, langs.length ? langs.join(', ') : 'No languages']
+    ].map(([label, value, sub]) => `<div class="metric-tile"><b>${esc(value)}</b><span>${esc(label)} · ${esc(sub)}</span></div>`).join('');
+  }
+
+  function rowsToCSV(rows) {
+    return rows.map(row => row.map(value => JSON.stringify(value ?? '')).join(',')).join('\n');
+  }
+
+  function downloadText(filename, content, type) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([content], { type }));
+    a.download = filename;
+    a.click();
+  }
+
+  function exportCurrentSummaryCSV() {
+    if (!currentItems.length) {
+      alert('No current records to export.');
+      return;
+    }
+    const headers = [
+      'id','createdAt','participantId','gender','age','education','stimLang','conditions',
+      'nFormalTrials','expectedFormalTrials','complete','randomized','fixedNoiseGain','calibrationDb','SRTs'
+    ];
+    const rows = currentItems.map(rec => {
+      const ui = getUserInfo(rec);
+      const conds = getConditionOrder(rec);
+      const perC = Array.isArray(rec.perCondition) ? rec.perCondition : [];
+      return [
+        rec._id || '',
+        rec.createdAt || '',
+        rec.participantId || ui.pid || '',
+        ui.gender || '',
+        ui.age ?? '',
+        ui.education ?? ui.educationYears ?? '',
+        getStimLang(rec),
+        conds.join('|'),
+        getFormalCount(rec),
+        getExpectedFormalCount(rec),
+        isCompleteRecord(rec) ? 'yes' : 'no',
+        isRandomizedRecord(rec) ? 'yes' : 'no',
+        getCalibrationGain(rec),
+        getCalibrationDb(rec),
+        srtSummary(perC)
+      ];
+    });
+    downloadText(`idin_results_summary_${new Date().toISOString().slice(0,10)}.csv`, rowsToCSV([headers].concat(rows)), 'text/csv;charset=utf-8');
+  }
+
   // ===== Auth =====
   async function checkMe(){
     try { const r = await api('me'); console.log('[ME]', r); return r.user || null; }
@@ -70,15 +202,18 @@
   async function loadList(){
     const isAdmin = window.__ME_ROLE === 'admin';
     const q = $('#q').value.trim();
-    const data = await api(`results?limit=200&search=${encodeURIComponent(q)}`);
-    $('#count').textContent = `${data.total} records`;
+    const data = await api(`results?limit=500&search=${encodeURIComponent(q)}`);
+    const filteredItems = applyDashboardFilters(data.items || []);
+    currentItems = filteredItems;
+    $('#count').textContent = `${filteredItems.length} shown / ${data.total} records`;
+    renderQcSummary(filteredItems, data.total);
 
-    if (!data.items?.length){
+    if (!filteredItems.length){
       $('#list').innerHTML = '<p class="note">No records.</p>';
       return;
     }
 
-    const rows = data.items.map(it => {
+    const rows = filteredItems.map(it => {
       const ui = it.userInfo || {};
       const pid = it.participantId || ui.pid || '—';
       const sex = ui.gender || '—';
@@ -304,7 +439,12 @@
 
     document.getElementById('btnLogout').addEventListener('click', async ()=>{ await doLogout(); location.reload(); });
     document.getElementById('btnReload').addEventListener('click', loadList);
+    document.getElementById('btnExportSummary').addEventListener('click', exportCurrentSummaryCSV);
     document.getElementById('q').addEventListener('keydown', e=>{ if (e.key === 'Enter') loadList(); });
+    ['filterLang','filterCompletion','filterRandomized'].forEach(id => {
+      document.getElementById(id).addEventListener('change', loadList);
+    });
+    document.getElementById('filterMinFormal').addEventListener('keydown', e=>{ if (e.key === 'Enter') loadList(); });
     document.getElementById('btnAddUser').addEventListener('click', addUser);
 
     const me = await checkMe();

@@ -6,7 +6,8 @@
 /* ---------- Theme variables ---------- */
 :root {
   color-scheme: light dark;
-  --ios-blue: #0a84ff;
+  --ios-blue: #0f766e;
+  --brand-accent: #d97706;
   --text: #111315;
   --text-dim: #5c5f62;
   --bg: #f5f5f7;
@@ -47,8 +48,8 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   color: var(--text);
   background:
-    radial-gradient(1200px 700px at 10% -10%, #eaf0ff 0%, transparent 50%),
-    radial-gradient(900px 600px at 110% 0%, #ffeef2 0%, transparent 55%),
+    radial-gradient(1200px 700px at 10% -10%, #dff7ef 0%, transparent 50%),
+    radial-gradient(900px 600px at 110% 0%, #eef6ff 0%, transparent 55%),
     var(--bg) !important;
 }
 
@@ -160,6 +161,75 @@ button {
   border: 1px solid var(--hairline) !important;
   border-radius: 12px !important;
   padding: 10px 14px !important;
+}
+.small {
+  font-size: 0.9rem;
+  padding: 8px 11px !important;
+}
+
+/* ---------- Calibration controls ---------- */
+.calibration-readout {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  font-weight: 700;
+}
+#gainValue {
+  font-size: 1.35rem;
+}
+#gainDbValue {
+  color: var(--text-dim);
+}
+.calibration-controls {
+  display: grid;
+  grid-template-columns: auto minmax(180px, 1fr) auto auto;
+  gap: 10px;
+  align-items: end;
+  margin-top: 12px;
+}
+.numeric-field {
+  display: grid;
+  gap: 5px;
+  font-size: 0.88rem;
+  color: var(--text-dim);
+}
+.numeric-field input {
+  width: 100%;
+}
+.calibration-note {
+  margin-top: 10px;
+}
+.phase-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 6px 10px;
+  border: 1px solid rgba(15,118,110,.24);
+  border-radius: 999px;
+  background: rgba(15,118,110,.10);
+  color: var(--ios-blue);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.phase-badge.is-formal {
+  border-color: rgba(217,119,6,.30);
+  background: rgba(217,119,6,.12);
+  color: var(--brand-accent);
+}
+#statusMsg[data-tone="warning"] {
+  color: #b45309 !important;
+  font-weight: 700;
+}
+#statusMsg[data-tone="success"] {
+  color: var(--ios-blue) !important;
+  font-weight: 700;
 }
 
 /* ---------- Table ---------- */
@@ -299,6 +369,24 @@ button {
 /* ---------- Motion preference ---------- */
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
+}
+
+@media (max-width: 560px) {
+  .container {
+    margin: 10px;
+    padding: 20px !important;
+  }
+  .calibration-controls {
+    grid-template-columns: 1fr 1fr;
+  }
+  .numeric-field {
+    grid-column: 1 / -1;
+    order: -1;
+  }
+  .progress-row {
+    flex-direction: column;
+    align-items: center;
+  }
 }
 
 /* 只让 OK 的字更小（不改按钮尺寸） */

@@ -48,7 +48,7 @@ export const toolItems: ToolItem[] = [
     tone: "teal",
     data: "Responses are submitted to the project backend for study use.",
     output: "Participant-level DIN records and server-side study exports.",
-    version: "Sequence-level SNR documented",
+    version: "Calibration and dashboard UX refinement",
     assessmentPathway: true,
     platformHighlight: true,
   },
@@ -122,6 +122,24 @@ export const toolStatusLegend: Array<{ label: ToolStatus; text: string }> = [
 ];
 
 export const toolReleaseNotes: ToolReleaseNote[] = [
+  {
+    date: "2026-06-10",
+    title: "iDIN calibration and dashboard workflow refined",
+    tool: "integrated Digit-in-Noise Test",
+    version: "iDIN 2026.06 flow and dashboard UX",
+    status: "Released",
+    tone: "teal",
+    summary:
+      "The iDIN workflow now has clearer noise calibration controls, smoother in-test transition messages, and stronger researcher dashboard filtering and export tools.",
+    changes: [
+      "Added calibration gain and dB readouts, direct dB entry, -1 dB/+1 dB controls, and reset while preserving the existing fixed-noise-gain algorithm.",
+      "Replaced normal practice/formal transition alerts with inline status messages and short automatic continuation delays.",
+      "Added dashboard filters, QC summary tiles, and current-list CSV export for researcher review.",
+    ],
+    dataBoundary:
+      "Front-end workflow and dashboard UI changed only; audio mixing formulas, adaptive scoring, and existing server-side result records are unchanged.",
+    href: "/tools/digit-in-noise-test/",
+  },
   {
     date: "2026-06-10",
     title: "iDIN sequence-level SNR definition documented",
