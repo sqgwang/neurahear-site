@@ -8,7 +8,7 @@
     <title data-i18n="infoTitle">Participant Information</title>
 
     <!-- 引入全局样式：让它和其他页面风格一致 -->
-    <link rel="stylesheet" href="css/styles.css?v=idin-20260610-stability-1">
+    <link rel="stylesheet" href="css/styles.css?v=idin-20260610-randomize-1">
   </head>
 
   <body>
@@ -87,6 +87,13 @@
           <label><input type="checkbox" name="testCond" value="3b" checked> 3-digit backward</label><br>
           <label><input type="checkbox" name="testCond" value="5f"> 5-digit forward</label><br>
           <p class="note" data-i18n="condHelp">You may select one or more conditions.</p>
+          <label style="display:block; margin-top:12px;">
+            <input type="checkbox" id="randomizeConditions" name="randomizeConditions">
+            <span data-i18n="randomizeConditions">Randomize selected condition order</span>
+          </label>
+          <p class="note" data-i18n="randomizeConditionsHelp">
+            If enabled, the selected conditions will be completed once in a randomized order.
+          </p>
         </fieldset>
 
         <div class="form-row">
@@ -98,8 +105,8 @@
     </main>
 
     <!-- 脚本：保持你的实际路径（你说在 js/ 目录） -->
-    <script src="js/i18n.js?v=idin-20260610-stability-1"></script>
-    <script src="js/app.js?v=idin-20260610-stability-1"></script>
+    <script src="js/i18n.js?v=idin-20260610-randomize-1"></script>
+    <script src="js/app.js?v=idin-20260610-randomize-1"></script>
 
     <script>
       // 语言初始化
@@ -125,11 +132,22 @@
         const safeSet = (id, v) => { const el = byId(id); if (el) el.value = v; };
         safeSet('pid',''); safeSet('age',''); safeSet('edu',''); safeSet('gender','');
         document.querySelectorAll('input[name="testCond"]').forEach(cb => cb.checked = false);
+        const randomize = document.getElementById('randomizeConditions');
+        if (randomize) randomize.checked = false;
         const def3f = document.querySelector('input[name="testCond"][value="3f"]');
         const def3b = document.querySelector('input[name="testCond"][value="3b"]');
         if (def3f) def3f.checked = true;
         if (def3b) def3b.checked = true;
       })();
+
+      function shuffledCopy(items) {
+        const next = items.slice();
+        for (let i = next.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [next[i], next[j]] = [next[j], next[i]];
+        }
+        return next;
+      }
 
       // 提交保存并跳转
       document.getElementById('infoForm').addEventListener('submit', function(ev){
@@ -144,8 +162,21 @@
           return;
         }
         const selected = Array.from(document.querySelectorAll('input[name="testCond"]:checked')).map(i => i.value);
-        const testConditions = selected.length ? selected : ['3f'];
-        const userInfo = { pid: pid || '', gender, age, education: edu, stimLang, testConditions };
+        const conditionOrderOriginal = selected.length ? selected : ['3f'];
+        const randomizeConditions = !!document.getElementById('randomizeConditions')?.checked;
+        const testConditions = randomizeConditions ? shuffledCopy(conditionOrderOriginal) : conditionOrderOriginal.slice();
+        const userInfo = {
+          pid: pid || '',
+          gender,
+          age,
+          education: edu,
+          stimLang,
+          testConditions,
+          conditionOrderOriginal,
+          randomizeConditions,
+          conditionOrderMode: randomizeConditions ? 'randomized_once_at_setup' : 'selected_order',
+          conditionOrderGeneratedAt: new Date().toISOString()
+        };
         localStorage.setItem('userInfo', JSON.stringify(userInfo));
         localStorage.removeItem('din_session');
         location.href = 'calibrate.html';

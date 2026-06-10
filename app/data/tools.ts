@@ -48,7 +48,7 @@ export const toolItems: ToolItem[] = [
     tone: "teal",
     data: "Responses are submitted to the project backend for study use.",
     output: "Participant-level DIN records and server-side study exports.",
-    version: "Stable playback + 30 s noise baseline",
+    version: "Randomized condition order option",
     assessmentPathway: true,
     platformHighlight: true,
   },
@@ -122,6 +122,24 @@ export const toolStatusLegend: Array<{ label: ToolStatus; text: string }> = [
 ];
 
 export const toolReleaseNotes: ToolReleaseNote[] = [
+  {
+    date: "2026-06-10",
+    title: "iDIN condition order randomization added",
+    tool: "integrated Digit-in-Noise Test",
+    version: "iDIN 2026.06 condition-order release",
+    status: "Released",
+    tone: "teal",
+    summary:
+      "The integrated DIN setup page now supports optional randomization of selected test conditions and exposes a researcher dashboard entry from the iDIN landing page.",
+    changes: [
+      "Added a researcher dashboard link on the iDIN landing page.",
+      "Added an optional randomize-condition-order checkbox during participant setup.",
+      "Stored the original selected condition order, executed condition order, randomization flag, and generation timestamp in the result metadata.",
+    ],
+    dataBoundary:
+      "Static iDIN front-end files changed only; existing server-side JSONL results and backend storage are not modified by this release.",
+    href: "/tools/digit-in-noise-test/",
+  },
   {
     date: "2026-06-10",
     title: "iDIN playback and audio asset baseline tightened",
