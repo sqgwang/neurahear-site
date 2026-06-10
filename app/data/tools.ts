@@ -48,7 +48,7 @@ export const toolItems: ToolItem[] = [
     tone: "teal",
     data: "Responses are submitted to the project backend for study use.",
     output: "Participant-level DIN records and server-side study exports.",
-    version: "Active deployment",
+    version: "Stable playback + 30 s noise baseline",
     assessmentPathway: true,
     platformHighlight: true,
   },
@@ -122,6 +122,25 @@ export const toolStatusLegend: Array<{ label: ToolStatus; text: string }> = [
 ];
 
 export const toolReleaseNotes: ToolReleaseNote[] = [
+  {
+    date: "2026-06-10",
+    title: "iDIN playback and audio asset baseline tightened",
+    tool: "integrated Digit-in-Noise Test",
+    version: "iDIN 2026.06 stability release",
+    status: "Released",
+    tone: "teal",
+    summary:
+      "The integrated DIN workflow now has stronger playback-state handling, cache-busted static assets, clearer formal/practice export metadata, and shorter noise files for faster loading.",
+    changes: [
+      "Prevented repeated Play/OK actions from creating unstable trial states.",
+      "Separated formal-trial metrics from practice-trial records in result summaries and exports.",
+      "Trimmed long language noise files to approximately 30 seconds without changing sample rate, channel count, bit depth, or digit stimuli.",
+      "Added versioned CSS/JS references so browsers fetch the current iDIN interface after deployment.",
+    ],
+    dataBoundary:
+      "Static tool files and audio assets changed; the server-side iDIN results JSONL data directory is not modified by this release.",
+    href: "/tools/digit-in-noise-test/",
+  },
   {
     date: "2026-05-20",
     title: "Public version log established",
