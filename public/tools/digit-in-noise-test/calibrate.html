@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <title>DIN Test Calibration</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet" href="css/styles.css?v=idin-20260610-stable-keypad-4" />
+  <link rel="stylesheet" href="css/styles.css?v=idin-20260610-calibration-ready-state-2" />
 </head>
 <body>
   <header class="topbar">
@@ -21,9 +21,14 @@
     <h1 id="calibTitle" class="large-title" data-i18n="calibTitle">Calibration</h1>
     <p data-i18n="calibText">Please connect wired headphones. Use the slider to adjust the background noise until the noise is comfortably audible.</p>
 
-    <div class="center">
-      <button id="playNoise" class="secondary" data-i18n="playNoise">Play noise</button>
-      <button id="stopNoise" class="secondary" data-i18n="stop">Stop</button>
+    <div id="calibLoadStatus" class="calibration-status is-loading" aria-live="polite" role="status">
+      <span class="status-dot" aria-hidden="true"></span>
+      <span id="calibLoadText" data-i18n="calibAudioLoading">Loading calibration audio. Please wait...</span>
+    </div>
+
+    <div class="center calibration-actions">
+      <button id="playNoise" class="secondary" data-i18n="playNoise" disabled>Play noise</button>
+      <button id="stopNoise" class="secondary" data-i18n="stop" disabled>Stop</button>
     </div>
     <div class="spacer-md"></div>
 
@@ -47,13 +52,13 @@
     </div>
 
     <div class="center">
-      <button id="confirmCalib" class="primary" data-i18n="calibConfirm">Confirm and Start Test</button>
+      <button id="confirmCalib" class="primary" data-i18n="calibConfirm" disabled>Confirm and Start Test</button>
     </div>
-    <div id="calibMsg" class="note"></div>
+    <div id="calibMsg" class="note inline-message" aria-live="polite"></div>
   </main>
 
-  <script src="js/i18n.js?v=idin-20260610-stable-keypad-4"></script>
-  <script src="js/app.js?v=idin-20260610-stable-keypad-4"></script>
+  <script src="js/i18n.js?v=idin-20260610-calibration-ready-state-2"></script>
+  <script src="js/app.js?v=idin-20260610-calibration-ready-state-2"></script>
   <script>
     // calibration wiring
     document.addEventListener('DOMContentLoaded', async () => {
@@ -69,16 +74,12 @@
         return;
       }
 
-      // load language audio for calibration (just noise and digits)
-      try {
-        await loadLanguageAudio(userInfo.stimLang); // defined in app.js
-      } catch (e) {
-        document.getElementById('calibMsg').textContent = 'Failed to load audio. Check console.';
-        console.error(e);
-      }
-
       const playBtn = document.getElementById('playNoise');
       const stopBtn = document.getElementById('stopNoise');
+      const confirmBtn = document.getElementById('confirmCalib');
+      const statusWrap = document.getElementById('calibLoadStatus');
+      const statusText = document.getElementById('calibLoadText');
+      const calibMsg = document.getElementById('calibMsg');
       const gainSlider = document.getElementById('noiseGain');
       const gainValue = document.getElementById('gainValue');
       const gainDbValue = document.getElementById('gainDbValue');
@@ -88,6 +89,31 @@
       const clampGain = value => Math.min(maxGain, Math.max(minGain, value));
       const gainToDb = value => 20 * Math.log10(Math.max(value, minGain));
       const dbToGain = value => Math.pow(10, value / 20);
+      let audioReady = false;
+      let noisePlaying = false;
+
+      function textFor(key, fallback, vars) {
+        return typeof t === 'function' ? t(key, vars) : fallback;
+      }
+
+      function setCalibStatus(state, message) {
+        statusWrap.classList.remove('is-loading', 'is-ready', 'is-error', 'is-playing');
+        statusWrap.classList.add(`is-${state}`);
+        statusText.textContent = message;
+      }
+
+      function setCalibMessage(message, tone = '') {
+        calibMsg.textContent = message || '';
+        if (tone) calibMsg.dataset.tone = tone;
+        else delete calibMsg.dataset.tone;
+      }
+
+      function syncCalibrationButtons(options = {}) {
+        const starting = !!options.starting;
+        playBtn.disabled = !audioReady || noisePlaying || starting;
+        stopBtn.disabled = !noisePlaying;
+        confirmBtn.disabled = !audioReady;
+      }
 
       function renderGain(value, options = {}) {
         const gain = clampGain(Number.isFinite(value) ? value : 1.0);
@@ -103,10 +129,63 @@
 
       renderGain(parseFloat(localStorage.getItem('fixedNoiseGain') || '1.0'));
 
+      async function ensureAudioReady() {
+        if (audioReady) return true;
+        playBtn.disabled = true;
+        stopBtn.disabled = true;
+        confirmBtn.disabled = true;
+        setCalibMessage('');
+        setCalibStatus('loading', textFor('calibAudioLoading', 'Loading calibration audio. Please wait...'));
+        try {
+          await loadLanguageAudio(userInfo.stimLang, {
+            onProgress: ({ loaded, total }) => {
+              setCalibStatus(
+                'loading',
+                textFor('calibAudioLoadingProgress', `Loading calibration audio (${loaded}/${total})...`, { loaded, total })
+              );
+            }
+          });
+          audioReady = true;
+          setCalibStatus('ready', textFor('calibAudioReady', 'Audio ready. Click Play noise to begin calibration.'));
+          syncCalibrationButtons();
+          return true;
+        } catch (e) {
+          audioReady = false;
+          console.error(e);
+          setCalibStatus('error', textFor('calibAudioFailed', 'Audio failed to load. Check the audio files or connection, then click Play noise to retry.'));
+          playBtn.disabled = false;
+          stopBtn.disabled = true;
+          confirmBtn.disabled = true;
+          return false;
+        }
+      }
+
+      syncCalibrationButtons();
+      ensureAudioReady();
+
       playBtn.addEventListener('click', async () => {
-        await startNoiseLoop(); // from app.js
+        const ready = await ensureAudioReady();
+        if (!ready) return;
+        setCalibMessage('');
+        setCalibStatus('loading', textFor('calibStartingNoise', 'Starting noise playback...'));
+        syncCalibrationButtons({ starting: true });
+        try {
+          await startNoiseLoop(); // from app.js
+          noisePlaying = true;
+          setCalibStatus('playing', textFor('calibNoisePlaying', 'Noise is playing. Adjust the level until it is comfortably audible.'));
+        } catch (e) {
+          console.error(e);
+          noisePlaying = false;
+          setCalibStatus('error', textFor('calibNoiseStartFailed', 'Could not start playback. Click Play noise to try again.'));
+        }
+        syncCalibrationButtons();
       });
-      stopBtn.addEventListener('click', () => stopNoiseLoop());
+      stopBtn.addEventListener('click', () => {
+        stopNoiseLoop();
+        noisePlaying = false;
+        setCalibStatus('ready', textFor('calibNoiseStopped', 'Noise stopped. Click Play noise to listen again.'));
+        syncCalibrationButtons();
+      });
       gainSlider.addEventListener('input', (e) => {
         renderGain(parseFloat(e.target.value));
       });
@@ -124,7 +203,12 @@
         renderGain(1.0);
       });
 
-      document.getElementById('confirmCalib').addEventListener('click', () => {
+      confirmBtn.addEventListener('click', () => {
+        if (!audioReady) {
+          setCalibMessage(textFor('calibAudioNotReady', 'Please wait until audio is ready before continuing.'), 'warning');
+          ensureAudioReady();
+          return;
+        }
         const v = clampGain(parseFloat(gainSlider.value));
         setFixedNoiseGain(v);
         localStorage.setItem('fixedNoiseGain', v);

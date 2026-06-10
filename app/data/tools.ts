@@ -48,7 +48,7 @@ export const toolItems: ToolItem[] = [
     tone: "teal",
     data: "Responses are submitted to the project backend for study use.",
     output: "Participant-level DIN records and server-side study exports.",
-    version: "Stable keypad and unified iDIN actions",
+    version: "Calibration ready-state feedback",
     assessmentPathway: true,
     platformHighlight: true,
   },
@@ -122,6 +122,26 @@ export const toolStatusLegend: Array<{ label: ToolStatus; text: string }> = [
 ];
 
 export const toolReleaseNotes: ToolReleaseNote[] = [
+  {
+    date: "2026-06-10",
+    title: "iDIN calibration audio readiness added",
+    tool: "integrated Digit-in-Noise Test",
+    version: "iDIN 2026.06 calibration ready-state UX",
+    status: "Released",
+    tone: "teal",
+    summary:
+      "The calibration page now makes audio loading explicit and prevents users from pressing calibration controls before noise playback is ready.",
+    changes: [
+      "Added loading, ready, playing, stopped, and error states to the calibration page.",
+      "Disabled Play noise and Confirm until the selected language audio has finished loading.",
+      "Added loading progress feedback for the 10 digit files plus the noise file.",
+      "Resumed the browser audio context on Play noise so browser autoplay protections do not silently block calibration playback.",
+      "Added timeout recovery so calibration playback cannot remain indefinitely in the starting state.",
+    ],
+    dataBoundary:
+      "Front-end calibration interaction changed only; audio files, SNR logic, adaptive scoring, randomization behavior, and existing server-side result records are unchanged.",
+    href: "/tools/digit-in-noise-test/",
+  },
   {
     date: "2026-06-10",
     title: "iDIN test-page layout stabilized",

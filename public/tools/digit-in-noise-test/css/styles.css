@@ -230,6 +230,14 @@ button {
   font-size: 0.9rem;
   padding: 8px 11px !important;
 }
+button:disabled,
+.primary:disabled,
+.secondary:disabled {
+  cursor: not-allowed;
+  opacity: 0.52;
+  filter: grayscale(45%);
+  box-shadow: none;
+}
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
@@ -242,6 +250,54 @@ button {
 }
 
 /* ---------- Calibration controls ---------- */
+.calibration-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.calibration-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  margin: 16px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text-dim);
+  line-height: 1.35;
+}
+.status-dot {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--text-dim);
+}
+.calibration-status.is-loading .status-dot {
+  background: var(--brand-accent);
+  animation: statusPulse 1s ease-in-out infinite;
+}
+.calibration-status.is-ready .status-dot {
+  background: var(--ios-blue);
+}
+.calibration-status.is-playing .status-dot {
+  background: #16a34a;
+  box-shadow: 0 0 0 5px rgba(22,163,74,.12);
+}
+.calibration-status.is-error {
+  color: #b45309;
+  border-color: rgba(180,83,9,.30);
+  background: rgba(245,158,11,.10);
+}
+.calibration-status.is-error .status-dot {
+  background: #b45309;
+}
+@keyframes statusPulse {
+  0%, 100% { transform: scale(0.85); opacity: 0.55; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
 .calibration-readout {
   display: flex;
   align-items: baseline;
@@ -495,6 +551,7 @@ button {
 /* ---------- Motion preference ---------- */
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
+  .calibration-status.is-loading .status-dot { animation: none !important; }
 }
 
 @media (max-width: 560px) {

@@ -4,7 +4,7 @@
 // 重要：不要在此文件覆盖 setUILanguage（i18n.js 提供翻译功能）
 
 /* ========== CONFIG ========== */
-const APP_VERSION = 'iDIN-2026-06-stable-keypad-4';
+const APP_VERSION = 'iDIN-2026-06-calibration-ready-state-2';
 const STEP_DB = 2;
 const START_SNR = 0;
 const SNR_MIN = -30;
@@ -29,8 +29,10 @@ const COND_DEFS = {
 /* ========== AUDIO CONTEXT & STORAGE ========== */
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 let langBuffers = {}; // { lang: { digitBuffers: [], noiseBuffer, corrections: [] } }
+let langLoadPromises = {};
 let noiseLoopSource = null;
 let noiseLoopGain = null;
+window.getDinAudioContextState = () => audioContext.state;
 
 function createSessionId() {
   const rand = Math.random().toString(36).slice(2, 8);
@@ -46,6 +48,21 @@ let fixedNoiseGain = readStoredNoiseGain();
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function resumeAudioContextForPlayback(timeoutMs = 2000) {
+  if (!audioContext || audioContext.state === 'running') return;
+  let timeoutId;
+  try {
+    await Promise.race([
+      audioContext.resume(),
+      new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('AudioContext resume timed out')), timeoutMs);
+      })
+    ]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
 }
 
 function setStatusMessage(message, tone = '') {
@@ -164,43 +181,74 @@ function normalizeAudioBuffer(buffer, targetRms = 0.05) {
 }
 
 /* ========== LOAD AUDIO & CORRECTIONS ========== */
-async function loadLanguageAudio(lang) {
+async function loadLanguageAudio(lang, options = {}) {
+  if (langBuffers[lang]) {
+    if (typeof options.onProgress === 'function') {
+      options.onProgress({ loaded: 11, total: 11, phase: 'cached' });
+    }
+    return langBuffers[lang];
+  }
+  if (langLoadPromises[lang]) return langLoadPromises[lang];
+
   const base = `audio/${lang}`;
   const digitUrls = [];
   for (let i=0;i<=9;i++) digitUrls.push(`${base}/${i}.wav`);
   const noiseUrl = `${base}/noise.wav`;
+  const totalFiles = digitUrls.length + 1;
+  let loadedFiles = 0;
+  const notifyProgress = (phase, file) => {
+    if (typeof options.onProgress === 'function') {
+      options.onProgress({ loaded: loadedFiles, total: totalFiles, phase, file });
+    }
+  };
 
-  let corrections = new Array(10).fill(0);
+  langLoadPromises[lang] = (async () => {
+    notifyProgress('start', null);
+
+    let corrections = new Array(10).fill(0);
+    try {
+      const rc = await fetch(`${base}/corrections.json`);
+      if (rc.ok) corrections = await rc.json();
+    } catch (e) {
+      console.warn('No corrections.json for', lang);
+    }
+
+    const digitBuffers = [];
+    for (let i=0;i<digitUrls.length;i++){
+      const r = await fetch(digitUrls[i]);
+      if (!r.ok) throw new Error(`Failed fetch ${digitUrls[i]} status ${r.status}`);
+      const ab = await r.arrayBuffer();
+      const dbuf = await audioContext.decodeAudioData(ab.slice(0));
+      const norm = normalizeAudioBuffer(dbuf, 0.05);
+      digitBuffers.push(norm);
+      loadedFiles += 1;
+      notifyProgress('digit', `${i}.wav`);
+    }
+    const rn = await fetch(noiseUrl);
+    if (!rn.ok) throw new Error(`Failed fetch ${noiseUrl}`);
+    const nab = await rn.arrayBuffer();
+    const nbuf = await audioContext.decodeAudioData(nab.slice(0));
+    const noiseNorm = normalizeAudioBuffer(nbuf, 0.05);
+    loadedFiles += 1;
+    notifyProgress('noise', 'noise.wav');
+
+    langBuffers[lang] = { digitBuffers, noiseBuffer: noiseNorm, corrections };
+    console.log('Loaded audio for', lang);
+    return langBuffers[lang];
+  })();
+
   try {
-    const rc = await fetch(`${base}/corrections.json`);
-    if (rc.ok) corrections = await rc.json();
-  } catch (e) {
-    console.warn('No corrections.json for', lang);
+    return await langLoadPromises[lang];
+  } finally {
+    delete langLoadPromises[lang];
   }
-
-  const digitBuffers = [];
-  for (let i=0;i<digitUrls.length;i++){
-    const r = await fetch(digitUrls[i]);
-    if (!r.ok) throw new Error(`Failed fetch ${digitUrls[i]} status ${r.status}`);
-    const ab = await r.arrayBuffer();
-    const dbuf = await audioContext.decodeAudioData(ab.slice(0));
-    const norm = normalizeAudioBuffer(dbuf, 0.05);
-    digitBuffers.push(norm);
-  }
-  const rn = await fetch(noiseUrl);
-  if (!rn.ok) throw new Error(`Failed fetch ${noiseUrl}`);
-  const nab = await rn.arrayBuffer();
-  const nbuf = await audioContext.decodeAudioData(nab.slice(0));
-  const noiseNorm = normalizeAudioBuffer(nbuf, 0.05);
-
-  langBuffers[lang] = { digitBuffers, noiseBuffer: noiseNorm, corrections };
-  console.log('Loaded audio for', lang);
 }
 
 /* ========== NOISE LOOP (calibration) ========== */
 async function startNoiseLoop() {
   const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
   if (!userInfo || !userInfo.stimLang) { alert('Missing user info'); return; }
+  await resumeAudioContextForPlayback();
   if (!langBuffers[userInfo.stimLang]) {
     try { await loadLanguageAudio(userInfo.stimLang); } catch (e) { alert('Failed to load audio'); throw e; }
   }
@@ -573,7 +621,17 @@ async function startTrialPlay() {
   setInputLock(true);
   setStatusMessage('Preparing audio...');
 
-  try { await audioContext.resume(); } catch(e) {}
+  try {
+    await resumeAudioContextForPlayback();
+  } catch(e) {
+    console.warn('AudioContext resume failed', e);
+    setStatusMessage('Audio device is not ready. Click Play again and check browser sound permissions.', 'warning');
+    window.dinUI.playbackActive = false;
+    window.dinUI.awaitingResponse = false;
+    setInputLock(false);
+    setPlayButtonEnabled(true);
+    return;
+  }
   const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
   if (!userInfo || !userInfo.stimLang) {
     window.dinUI.playbackActive = false;
