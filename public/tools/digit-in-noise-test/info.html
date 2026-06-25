@@ -58,9 +58,8 @@
         <div class="form-row">
           <label for="edu">
             <span data-i18n="education">Education years (0-30)</span>
-            <span class="required" aria-hidden="true">*</span>
           </label>
-          <input id="edu" name="education" type="number" min="0" max="30" required>
+          <input id="edu" name="education" type="number" min="0" max="30">
         </div>
 
         <div class="form-row">
@@ -186,10 +185,11 @@
         const pid = document.getElementById('pid').value.trim();
         const gender = document.getElementById('gender').value;
         const age = parseInt(document.getElementById('age').value, 10);
-        const edu = parseInt(document.getElementById('edu').value, 10);
+        const eduValue = document.getElementById('edu').value.trim();
+        const edu = eduValue === '' ? '' : parseInt(eduValue, 10);
         const stimLang = document.getElementById('stimLang').value;
         const ageInvalid = isNaN(age) || age < 0 || age > 100;
-        const eduInvalid = isNaN(edu) || edu < 0 || edu > 30;
+        const eduInvalid = eduValue !== '' && (isNaN(edu) || edu < 0 || edu > 30);
         const readinessBoxes = Array.from(document.querySelectorAll('input[name="readinessCheck"]'));
         const missingReadiness = readinessBoxes.find(cb => !cb.checked);
         if (!pid || !gender || ageInvalid || eduInvalid || !stimLang) {
