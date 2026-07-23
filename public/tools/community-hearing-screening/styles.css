@@ -831,7 +831,7 @@ h2 {
 
 .digit-display {
   display: grid;
-  grid-template-columns: repeat(3, 60px);
+  grid-template-columns: repeat(2, 60px);
   align-items: center;
   gap: 10px;
   height: 78px;

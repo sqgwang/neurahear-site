@@ -39,7 +39,7 @@ export const toolItems: ToolItem[] = [
     shortName: "Community Screen",
     category: "Public hearing screening",
     description:
-      "A fixed Cantonese three-digit-in-noise screen for community use, with guided calibration, a simple participant flow, immediate referral guidance, and a dedicated staff dashboard.",
+      "A fixed Mandarin two-digit-in-noise screen for community use, with guided calibration, a simple participant flow, provisional referral guidance, and a dedicated staff dashboard.",
     status: "In validation",
     shortStatus: "Validation",
     stage: "Community screening release",
@@ -48,7 +48,7 @@ export const toolItems: ToolItem[] = [
     tone: "sky",
     data: "Screening records use a dedicated API and storage directory, separate from research iDIN data.",
     output: "Participant-facing result, SRT, referral category, QC metadata, and staff CSV/JSON exports.",
-    version: "Cantonese 3-digit protocol v1",
+    version: "Mandarin 2-digit protocol v1",
     assessmentPathway: true,
     platformHighlight: true,
   },
@@ -148,16 +148,16 @@ export const toolReleaseNotes: ToolReleaseNote[] = [
     status: "Released",
     tone: "sky",
     summary:
-      "A dedicated Cantonese hearing-screening workflow now provides a fixed participant protocol outside the configurable research iDIN.",
+      "A dedicated Mandarin hearing-screening workflow now provides a fixed participant protocol outside the configurable research iDIN.",
     changes: [
       "Added a guided preparation, audio loading, participant-set calibration, practice, screening, and result flow.",
-      "Fixed the participant protocol to three-digit forward recall, 24 formal trials, a 2 dB one-up one-down rule, and SRT scoring from the final 20 trials.",
-      "Added research-grounded referral guidance at an SRT of -7.7 dB SNR while keeping clear screening and diagnostic limitations visible.",
+      "Fixed the participant protocol to two-digit forward recall, 24 formal trials, a 2 dB one-up one-down rule, and SRT scoring from the final 20 trials.",
+      "Added a provisional Mandarin referral reference at an SRT of -8.0 dB SNR, with an explicit notice that prospective community validation is still required.",
       "Added a dedicated staff dashboard with screening metrics, filters, record detail, QC status, and CSV/JSON exports.",
       "Added an independent community-screening API namespace, browser-storage namespace, and production data directory.",
     ],
     dataBoundary:
-      "The community workflow shares validated Cantonese audio assets only. Its sessions, upload queue, API endpoints, dashboard, and JSONL result storage are separate from the research iDIN and do not alter existing iDIN records.",
+      "The community workflow shares the existing Mandarin iDIN audio assets only. Its sessions, upload queue, API endpoints, dashboard, and JSONL result storage are separate from the research iDIN and do not alter existing iDIN records.",
     href: "/tools/community-hearing-screening/",
   },
   {

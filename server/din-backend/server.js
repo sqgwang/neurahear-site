@@ -187,7 +187,12 @@ function validateCommunityResult(rec) {
   if (!rec.sessionId || !rec.participantId || !Array.isArray(rec.trials)) {
     return 'missing required fields';
   }
-  if (!rec.screening || rec.screening.protocolId !== 'cantonese-3f-community-screening-v1') {
+  if (
+    !rec.screening
+    || rec.screening.protocolId !== 'mandarin-2f-community-screening-v1'
+    || rec.screening.stimulusLanguage !== 'mandarin'
+    || Number(rec.screening.nDigits) !== 2
+  ) {
     return 'invalid screening protocol';
   }
   const formalTrials = rec.trials.filter(trial => trial && trial.phase === 'formal');
