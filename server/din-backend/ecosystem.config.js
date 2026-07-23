@@ -11,7 +11,8 @@ module.exports = {
       env: {
         PORT: 4000,
         JWT_SECRET: process.env.JWT_SECRET || 'change_me',
-        DATA_DIR: process.env.DATA_DIR || '/data'
+        DATA_DIR: process.env.DATA_DIR || '/data',
+        COMMUNITY_DATA_DIR: process.env.COMMUNITY_DATA_DIR || '/community-data'
       }
     }
   ]

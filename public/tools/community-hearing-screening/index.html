@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="zh-HK">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b6259">
+  <title>Community Hearing Screening | NeuraHear</title>
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css?v=community-screening-20260723-1">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/tools/" aria-label="NeuraHear assessment tools">
+      <span class="brand-mark" aria-hidden="true">NH</span>
+      <span>
+        <strong>NeuraHear</strong>
+        <small data-i18n="brandSubtitle">Community Hearing Screening</small>
+      </span>
+    </a>
+    <div class="topbar-actions">
+      <label class="language-control" for="uiLanguage">
+        <span class="sr-only" data-i18n="languageLabel">Interface language</span>
+        <select id="uiLanguage">
+          <option value="zh-HK">繁體中文</option>
+          <option value="en">English</option>
+        </select>
+      </label>
+      <a class="icon-link" href="admin.html" data-i18n-title="staffDashboard" title="Staff dashboard" aria-label="Staff dashboard">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 19V9m8 10V5m8 14v-7M2 19h20"></path>
+        </svg>
+      </a>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <nav class="stepper" aria-label="Screening progress">
+      <ol>
+        <li class="is-active" data-step-nav="welcome"><span>1</span><b data-i18n="stepWelcome">準備</b></li>
+        <li data-step-nav="calibration"><span>2</span><b data-i18n="stepCalibration">校準</b></li>
+        <li data-step-nav="screening"><span>3</span><b data-i18n="stepScreening">篩查</b></li>
+        <li data-step-nav="result"><span>4</span><b data-i18n="stepResult">結果</b></li>
+      </ol>
+    </nav>
+
+    <section class="screen is-active" id="screenWelcome" data-screen="welcome">
+      <div class="screen-heading">
+        <p class="eyebrow" data-i18n="welcomeEyebrow">約 5 分鐘 · 粵語</p>
+        <h1 data-i18n="welcomeTitle">在背景噪聲中聆聽數字，快速了解你的聽力</h1>
+        <p data-i18n="welcomeIntro">
+          你會聽到三個被噪聲包圍的數字。每次播放後，按順序輸入聽到的數字；系統會自動調節難度。
+        </p>
+      </div>
+
+      <div class="feature-strip" aria-label="Screening overview">
+        <div>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13a8 8 0 0 1 16 0v5a2 2 0 0 1-2 2h-2v-7h4M4 13v7H2a2 2 0 0 1-2-2v-5"></path></svg>
+          <span data-i18n="featureHeadphones">使用雙耳耳機</span>
+        </div>
+        <div>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8v4l2.5 2.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path></svg>
+          <span data-i18n="featureDuration">約 5 分鐘</span>
+        </div>
+        <div>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"></path></svg>
+          <span data-i18n="featureOutcome">即時篩查結果</span>
+        </div>
+      </div>
+
+      <form id="setupForm" class="setup-form" novalidate>
+        <div class="section-label">
+          <h2 data-i18n="participantHeading">基本資料</h2>
+          <p data-i18n="participantHelp">請勿輸入姓名、電話或身份證號碼。</p>
+        </div>
+
+        <div class="form-grid">
+          <label class="field">
+            <span><span data-i18n="participantCode">參與者編號</span> <em>*</em></span>
+            <input id="participantCode" type="text" maxlength="64" autocomplete="off" placeholder="例如：C001" data-i18n-placeholder="participantPlaceholder" required>
+          </label>
+          <label class="field">
+            <span><span data-i18n="age">年齡</span> <em>*</em></span>
+            <input id="participantAge" type="number" min="18" max="120" inputmode="numeric" required>
+          </label>
+          <label class="field">
+            <span data-i18n="gender">性別（選填）</span>
+            <select id="participantGender">
+              <option value="" data-i18n="preferNotSay">不填寫</option>
+              <option value="female" data-i18n="female">女性</option>
+              <option value="male" data-i18n="male">男性</option>
+              <option value="other" data-i18n="other">其他</option>
+            </select>
+          </label>
+          <div class="field field-static">
+            <span data-i18n="stimulusLanguage">測試語言</span>
+            <strong data-i18n="cantonese">粵語</strong>
+          </div>
+        </div>
+
+        <fieldset class="check-panel">
+          <legend data-i18n="beforeStart">開始前請確認</legend>
+          <label>
+            <input type="checkbox" id="checkHeadphones">
+            <span data-i18n="checkHeadphones">我已戴好可同時覆蓋雙耳的耳機或耳塞。</span>
+          </label>
+          <label>
+            <input type="checkbox" id="checkQuiet">
+            <span data-i18n="checkQuiet">我身處安靜環境，並已關閉其他會播放聲音的程式。</span>
+          </label>
+          <label>
+            <input type="checkbox" id="checkUnderstand">
+            <span data-i18n="checkUnderstand">我明白這是聽力篩查而非醫療診斷；如有聽力疑慮，仍應尋求專業評估。</span>
+          </label>
+        </fieldset>
+
+        <p id="setupMessage" class="inline-message" role="alert" aria-live="polite"></p>
+        <button class="primary-button" type="submit">
+          <span data-i18n="continueCalibration">繼續校準</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+        </button>
+      </form>
+    </section>
+
+    <section class="screen" id="screenCalibration" data-screen="calibration" hidden>
+      <div class="screen-heading compact">
+        <p class="eyebrow" data-i18n="calibrationEyebrow">步驟 2 / 4</p>
+        <h1 data-i18n="calibrationTitle">把噪聲調到清楚而舒適的音量</h1>
+        <p data-i18n="calibrationIntro">按播放後調整音量。正式篩查會固定使用你確認的音量，請不要再改動裝置音量。</p>
+      </div>
+
+      <div id="audioLoadPanel" class="load-panel" data-state="loading" role="status" aria-live="polite">
+        <div class="load-status">
+          <span class="status-indicator" aria-hidden="true"></span>
+          <div>
+            <strong id="audioLoadTitle" data-i18n="audioLoading">正在準備測試聲音</strong>
+            <span id="audioLoadDetail" data-i18n="audioLoadingDetail">首次載入可能需要一些時間。</span>
+          </div>
+          <b id="audioLoadCount">0 / 11</b>
+        </div>
+        <div class="progress-track"><span id="audioLoadProgress"></span></div>
+      </div>
+
+      <div class="calibration-workspace">
+        <div class="listen-control">
+          <button id="toggleNoiseButton" class="listen-button" type="button" disabled>
+            <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7V5Z"></path></svg>
+            <svg class="icon-stop" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12"></rect></svg>
+            <span data-i18n="playNoise">播放噪聲</span>
+          </button>
+          <p id="noiseInstruction" data-i18n="noiseInstruction">聲音準備完成後即可播放。</p>
+        </div>
+
+        <label class="volume-control" for="noiseLevel">
+          <span class="volume-label">
+            <span data-i18n="noiseLevel">噪聲音量</span>
+            <output id="noiseLevelOutput">0.0 dB</output>
+          </span>
+          <div class="range-wrap">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"></path></svg>
+            <input id="noiseLevel" type="range" min="-20" max="6" step="0.5" value="0">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Zm4 3a5 5 0 0 1 0 8m3-11a9 9 0 0 1 0 14"></path></svg>
+          </div>
+        </label>
+
+        <label class="confirmation-row">
+          <input type="checkbox" id="calibrationConfirmed" disabled>
+          <span data-i18n="calibrationConfirmed">我能清楚、舒適地聽到噪聲，並會保持目前的裝置音量。</span>
+        </label>
+      </div>
+
+      <p id="calibrationMessage" class="inline-message" role="alert" aria-live="polite"></p>
+      <div class="screen-actions">
+        <button id="backToSetup" class="text-button" type="button" data-i18n="back">返回</button>
+        <button id="startScreeningButton" class="primary-button" type="button" disabled>
+          <span data-i18n="startPractice">開始練習</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+        </button>
+      </div>
+    </section>
+
+    <section class="screen screening-screen" id="screenScreening" data-screen="screening" hidden>
+      <div class="screening-header">
+        <div>
+          <p id="phaseLabel" class="eyebrow">練習</p>
+          <h1 id="trialProgress">1 / 5</h1>
+        </div>
+        <div class="test-status" id="testStatus" data-state="ready">
+          <span></span>
+          <b id="testStatusLabel" data-i18n="ready">準備就緒</b>
+        </div>
+      </div>
+      <div class="trial-progress" aria-hidden="true"><span id="trialProgressBar"></span></div>
+
+      <div class="test-stage">
+        <p id="testInstruction" aria-live="polite" data-i18n="testReady">按下播放，聆聽三個數字。</p>
+        <button id="playTrialButton" class="play-trial-button" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7V5Z"></path></svg>
+          <span data-i18n="play">播放</span>
+        </button>
+
+        <div id="digitDisplay" class="digit-display" aria-label="Entered digits">
+          <span></span><span></span><span></span>
+        </div>
+
+        <div id="keypad" class="keypad is-disabled" aria-label="Number keypad">
+          <button type="button" data-digit="1">1</button>
+          <button type="button" data-digit="2">2</button>
+          <button type="button" data-digit="3">3</button>
+          <button type="button" data-digit="4">4</button>
+          <button type="button" data-digit="5">5</button>
+          <button type="button" data-digit="6">6</button>
+          <button type="button" data-digit="7">7</button>
+          <button type="button" data-digit="8">8</button>
+          <button type="button" data-digit="9">9</button>
+          <button id="backspaceButton" class="keypad-icon" type="button" data-i18n-title="backspace" title="刪除">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 5H9.5L3 12l6.5 7H20a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Z"></path><path d="m14 9 4 4m0-4-4 4"></path></svg>
+          </button>
+          <button type="button" data-digit="0">0</button>
+          <button id="submitAnswerButton" class="keypad-submit" type="button" data-i18n="confirmAnswer">確認</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="screenResult" data-screen="result" hidden>
+      <div id="outcomePanel" class="outcome-panel" data-outcome="pending">
+        <div class="outcome-icon" aria-hidden="true">
+          <svg class="outcome-pass" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"></path></svg>
+          <svg class="outcome-refer" viewBox="0 0 24 24"><path d="M12 8v5m0 3h.01M10.3 3.8 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0Z"></path></svg>
+        </div>
+        <p class="eyebrow" data-i18n="screeningComplete">篩查完成</p>
+        <h1 id="outcomeTitle">—</h1>
+        <p id="outcomeMessage">—</p>
+        <div class="result-metric">
+          <span data-i18n="srtLabel">言語接收閾值（SRT）</span>
+          <strong id="srtValue">—</strong>
+          <small>dB SNR</small>
+        </div>
+      </div>
+
+      <div class="next-step-panel">
+        <h2 data-i18n="nextSteps">下一步</h2>
+        <p id="nextStepMessage">—</p>
+        <p class="result-limit" data-i18n="resultLimit">
+          此雙耳篩查主要反映較好耳的表現，不能排除單側、不對稱或其他類型的聽力問題。
+        </p>
+      </div>
+
+      <div id="uploadPanel" class="upload-panel" data-state="pending" aria-live="polite">
+        <span class="status-indicator" aria-hidden="true"></span>
+        <div>
+          <strong data-i18n="saveStatus">記錄儲存狀態</strong>
+          <p id="uploadStatusText" data-i18n="savePending">正在安全儲存本次篩查記錄。</p>
+        </div>
+        <button id="retryUploadButton" class="small-button" type="button" hidden data-i18n="retry">重試</button>
+      </div>
+
+      <div class="screen-actions result-actions">
+        <a class="text-button" href="/tools/" data-i18n="backToTools">返回工具列表</a>
+        <button id="newScreeningButton" class="primary-button" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.7L20 8m0-5v5h-5"></path></svg>
+          <span data-i18n="newScreening">開始新的篩查</span>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>NeuraHear · HK Audiology Group</span>
+    <span data-i18n="protocolFooter">Cantonese 3-digit community screening protocol</span>
+  </footer>
+
+  <script src="screening.js?v=community-screening-20260723-1"></script>
+</body>
+</html>

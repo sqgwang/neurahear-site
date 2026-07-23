@@ -54,6 +54,9 @@ const TOKEN_COOKIE = 'token';
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const RESULTS_FILE = path.join(DATA_DIR, 'results.jsonl');
+const COMMUNITY_DATA_DIR = process.env.COMMUNITY_DATA_DIR
+  || path.join(path.dirname(DATA_DIR), 'community-screening-data');
+const COMMUNITY_RESULTS_FILE = path.join(COMMUNITY_DATA_DIR, 'results.jsonl');
 
 // 允许的前端来源：从环境变量 ALLOWED_ORIGINS 读（逗号分隔），否则默认允许你的 GitHub Pages 主机
 const RAW_ALLOWED = process.env.ALLOWED_ORIGINS
@@ -88,7 +91,9 @@ app.use(cors({
 // ----------- Helpers -----------
 function ensureDirs() {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+  if (!fs.existsSync(COMMUNITY_DATA_DIR)) fs.mkdirSync(COMMUNITY_DATA_DIR, { recursive: true });
   if (!fs.existsSync(RESULTS_FILE)) fs.writeFileSync(RESULTS_FILE, '', 'utf8');
+  if (!fs.existsSync(COMMUNITY_RESULTS_FILE)) fs.writeFileSync(COMMUNITY_RESULTS_FILE, '', 'utf8');
   if (!fs.existsSync(USERS_FILE)) {
     const salt = bcrypt.genSaltSync(10);
     const password = Math.random().toString(36).slice(-10);
@@ -135,8 +140,20 @@ function genId(prefix = 'r') {
 async function appendResult(rec) {
   await fsp.appendFile(RESULTS_FILE, JSON.stringify(rec) + '\n', 'utf8');
 }
+async function appendCommunityResult(rec) {
+  await fsp.appendFile(COMMUNITY_RESULTS_FILE, JSON.stringify(rec) + '\n', 'utf8');
+}
 async function readAllResults() {
   const txt = await fsp.readFile(RESULTS_FILE, 'utf8');
+  if (!txt.trim()) return [];
+  return txt
+    .trim()
+    .split('\n')
+    .map(l => { try { return JSON.parse(l); } catch { return null; } })
+    .filter(Boolean);
+}
+async function readAllCommunityResults() {
+  const txt = await fsp.readFile(COMMUNITY_RESULTS_FILE, 'utf8');
   if (!txt.trim()) return [];
   return txt
     .trim()
@@ -162,6 +179,28 @@ function findExistingResult(incoming, allResults) {
   }
 
   return null;
+}
+function validateCommunityResult(rec) {
+  if (!rec || rec.schemaVersion !== 'community-hearing-screening-result-v1') {
+    return 'invalid schemaVersion';
+  }
+  if (!rec.sessionId || !rec.participantId || !Array.isArray(rec.trials)) {
+    return 'missing required fields';
+  }
+  if (!rec.screening || rec.screening.protocolId !== 'cantonese-3f-community-screening-v1') {
+    return 'invalid screening protocol';
+  }
+  const formalTrials = rec.trials.filter(trial => trial && trial.phase === 'formal');
+  if (formalTrials.length !== 24) {
+    return 'formal trial count must equal 24';
+  }
+  if (!Number.isFinite(Number(rec.screening.srtDbSnr))) {
+    return 'invalid SRT';
+  }
+  if (!['pass', 'refer'].includes(rec.screening.outcome)) {
+    return 'invalid outcome';
+  }
+  return '';
 }
 
 // ----------- Middleware -----------
@@ -279,6 +318,73 @@ app.post('/api/users/reset', requireAuth, requireAdmin, async (req, res) => {
   res.json({ ok: true });
 });
 
+// ----------- Community hearing screening results -----------
+// These routes and files are intentionally separate from the research iDIN
+// /api/results namespace and DATA_DIR/results.jsonl.
+app.post('/api/community-screening/results', async (req, res) => {
+  const rec = req.body || {};
+  const validationError = validateCommunityResult(rec);
+  if (validationError) {
+    return res.status(400).json({ error: 'invalid community screening payload', detail: validationError });
+  }
+
+  const all = await readAllCommunityResults();
+  const existing = findExistingResult(rec, all);
+  if (existing) {
+    return res.json({
+      ok: true,
+      id: existing._id,
+      duplicate: true,
+      matchedBy: getUploadClientId(rec) ? 'uploadClientId' : 'sessionId'
+    });
+  }
+
+  rec._id = genId('cs');
+  rec._recordType = 'community-hearing-screening';
+  rec._ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
+  rec._ua = req.headers['user-agent'] || '';
+  rec.createdAt = rec.createdAt || new Date().toISOString();
+
+  await appendCommunityResult(rec);
+  res.json({ ok: true, id: rec._id });
+});
+
+app.get('/api/community-screening/results', requireAuth, async (req, res) => {
+  const { limit = 50, offset = 0, search = '' } = req.query;
+  const all = await readAllCommunityResults();
+  const query = String(search || '').trim().toLowerCase();
+  const filtered = query
+    ? all.filter(rec => {
+        const participantId = String(rec.participantId || rec.userInfo?.participantCode || '').toLowerCase();
+        const sessionId = String(rec.sessionId || '').toLowerCase();
+        const serverId = String(rec._id || '').toLowerCase();
+        return participantId.includes(query) || sessionId.includes(query) || serverId.includes(query);
+      })
+    : all;
+
+  const start = Math.max(0, parseInt(offset, 10) || 0);
+  const end = start + Math.min(500, parseInt(limit, 10) || 50);
+  const items = filtered.slice().reverse().slice(start, end);
+  res.json({ total: filtered.length, items });
+});
+
+app.get('/api/community-screening/results/:id', requireAuth, async (req, res) => {
+  const all = await readAllCommunityResults();
+  const item = all.find(rec => rec._id === req.params.id);
+  if (!item) return res.status(404).json({ error: 'not found' });
+  res.json(item);
+});
+
+app.delete('/api/community-screening/results/:id', requireAuth, requireAdmin, async (req, res) => {
+  const all = await readAllCommunityResults();
+  const next = all.filter(rec => rec._id !== req.params.id);
+  if (next.length === all.length) return res.status(404).json({ error: 'not found' });
+
+  const lines = next.map(rec => JSON.stringify(rec)).join('\n') + (next.length ? '\n' : '');
+  await fsp.writeFile(COMMUNITY_RESULTS_FILE, lines, 'utf8');
+  res.json({ ok: true });
+});
+
 // ----------- Results -----------
 /**
  * 期望 payload（建议结构）：
@@ -360,4 +466,5 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
   console.log(`DATA_DIR = ${DATA_DIR}`);
+  console.log(`COMMUNITY_DATA_DIR = ${COMMUNITY_DATA_DIR}`);
 });

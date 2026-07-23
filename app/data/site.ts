@@ -39,6 +39,7 @@ export const primarySiteRoutes = [
   { path: "/tools/study-workflow/", priority: 0.7, changeFrequency: "monthly" },
   { path: "/tools/version-log/", priority: 0.6, changeFrequency: "monthly" },
   { path: "/tools/hfeq-mandarin/", priority: 0.7, changeFrequency: "monthly" },
+  { path: "/tools/community-hearing-screening/", priority: 0.8, changeFrequency: "monthly" },
   { path: "/tools/digit-in-noise-test/", priority: 0.7, changeFrequency: "monthly" },
   { path: "/tools/single-digit-in-noise-test/", priority: 0.6, changeFrequency: "monthly" },
   { path: "/seminars/", priority: 0.5, changeFrequency: "monthly" },

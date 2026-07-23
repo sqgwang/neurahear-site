@@ -11,6 +11,12 @@ Quick start (development)
 
 Notes
 - The server persists user data to DATA_DIR/users.json and results to DATA_DIR/results.jsonl.
+- Community hearing screening results use
+  `COMMUNITY_DATA_DIR/results.jsonl`. If `COMMUNITY_DATA_DIR` is not set, the
+  server creates a sibling `community-screening-data` directory beside
+  `DATA_DIR`, keeping these records separate from research iDIN results.
+- The community screening API is `/api/community-screening/results`; it shares
+  the protected staff login but not the research iDIN result file.
 - For local development you can set secure cookie behavior by editing server.js (secure: false) but in production keep secure: true and serve via HTTPS.
 
 Production suggestions

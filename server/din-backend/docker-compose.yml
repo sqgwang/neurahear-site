@@ -12,9 +12,11 @@ services:
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-}
       - ADMIN_BOOT_PASSWORD=${ADMIN_BOOT_PASSWORD:-}
       - DATA_DIR=/data
+      - COMMUNITY_DATA_DIR=/community-data
       - TOKEN_COOKIE=token
     volumes:
       - ./data:/data
+      - ./community-data:/community-data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
       interval: 30s
