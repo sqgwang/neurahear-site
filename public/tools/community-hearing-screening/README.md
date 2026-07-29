@@ -6,7 +6,7 @@ This public-facing workflow is intentionally separate from the research iDIN.
 
 - Mandarin stimuli
 - Two-digit forward recall
-- Five practice items
+- Three practice items: one quiet familiarization item followed by two items in noise
 - 24 formal adaptive items
 - One-up one-down adaptive rule with a 2 dB step
 - Sequence-level SNR using the existing RMS normalization and digit correction levels
@@ -20,6 +20,11 @@ SNR boundary is provisional and must not be described as a validated diagnostic
 cutoff. The participant result page states that prospective community
 validation is still required, that this is screening rather than diagnosis, and
 that binaural DIN may not identify unilateral or asymmetric hearing loss.
+
+The calibration page provides the only explicit start action. After the
+participant selects Start practice, the first practice item and all subsequent
+items play automatically. The test-page Play control is reserved for retrying
+after a browser playback error.
 
 ## Data boundary
 

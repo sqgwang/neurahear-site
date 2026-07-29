@@ -2,14 +2,14 @@
   "use strict";
 
   const CONFIG = Object.freeze({
-    appVersion: "community-screening-2026.07.29-1",
+    appVersion: "community-screening-2026.07.29-2",
     schemaVersion: "community-hearing-screening-result-v1",
     protocolId: "mandarin-2f-community-screening-v1",
     protocolLabel: "Mandarin 2-digit forward community hearing screening",
     stimulusLanguage: "mandarin",
     audioBase: "/tools/digit-in-noise-test/audio/mandarin",
     nDigits: 2,
-    practiceCount: 5,
+    practiceCount: 3,
     formalCount: 24,
     srtWindow: 20,
     startSnrDb: 0,
@@ -97,7 +97,7 @@
       savingAnswer: "记录答案",
       playbackError: "播放出错",
       play: "播放",
-      testReady: "按下播放，聆听两个数字。",
+      testReady: "声音即将自动播放，请留意聆听两个数字。",
       testPreparing: "正在准备声音，请稍候。",
       testPlaying: "正在播放，请仔细聆听。",
       testRespond: "按顺序输入你听到的两个数字。",
@@ -195,7 +195,7 @@
       savingAnswer: "Saving answer",
       playbackError: "Playback error",
       play: "Play",
-      testReady: "Press Play and listen for two digits.",
+      testReady: "The audio will play automatically. Listen for two digits.",
       testPreparing: "Preparing the sound. Please wait.",
       testPlaying: "Audio is playing. Listen carefully.",
       testRespond: "Enter the two digits in the order you heard them.",
@@ -233,9 +233,7 @@
 
   const PRACTICE_ITEMS = [
     { digits: [1, 2], noiseEnabled: false, snrDb: 0, mustCorrect: true },
-    { digits: [6, 8], noiseEnabled: false, snrDb: 0, mustCorrect: true },
     { digits: [5, 9], noiseEnabled: true, snrDb: 6, mustCorrect: false },
-    { digits: [7, 1], noiseEnabled: true, snrDb: 4, mustCorrect: false },
     { digits: [9, 0], noiseEnabled: true, snrDb: 2, mustCorrect: false }
   ];
 
@@ -1132,7 +1130,7 @@
     window.location.reload();
   }
 
-  function beginScreening() {
+  async function beginScreening() {
     stopNoise();
     state.session.calibration = {
       type: "participant-set-comfortable-noise-level",
@@ -1160,8 +1158,9 @@
     state.awaitingResponse = false;
     state.playbackActive = false;
     setKeypadEnabled(false);
-    $("playTrialButton").disabled = false;
+    $("playTrialButton").disabled = true;
     setTestStatus("ready", "testReady");
+    await playCurrentTrial();
   }
 
   function handleSetupSubmit(event) {
@@ -1263,12 +1262,12 @@
       renderCalibrationControls();
     });
 
-    $("startScreeningButton").addEventListener("click", () => {
+    $("startScreeningButton").addEventListener("click", async () => {
       if (!(state.audioData && state.noisePlayed && state.calibrationConfirmed)) {
         setInlineMessage($("calibrationMessage"), t("calibrationRequirement"), "warning");
         return;
       }
-      beginScreening();
+      await beginScreening();
     });
 
     $("playTrialButton").addEventListener("click", playCurrentTrial);
