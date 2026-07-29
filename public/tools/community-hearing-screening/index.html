@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0b6259">
   <title>普通话社区听力筛查 | NeuraHear</title>
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=community-screening-20260729-4">
+  <link rel="stylesheet" href="styles.css?v=community-screening-20260729-5">
 </head>
 <body>
   <header class="topbar">
@@ -67,20 +67,68 @@
         </p>
       </div>
 
-      <div class="feature-strip" aria-label="Screening overview">
-        <div>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13a8 8 0 0 1 16 0v5a2 2 0 0 1-2 2h-2v-7h4M4 13v7H2a2 2 0 0 1-2-2v-5"></path></svg>
-          <span data-i18n="featureHeadphones">使用双耳耳机</span>
+      <section class="quick-tutorial" aria-labelledby="tutorialTitle">
+        <div class="tutorial-heading">
+          <div>
+            <p class="eyebrow" data-i18n="tutorialEyebrow">三步看懂</p>
+            <h2 id="tutorialTitle" data-i18n="tutorialTitle">测试时只需要做三件事</h2>
+          </div>
+          <p data-i18n="tutorialIntro">全程约 5 分钟，完成后立即显示筛查结果。</p>
         </div>
-        <div>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8v4l2.5 2.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path></svg>
-          <span data-i18n="featureDuration">约 5 分钟</span>
+
+        <ol class="tutorial-steps">
+          <li>
+            <span class="tutorial-step-number" aria-hidden="true">1</span>
+            <div class="tutorial-visual tutorial-headphones" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 13a8 8 0 0 1 16 0v5a2 2 0 0 1-2 2h-2v-7h4M4 13v7H2a2 2 0 0 1-2-2v-5"></path></svg>
+            </div>
+            <div>
+              <h3 data-i18n="tutorialStepOneTitle">戴好双耳耳机</h3>
+              <p data-i18n="tutorialStepOneBody">坐在安静环境中，保持设备音量不变。</p>
+            </div>
+          </li>
+          <li>
+            <span class="tutorial-step-number" aria-hidden="true">2</span>
+            <div class="tutorial-visual tutorial-digit-pair" aria-hidden="true">
+              <span>5</span><span>9</span>
+            </div>
+            <div>
+              <h3 data-i18n="tutorialStepTwoTitle">听两个数字</h3>
+              <p data-i18n="tutorialStepTwoBody">噪声中会依次播放两个普通话数字。</p>
+            </div>
+          </li>
+          <li>
+            <span class="tutorial-step-number" aria-hidden="true">3</span>
+            <div class="tutorial-visual tutorial-response" aria-hidden="true">
+              <span>5</span><span>9</span>
+              <svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"></path></svg>
+            </div>
+            <div>
+              <h3 data-i18n="tutorialStepThreeTitle">按顺序输入</h3>
+              <p data-i18n="tutorialStepThreeBody">先点第一个数字，再点第二个数字，然后确认。</p>
+            </div>
+          </li>
+        </ol>
+
+        <div class="tutorial-demo" id="tutorialDemo">
+          <div class="tutorial-demo-copy">
+            <p class="eyebrow" data-i18n="tutorialTryEyebrow">试一下</p>
+            <h3 data-i18n="tutorialTryTitle">假设你听到“5、9”</h3>
+            <p data-i18n="tutorialTryBody">请依次点击 5 和 9，然后按确认。这只是示范，不会记录结果。</p>
+          </div>
+          <div class="tutorial-demo-practice">
+            <div class="tutorial-demo-answer" data-i18n-title="tutorialAnswerLabel" title="示范输入" aria-label="示范输入">
+              <span></span><span></span>
+            </div>
+            <div class="tutorial-demo-buttons">
+              <button type="button" data-tutorial-digit="5">5</button>
+              <button type="button" data-tutorial-digit="9">9</button>
+              <button id="tutorialConfirmButton" class="tutorial-confirm-button" type="button" disabled data-i18n="confirmAnswer">确认</button>
+            </div>
+            <p id="tutorialFeedback" class="tutorial-feedback" role="status" aria-live="polite" data-i18n="tutorialDemoPrompt">请先按 5，再按 9。</p>
+          </div>
         </div>
-        <div>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"></path></svg>
-          <span data-i18n="featureOutcome">即时筛查结果</span>
-        </div>
-      </div>
+      </section>
 
       <form id="setupForm" class="setup-form" novalidate>
         <div class="section-label">
@@ -294,6 +342,6 @@
     <span data-i18n="protocolFooter">普通话两位数字社区听力筛查协议</span>
   </footer>
 
-  <script src="screening.js?v=community-screening-20260729-4"></script>
+  <script src="screening.js?v=community-screening-20260729-5"></script>
 </body>
 </html>

@@ -2,7 +2,7 @@
   "use strict";
 
   const CONFIG = Object.freeze({
-    appVersion: "community-screening-2026.07.29-4",
+    appVersion: "community-screening-2026.07.29-5",
     schemaVersion: "community-hearing-screening-result-v1",
     protocolId: "mandarin-2f-community-screening-v1",
     protocolLabel: "Mandarin 2-digit forward community hearing screening",
@@ -46,9 +46,22 @@
       welcomeEyebrow: "约 5 分钟 · 普通话",
       welcomeTitle: "在背景噪声中聆听数字，快速了解你的听力",
       welcomeIntro: "你会听到两个被噪声包围的普通话数字。每次播放后，按顺序输入听到的数字；系统会自动调节难度。",
-      featureHeadphones: "使用双耳耳机",
-      featureDuration: "约 5 分钟",
-      featureOutcome: "即时筛查结果",
+      tutorialEyebrow: "三步看懂",
+      tutorialTitle: "测试时只需要做三件事",
+      tutorialIntro: "全程约 5 分钟，完成后立即显示筛查结果。",
+      tutorialStepOneTitle: "戴好双耳耳机",
+      tutorialStepOneBody: "坐在安静环境中，保持设备音量不变。",
+      tutorialStepTwoTitle: "听两个数字",
+      tutorialStepTwoBody: "噪声中会依次播放两个普通话数字。",
+      tutorialStepThreeTitle: "按顺序输入",
+      tutorialStepThreeBody: "先点第一个数字，再点第二个数字，然后确认。",
+      tutorialTryEyebrow: "试一下",
+      tutorialTryTitle: "假设你听到“5、9”",
+      tutorialTryBody: "请依次点击 5 和 9，然后按确认。这只是示范，不会记录结果。",
+      tutorialAnswerLabel: "示范输入",
+      tutorialDemoPrompt: "请先按 5，再按 9。",
+      tutorialDemoSuccess: "做对了。正式测试就是这样。",
+      tutorialDemoRetry: "顺序不对，请重新按 5、9。",
       participantHeading: "基本资料",
       participantHelp: "请勿输入姓名、电话或身份证号码。",
       participantCode: "参与者编号",
@@ -149,9 +162,22 @@
       welcomeEyebrow: "About 5 minutes · Mandarin",
       welcomeTitle: "Listen for digits in background noise and check your hearing",
       welcomeIntro: "You will hear two Mandarin digits in noise. Enter the digits in the same order after each presentation; the test adjusts the difficulty automatically.",
-      featureHeadphones: "Use headphones on both ears",
-      featureDuration: "About 5 minutes",
-      featureOutcome: "Immediate screening result",
+      tutorialEyebrow: "Three simple steps",
+      tutorialTitle: "You only need to do three things",
+      tutorialIntro: "The screening takes about 5 minutes and shows the result immediately.",
+      tutorialStepOneTitle: "Wear headphones",
+      tutorialStepOneBody: "Sit somewhere quiet and keep the device volume unchanged.",
+      tutorialStepTwoTitle: "Listen for two digits",
+      tutorialStepTwoBody: "Two Mandarin digits will play in background noise.",
+      tutorialStepThreeTitle: "Enter them in order",
+      tutorialStepThreeBody: "Tap the first digit, then the second digit, and confirm.",
+      tutorialTryEyebrow: "Try it",
+      tutorialTryTitle: "Imagine you heard “5, 9”",
+      tutorialTryBody: "Tap 5 and 9 in order, then confirm. This demonstration is not recorded.",
+      tutorialAnswerLabel: "Demonstration input",
+      tutorialDemoPrompt: "Tap 5 first, then 9.",
+      tutorialDemoSuccess: "Correct. The real screening works the same way.",
+      tutorialDemoRetry: "That order was different. Try 5, then 9 again.",
       participantHeading: "Basic information",
       participantHelp: "Do not enter a name, phone number, or identity document number.",
       participantCode: "Participant code",
@@ -277,7 +303,10 @@
     playbackActive: false,
     playbackEndedAt: null,
     autoPlayToken: 0,
-    uploadRecord: null
+    uploadRecord: null,
+    tutorialDigits: "",
+    tutorialFeedbackKey: "tutorialDemoPrompt",
+    tutorialFeedbackTone: ""
   };
 
   function $(id) {
@@ -328,7 +357,49 @@
     renderDynamicText();
   }
 
+  function renderTutorialDemo() {
+    const demo = $("tutorialDemo");
+    if (!demo) return;
+    const boxes = demo.querySelectorAll(".tutorial-demo-answer span");
+    boxes.forEach((box, index) => {
+      box.textContent = state.tutorialDigits[index] || "";
+      box.classList.toggle("is-filled", Boolean(state.tutorialDigits[index]));
+    });
+    $("tutorialConfirmButton").disabled = state.tutorialDigits.length !== 2;
+    const feedback = $("tutorialFeedback");
+    feedback.dataset.i18n = state.tutorialFeedbackKey;
+    feedback.textContent = t(state.tutorialFeedbackKey);
+    if (state.tutorialFeedbackTone) feedback.dataset.tone = state.tutorialFeedbackTone;
+    else delete feedback.dataset.tone;
+    demo.classList.toggle("is-complete", state.tutorialFeedbackKey === "tutorialDemoSuccess");
+  }
+
+  function appendTutorialDigit(digit) {
+    if (state.tutorialFeedbackKey === "tutorialDemoSuccess") {
+      state.tutorialDigits = "";
+      state.tutorialFeedbackKey = "tutorialDemoPrompt";
+      state.tutorialFeedbackTone = "";
+    }
+    if (state.tutorialDigits.length >= 2) return;
+    state.tutorialDigits += String(digit);
+    renderTutorialDemo();
+  }
+
+  function submitTutorialDemo() {
+    if (state.tutorialDigits.length !== 2) return;
+    if (state.tutorialDigits === "59") {
+      state.tutorialFeedbackKey = "tutorialDemoSuccess";
+      state.tutorialFeedbackTone = "success";
+    } else {
+      state.tutorialDigits = "";
+      state.tutorialFeedbackKey = "tutorialDemoRetry";
+      state.tutorialFeedbackTone = "warning";
+    }
+    renderTutorialDemo();
+  }
+
   function renderDynamicText() {
+    renderTutorialDemo();
     renderCalibrationControls();
     renderTestHeader();
     if (state.currentScreen === "screening") {
@@ -1277,6 +1348,11 @@
       localStorage.setItem(STORAGE.uiLanguage, state.uiLanguage);
       applyLanguage();
     });
+
+    document.querySelectorAll("[data-tutorial-digit]").forEach((button) => {
+      button.addEventListener("click", () => appendTutorialDigit(button.dataset.tutorialDigit));
+    });
+    $("tutorialConfirmButton").addEventListener("click", submitTutorialDemo);
 
     $("setupForm").addEventListener("submit", handleSetupSubmit);
     $("backToSetup").addEventListener("click", () => showScreen("welcome"));

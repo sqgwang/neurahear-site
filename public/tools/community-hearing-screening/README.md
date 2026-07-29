@@ -29,6 +29,10 @@ browser playback error.
 
 ## Accessibility
 
+- The welcome screen uses a three-step visual tutorial: wear headphones, listen
+  for two digits, and enter the digits in the same order.
+- A short 5-9 interaction lets participants rehearse the response pattern
+  without loading audio, saving data, or affecting the screening.
 - Participant-facing text uses larger type and generous line spacing.
 - Primary controls and the response keypad provide large touch targets.
 - Checkbox rows are fully clickable, with high-visibility focus states.
