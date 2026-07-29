@@ -22,9 +22,10 @@ validation is still required, that this is screening rather than diagnosis, and
 that binaural DIN may not identify unilateral or asymmetric hearing loss.
 
 The calibration page provides the only explicit start action. After the
-participant selects Start practice, the first practice item and all subsequent
-items play automatically. The test-page Play control is reserved for retrying
-after a browser playback error.
+participant selects Start practice, a large three-second countdown precedes the
+first practice item. The first practice item and all subsequent items then play
+automatically. The test-page Play control is reserved for retrying after a
+browser playback error.
 
 ## Accessibility
 

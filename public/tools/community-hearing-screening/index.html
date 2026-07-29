@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0b6259">
   <title>普通话社区听力筛查 | NeuraHear</title>
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=community-screening-20260729-3">
+  <link rel="stylesheet" href="styles.css?v=community-screening-20260729-4">
 </head>
 <body>
   <header class="topbar">
@@ -212,10 +212,16 @@
 
       <div class="test-stage">
         <p id="testInstruction" aria-live="polite" data-i18n="testReady">声音即将自动播放，请留意聆听两个数字。</p>
-        <button id="playTrialButton" class="play-trial-button" type="button">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7V5Z"></path></svg>
-          <span data-i18n="play">播放</span>
-        </button>
+        <div class="trial-cue">
+          <button id="playTrialButton" class="play-trial-button" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7V5Z"></path></svg>
+            <span data-i18n="play">播放</span>
+          </button>
+          <div id="practiceCountdown" class="practice-countdown" role="status" aria-live="polite" aria-atomic="true" hidden>
+            <strong id="practiceCountdownValue">3</strong>
+            <span data-i18n="countdownLabel">练习即将开始</span>
+          </div>
+        </div>
 
         <div id="digitDisplay" class="digit-display" aria-label="Entered digits">
           <span></span><span></span>
@@ -288,6 +294,6 @@
     <span data-i18n="protocolFooter">普通话两位数字社区听力筛查协议</span>
   </footer>
 
-  <script src="screening.js?v=community-screening-20260729-3"></script>
+  <script src="screening.js?v=community-screening-20260729-4"></script>
 </body>
 </html>

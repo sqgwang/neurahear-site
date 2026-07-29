@@ -2,7 +2,7 @@
   "use strict";
 
   const CONFIG = Object.freeze({
-    appVersion: "community-screening-2026.07.29-3",
+    appVersion: "community-screening-2026.07.29-4",
     schemaVersion: "community-hearing-screening-result-v1",
     protocolId: "mandarin-2f-community-screening-v1",
     protocolLabel: "Mandarin 2-digit forward community hearing screening",
@@ -93,12 +93,15 @@
       practice: "练习",
       formalScreening: "正式筛查",
       ready: "准备就绪",
+      startingSoon: "即将开始",
       preparing: "正在准备",
       listening: "请聆听",
       enterDigits: "输入数字",
       savingAnswer: "记录答案",
       playbackError: "播放出错",
       play: "播放",
+      countdownLabel: "练习即将开始",
+      countdownInstruction: "请准备，倒计时结束后将自动播放。",
       testReady: "声音即将自动播放，请留意聆听两个数字。",
       testPreparing: "正在准备声音，请稍候。",
       testPlaying: "正在播放，请仔细聆听。",
@@ -193,12 +196,15 @@
       practice: "Practice",
       formalScreening: "Screening",
       ready: "Ready",
+      startingSoon: "Starting soon",
       preparing: "Preparing",
       listening: "Listening",
       enterDigits: "Enter digits",
       savingAnswer: "Saving answer",
       playbackError: "Playback error",
       play: "Play",
+      countdownLabel: "Practice starts soon",
+      countdownInstruction: "Get ready. The audio will play when the countdown ends.",
       testReady: "The audio will play automatically. Listen for two digits.",
       testPreparing: "Preparing the sound. Please wait.",
       testPlaying: "Audio is playing. Listen carefully.",
@@ -329,6 +335,7 @@
       const status = $("testStatus")?.dataset.state || "ready";
       const instructionKeys = {
         ready: "testReady",
+        countdown: "countdownInstruction",
         preparing: "testPreparing",
         playing: "testPlaying",
         response: "testRespond",
@@ -757,6 +764,7 @@
   function setTestStatus(status, instructionKey) {
     const labelKeys = {
       ready: "ready",
+      countdown: "startingSoon",
       preparing: "preparing",
       playing: "listening",
       response: "enterDigits",
@@ -860,6 +868,19 @@
       $("playTrialButton").disabled = false;
       setTestStatus("error", "testPlaybackFailed");
     }
+  }
+
+  async function runPracticeCountdown() {
+    const countdown = $("practiceCountdown");
+    const value = $("practiceCountdownValue");
+    countdown.hidden = false;
+    $("playTrialButton").disabled = true;
+    setTestStatus("countdown", "countdownInstruction");
+    for (let seconds = 3; seconds >= 1; seconds -= 1) {
+      value.textContent = String(seconds);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+    countdown.hidden = true;
   }
 
   function recordTrial(input, correct) {
@@ -1164,6 +1185,7 @@
 
   async function beginScreening() {
     stopNoise();
+    await resumeAudioContext();
     state.session.calibration = {
       type: "participant-set-comfortable-noise-level",
       workflowVersion: "community-calibration-v1",
@@ -1191,7 +1213,7 @@
     state.playbackActive = false;
     setKeypadEnabled(false);
     $("playTrialButton").disabled = true;
-    setTestStatus("ready", "testReady");
+    await runPracticeCountdown();
     await playCurrentTrial();
   }
 

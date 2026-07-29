@@ -890,6 +890,16 @@ h2 {
   background: var(--teal-soft);
 }
 
+.test-status[data-state="countdown"] {
+  color: var(--teal);
+  border-color: #b9d9d2;
+  background: var(--teal-soft);
+}
+
+.test-status[data-state="countdown"] span {
+  background: var(--teal);
+}
+
 .test-status[data-state="playing"] span {
   background: var(--teal);
   animation: pulse 1.1s ease-in-out infinite;
@@ -942,6 +952,17 @@ h2 {
   line-height: 1.5;
 }
 
+.trial-cue {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 60px;
+}
+
+.trial-cue > * {
+  grid-area: 1 / 1;
+}
+
 .play-trial-button {
   display: inline-flex;
   align-items: center;
@@ -964,6 +985,37 @@ h2 {
 
 .play-trial-button:disabled {
   visibility: hidden;
+}
+
+.practice-countdown {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  min-height: 56px;
+  color: var(--teal);
+}
+
+.practice-countdown[hidden] {
+  display: none;
+}
+
+.practice-countdown strong {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--teal);
+  font-size: 32px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.practice-countdown span {
+  font-size: 18px;
+  font-weight: 800;
 }
 
 .digit-display {
