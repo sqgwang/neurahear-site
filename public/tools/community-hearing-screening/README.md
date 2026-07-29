@@ -26,6 +26,15 @@ participant selects Start practice, the first practice item and all subsequent
 items play automatically. The test-page Play control is reserved for retrying
 after a browser playback error.
 
+## Accessibility
+
+- Participant-facing text uses larger type and generous line spacing.
+- Primary controls and the response keypad provide large touch targets.
+- Checkbox rows are fully clickable, with high-visibility focus states.
+- Calibration supports both a large-thumb slider and one-decibel step buttons
+  for participants who find precise dragging difficult.
+- Essential screening status text remains visible on narrow screens.
+
 ## Data boundary
 
 - Browser storage keys use the `nh.communityScreening.*` namespace.

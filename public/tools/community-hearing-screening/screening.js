@@ -2,7 +2,7 @@
   "use strict";
 
   const CONFIG = Object.freeze({
-    appVersion: "community-screening-2026.07.29-2",
+    appVersion: "community-screening-2026.07.29-3",
     schemaVersion: "community-hearing-screening-result-v1",
     protocolId: "mandarin-2f-community-screening-v1",
     protocolLabel: "Mandarin 2-digit forward community hearing screening",
@@ -83,6 +83,8 @@
       noisePlayingInstruction: "请调至清楚可闻、舒适且不刺耳的音量。",
       noiseStoppedInstruction: "可再次播放确认，或勾选下方确认项目。",
       noiseLevel: "噪声音量",
+      decreaseVolume: "减小音量",
+      increaseVolume: "增大音量",
       calibrationConfirmed: "我能清楚、舒适地听到噪声，并会保持目前的设备音量。",
       calibrationRequirement: "请至少播放一次噪声，并确认目前音量舒适。",
       calibrationChanged: "音量已改变，请重新确认目前音量。",
@@ -181,6 +183,8 @@
       noisePlayingInstruction: "Adjust to a clear, comfortable level that is not uncomfortably loud.",
       noiseStoppedInstruction: "Play it again to check, or confirm the level below.",
       noiseLevel: "Noise level",
+      decreaseVolume: "Decrease volume",
+      increaseVolume: "Increase volume",
       calibrationConfirmed: "I can hear the noise clearly and comfortably and will keep the current device volume.",
       calibrationRequirement: "Play the noise at least once and confirm the comfortable level.",
       calibrationChanged: "The level changed. Please confirm the current level again.",
@@ -321,6 +325,18 @@
   function renderDynamicText() {
     renderCalibrationControls();
     renderTestHeader();
+    if (state.currentScreen === "screening") {
+      const status = $("testStatus")?.dataset.state || "ready";
+      const instructionKeys = {
+        ready: "testReady",
+        preparing: "testPreparing",
+        playing: "testPlaying",
+        response: "testRespond",
+        saving: "savingAnswer",
+        error: "testPlaybackFailed"
+      };
+      setTestStatus(status, instructionKeys[status]);
+    }
     if (state.currentScreen === "result" && state.session?.result) {
       renderOutcome(state.session.result);
       renderUploadState();
@@ -577,6 +593,22 @@
         : t("noiseInstruction");
     $("noiseLevelOutput").textContent = `${state.fixedGainDb.toFixed(1)} dB`;
     $("startScreeningButton").disabled = !(state.audioData && state.noisePlayed && state.calibrationConfirmed);
+  }
+
+  function setCalibrationGainDb(value, countAdjustment = false) {
+    const nextValue = clamp(readNumber(value, state.fixedGainDb), -20, 6);
+    if (nextValue === state.fixedGainDb) return;
+    state.fixedGainDb = nextValue;
+    $("noiseLevel").value = String(state.fixedGainDb);
+    localStorage.setItem(STORAGE.fixedGain, String(state.fixedGainDb));
+    if (state.noiseGainNode) state.noiseGainNode.gain.value = fixedGainLinear();
+    if (countAdjustment) state.calibrationAdjustmentCount += 1;
+    if (state.calibrationConfirmed) {
+      state.calibrationConfirmed = false;
+      $("calibrationConfirmed").checked = false;
+      setInlineMessage($("calibrationMessage"), t("calibrationChanged"), "warning");
+    }
+    renderCalibrationControls();
   }
 
   function randomIndex(maxExclusive) {
@@ -1242,18 +1274,16 @@
 
     $("noiseLevel").value = String(state.fixedGainDb);
     $("noiseLevel").addEventListener("input", () => {
-      state.fixedGainDb = clamp(readNumber($("noiseLevel").value, 0), -20, 6);
-      localStorage.setItem(STORAGE.fixedGain, String(state.fixedGainDb));
-      if (state.noiseGainNode) state.noiseGainNode.gain.value = fixedGainLinear();
-      if (state.calibrationConfirmed) {
-        state.calibrationConfirmed = false;
-        $("calibrationConfirmed").checked = false;
-        setInlineMessage($("calibrationMessage"), t("calibrationChanged"), "warning");
-      }
-      renderCalibrationControls();
+      setCalibrationGainDb($("noiseLevel").value);
     });
     $("noiseLevel").addEventListener("change", () => {
       state.calibrationAdjustmentCount += 1;
+    });
+    $("decreaseNoiseButton").addEventListener("click", () => {
+      setCalibrationGainDb(state.fixedGainDb - 1, true);
+    });
+    $("increaseNoiseButton").addEventListener("click", () => {
+      setCalibrationGainDb(state.fixedGainDb + 1, true);
     });
 
     $("calibrationConfirmed").addEventListener("change", () => {
