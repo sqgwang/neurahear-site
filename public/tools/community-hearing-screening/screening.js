@@ -2,7 +2,7 @@
   "use strict";
 
   const CONFIG = Object.freeze({
-    appVersion: "community-screening-2026.07.23-2",
+    appVersion: "community-screening-2026.07.29-1",
     schemaVersion: "community-hearing-screening-result-v1",
     protocolId: "mandarin-2f-community-screening-v1",
     protocolLabel: "Mandarin 2-digit forward community hearing screening",
@@ -37,6 +37,8 @@
       brandSubtitle: "社区听力筛查",
       languageLabel: "界面语言",
       staffDashboard: "工作人员后台",
+      screeningPartner: "联合筛查合作单位",
+      screeningPartnerName: "中国听力语言康复研究中心",
       stepWelcome: "准备",
       stepCalibration: "校准",
       stepScreening: "筛查",
@@ -133,6 +135,8 @@
       brandSubtitle: "Community Hearing Screening",
       languageLabel: "Interface language",
       staffDashboard: "Staff dashboard",
+      screeningPartner: "Screening partner",
+      screeningPartnerName: "中国听力语言康复研究中心",
       stepWelcome: "Prepare",
       stepCalibration: "Calibrate",
       stepScreening: "Screen",

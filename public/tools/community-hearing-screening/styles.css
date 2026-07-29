@@ -13,11 +13,13 @@
   --coral-soft: #fbece8;
   --amber: #936418;
   --amber-soft: #fff4d9;
+  --partner-orange: #df7f09;
+  --partner-soft: #fff8ec;
   --green: #247553;
   --green-soft: #e7f4ed;
   --shadow: 0 14px 36px rgba(23, 33, 31, 0.08);
   --focus: 0 0 0 3px rgba(11, 98, 89, 0.22);
-  font-family: Inter, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: Inter, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 * {
@@ -172,6 +174,50 @@ svg {
   border-color: var(--teal);
   box-shadow: var(--focus);
   outline: none;
+}
+
+.partner-bar {
+  border-bottom: 1px solid #f1d6ad;
+  background: var(--partner-soft);
+}
+
+.partner-lockup {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: min(100% - 40px, 1120px);
+  min-height: 66px;
+  margin: 0 auto;
+  padding-block: 8px;
+}
+
+.partner-lockup img {
+  display: block;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.partner-lockup span,
+.partner-lockup strong {
+  display: block;
+  letter-spacing: 0;
+}
+
+.partner-lockup span {
+  margin-bottom: 3px;
+  color: #875411;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.partner-lockup strong {
+  color: #4e3210;
+  font-size: 15px;
+  line-height: 1.35;
 }
 
 .app-shell {
@@ -1056,6 +1102,28 @@ h2 {
     display: none;
   }
 
+  .partner-lockup {
+    width: min(100% - 32px, 1120px);
+    min-height: 58px;
+    gap: 10px;
+    padding-block: 7px;
+  }
+
+  .partner-lockup img {
+    flex-basis: 42px;
+    width: 42px;
+    height: 42px;
+  }
+
+  .partner-lockup span {
+    margin-bottom: 2px;
+    font-size: 9px;
+  }
+
+  .partner-lockup strong {
+    font-size: 13px;
+  }
+
   .app-shell {
     width: min(100% - 20px, 960px);
     margin-top: 20px;
@@ -1149,6 +1217,10 @@ h2 {
 }
 
 @media (max-width: 410px) {
+  .topbar {
+    gap: 10px;
+  }
+
   .brand-mark {
     flex-basis: 38px;
     width: 38px;
@@ -1160,7 +1232,7 @@ h2 {
   }
 
   .language-control select {
-    width: 96px;
+    width: 104px;
     padding-left: 8px;
   }
 
