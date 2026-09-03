@@ -451,5 +451,6 @@ export function getAssessmentToolHighlights(items: ToolItem[] = toolItems) {
       detail: tool.category,
       status: tool.shortStatus,
       tone: tool.tone,
+      href: tool.href,
     }));
 }

@@ -1,23 +1,18 @@
 import Link from "next/link";
-import { getAssessmentToolHighlights, getToolStats, toolToneClasses } from "../data/tools";
-
-const waveformBars = [26, 44, 62, 36, 78, 52, 30, 72, 48, 84, 58, 34, 64, 46, 76, 40, 70, 54, 28, 62, 80, 38, 56, 72];
+import { getAssessmentToolHighlights, getToolStats, type ToolTone } from "../data/tools";
 
 const platformPillars = [
   {
     label: "AI care",
     title: "Decision support",
-    text: "Human-centered AI for screening, triage, counseling, and hearing-care workflows.",
   },
   {
     label: "Assessment",
     title: "Digital tools",
-    text: "Browser-based measures for speech-in-noise performance and patient-reported outcomes.",
   },
   {
     label: "Validation",
     title: "Real-world evidence",
-    text: "Cross-cultural adaptation, psychometrics, and implementation in everyday care contexts.",
   },
 ];
 
@@ -29,98 +24,82 @@ function ArrowIcon() {
   );
 }
 
+const toolToneDots: Record<ToolTone, string> = {
+  teal: "bg-teal-600",
+  amber: "bg-amber-600",
+  sky: "bg-sky-600",
+  neutral: "bg-neutral-400",
+};
+
 export default function PlatformResearchPanel() {
   const assessmentTools = getAssessmentToolHighlights();
   const toolStats = getToolStats();
 
   return (
-    <div className="relative overflow-hidden rounded-lg border border-stone-200 bg-white shadow-[0_18px_60px_rgba(23,23,23,0.08)]">
-      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-teal-600 via-sky-500 to-amber-500" />
+    <div className="overflow-hidden rounded-lg border border-stone-300 bg-white shadow-[0_20px_60px_rgba(23,23,23,0.07)]">
       <div className="grid gap-0 lg:grid-cols-[1.08fr_0.92fr]">
-        <div className="bg-neutral-950 p-5 text-white sm:p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="bg-neutral-950 p-6 text-white sm:p-7">
+          <div className="flex items-start justify-between gap-5">
             <div>
-              <p className="text-xs font-semibold uppercase text-teal-200">Research platform</p>
+              <p className="text-xs font-semibold uppercase text-teal-300">Research platform</p>
               <h2 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">
                 AI-enabled hearing care meets digital assessment
               </h2>
             </div>
-            <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-stone-100">
-              Building
+            <span className="mt-1 flex shrink-0 items-center gap-2 text-xs font-semibold text-stone-300">
+              <span className="h-2 w-2 rounded-full bg-teal-400" />
+              Active
             </span>
           </div>
 
-          <div
-            role="img"
-            aria-label="Signal, questionnaire, and AI model layers for hearing-care assessment"
-            className="mt-7 rounded-lg border border-white/10 bg-white/[0.04] p-4"
-          >
-            <div className="flex h-28 items-end gap-1.5">
-              {waveformBars.map((height, index) => (
-                <span
-                  key={`${height}-${index}`}
-                  className={`flex-1 rounded-t-sm ${index % 5 === 0 ? "bg-amber-300" : index % 3 === 0 ? "bg-sky-300" : "bg-teal-300"}`}
-                  style={{ height: `${height}%`, opacity: 0.42 + (height / 100) * 0.5 }}
-                />
-              ))}
-            </div>
-            <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs font-semibold text-stone-200">
-              <span className="rounded-md border border-white/10 bg-white/[0.05] px-2 py-2">Measure</span>
-              <span className="rounded-md border border-white/10 bg-white/[0.05] px-2 py-2">Model</span>
-              <span className="rounded-md border border-white/10 bg-white/[0.05] px-2 py-2">Care</span>
-            </div>
-          </div>
+          <p className="mt-5 max-w-xl text-sm text-stone-300">
+            Evidence, measurement, and responsible AI are developed as one translational research system.
+          </p>
 
-          <div className="mt-5 grid gap-3">
-            {platformPillars.map((pillar) => (
-              <div key={pillar.label} className="min-w-0 rounded-md border border-white/10 bg-white/[0.04] p-3">
-                <div className="text-xs font-semibold uppercase text-stone-400">{pillar.label}</div>
-                <div className="mt-2 text-sm font-semibold text-white">{pillar.title}</div>
-                <p className="mt-2 break-words text-xs leading-relaxed text-stone-300">{pillar.text}</p>
+          <div className="mt-7 border-y border-white/15">
+            {platformPillars.map((pillar, index) => (
+              <div key={pillar.label} className="grid min-w-0 grid-cols-[2.5rem_1fr] gap-3 border-b border-white/15 py-4 last:border-b-0">
+                <div className="pt-0.5 text-sm font-semibold text-teal-300">0{index + 1}</div>
+                <div>
+                  <div className="text-xs font-semibold uppercase text-stone-400">{pillar.label}</div>
+                  <div className="mt-1 text-base font-semibold text-white">{pillar.title}</div>
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="p-5 sm:p-6">
-          <div className="rounded-lg border border-stone-200 bg-stone-50 p-4">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold uppercase text-neutral-500">Assessment tools</p>
-                <h3 className="mt-2 text-xl font-semibold text-neutral-950">A growing tool registry</h3>
-                <p className="mt-2 text-sm text-neutral-600">
-                  iDIN and HFEQ-Mandarin are early examples of a broader assessment platform.
-                </p>
-              </div>
-              <span className="text-3xl font-semibold text-neutral-950">{toolStats.platformHighlightCount}</span>
+        <div className="p-6 sm:p-7">
+          <div className="flex items-start justify-between gap-5">
+            <div>
+              <p className="text-xs font-semibold uppercase text-neutral-500">Assessment tools</p>
+              <h3 className="mt-2 text-2xl font-semibold text-neutral-950">A growing tool registry</h3>
+              <p className="mt-3 text-sm text-neutral-600">
+                Current pathways span screening, speech-in-noise measurement, stimulus optimization, and everyday functioning.
+              </p>
             </div>
+            <span className="text-4xl font-semibold text-neutral-950">{toolStats.platformHighlightCount}</span>
+          </div>
 
-            <div className="mt-5 space-y-2">
-              {assessmentTools.map((tool) => (
-                <div key={tool.name} className="rounded-md border border-stone-200 bg-white p-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="text-sm font-semibold text-neutral-950">{tool.name}</div>
-                      <div className="mt-1 break-words text-xs text-neutral-500">{tool.detail}</div>
-                    </div>
-                    <span className={`shrink-0 rounded-full border px-2 py-1 text-[11px] font-semibold ${toolToneClasses[tool.tone]}`}>
-                      {tool.status}
-                    </span>
-                  </div>
+          <div className="mt-6 border-y border-stone-200">
+            {assessmentTools.map((tool) => (
+              <Link key={tool.name} href={tool.href || "/tools/"} className="group flex items-center justify-between gap-4 border-b border-stone-200 py-4 no-underline last:border-b-0">
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-neutral-950 transition-colors group-hover:text-brand-primary">{tool.name}</div>
+                  <div className="mt-1 break-words text-xs text-neutral-500">{tool.detail}</div>
                 </div>
-              ))}
-            </div>
+                <div className="flex shrink-0 items-center gap-3">
+                  <span className="flex items-center gap-2 text-xs font-semibold text-neutral-600">
+                    <span className={`h-2 w-2 rounded-full ${toolToneDots[tool.tone]}`} />
+                    {tool.status}
+                  </span>
+                  <ArrowIcon />
+                </div>
+              </Link>
+            ))}
           </div>
 
-          <div className="mt-4 rounded-lg border border-stone-200 bg-white p-4">
-            <p className="text-xs font-semibold uppercase text-neutral-500">Everyday functioning</p>
-            <p className="mt-2 text-sm text-neutral-600">
-              HFEQ-Mandarin extends the platform beyond auditory performance into ICF-based daily functioning, communication,
-              participation, personal resources, support, and health.
-            </p>
-          </div>
-
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
             <Link href="/tools/" className="btn">
               Assessment tools
               <ArrowIcon />

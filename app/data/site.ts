@@ -3,12 +3,13 @@ import type { Metadata } from "next";
 export const siteUrl = "https://neurahear.com";
 
 export const siteConfig = {
-  name: "HK Audiology Group",
+  name: "NeuraHear",
+  organizationName: "HK Audiology Group",
   shortName: "NeuraHear",
   url: siteUrl,
   email: "sqgw@connect.hku.hk",
   institution: "The University of Hong Kong",
-  title: "HK Audiology Group | AI-Enabled Hearing Care",
+  title: "NeuraHear | AI-Enabled Hearing Care",
   description:
     "AI-enabled hearing-care research and digital hearing assessment tools from HK Audiology Group at The University of Hong Kong.",
   image: "/brand/neurahear-social-card.svg",
@@ -76,7 +77,7 @@ export function createPageMetadata({
           url: siteConfig.image,
           width: 1200,
           height: 630,
-          alt: "HK Audiology Group: AI-enabled hearing care and digital assessment tools",
+          alt: "NeuraHear by HK Audiology Group: AI-enabled hearing care and digital assessment tools",
         },
       ],
     },

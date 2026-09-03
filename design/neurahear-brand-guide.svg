@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1040" role="img" aria-labelledby="guide-title guide-desc">
+  <title id="guide-title">NeuraHear compact brand guide</title>
+  <desc id="guide-desc">Primary logo, reversed logo, favicon, sizing, spacing, and color guidance for NeuraHear by HK Audiology Group.</desc>
+  <rect width="1600" height="1040" fill="#f6f7f3" />
+
+  <defs>
+    <mask id="guide-gap" maskUnits="userSpaceOnUse" x="0" y="0" width="128" height="128">
+      <rect width="128" height="128" fill="#ffffff" />
+      <rect x="52" y="47" width="30" height="12" rx="1.5" transform="rotate(-34 67 53)" fill="#000000" />
+    </mask>
+    <g id="guide-mark">
+      <path d="M30 99V38c0-7 3-11 8-13 6-2 11 0 15 6l28 42c4 6 8 9 12 9 5 0 7-4 7-10V29" fill="none" stroke="currentColor" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" mask="url(#guide-gap)" />
+    </g>
+  </defs>
+
+  <g font-family="Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" fill="#171717">
+    <text x="88" y="82" font-size="18" font-weight="700" letter-spacing="0">NEURAHEAR BRAND SYSTEM</text>
+    <text x="88" y="128" font-size="42" font-weight="650" letter-spacing="0">Quiet confidence for hearing science</text>
+    <text x="1512" y="88" text-anchor="end" font-size="16" font-weight="600" fill="#666666" letter-spacing="0">CORE IDENTITY · 2026</text>
+
+    <rect x="88" y="176" width="910" height="360" rx="8" fill="#ffffff" stroke="#dedbd2" />
+    <text x="128" y="222" font-size="14" font-weight="700" fill="#666666" letter-spacing="0">PRIMARY LOCKUP</text>
+    <g transform="translate(138 275) scale(1.55)" color="#171717"><use href="#guide-mark" /></g>
+    <text x="356" y="376" font-size="76" font-weight="700" letter-spacing="0">NeuraHear</text>
+    <text x="360" y="422" font-size="20" font-weight="600" fill="#666666" letter-spacing="0">BY HK AUDIOLOGY GROUP</text>
+
+    <rect x="1022" y="176" width="490" height="360" rx="8" fill="#171717" />
+    <text x="1062" y="222" font-size="14" font-weight="700" fill="#a8a8a2" letter-spacing="0">REVERSED USE</text>
+    <g transform="translate(1112 260) scale(1.5)" color="#ffffff"><use href="#guide-mark" /></g>
+    <text x="1308" y="352" font-size="42" font-weight="680" fill="#ffffff" letter-spacing="0">NeuraHear</text>
+    <text x="1310" y="385" font-size="14" font-weight="600" fill="#bdbdb7" letter-spacing="0">HK AUDIOLOGY GROUP</text>
+
+    <rect x="88" y="560" width="448" height="352" rx="8" fill="#ffffff" stroke="#dedbd2" />
+    <text x="128" y="606" font-size="14" font-weight="700" fill="#666666" letter-spacing="0">FAVICON AND MINIMUM SIZE</text>
+    <rect x="128" y="650" width="128" height="128" rx="32" fill="#171717" />
+    <g transform="translate(128 650)" color="#ffffff"><use href="#guide-mark" /></g>
+    <g transform="translate(306 666) scale(.3125)" color="#171717"><use href="#guide-mark" /></g>
+    <g transform="translate(382 674) scale(.1875)" color="#171717"><use href="#guide-mark" /></g>
+    <g transform="translate(442 678) scale(.125)" color="#171717"><use href="#guide-mark" /></g>
+    <text x="306" y="742" font-size="13" fill="#777777" letter-spacing="0">40 px</text>
+    <text x="382" y="742" font-size="13" fill="#777777" letter-spacing="0">24 px</text>
+    <text x="442" y="742" font-size="13" fill="#777777" letter-spacing="0">16 px</text>
+    <text x="128" y="838" font-size="15" fill="#5f666d" letter-spacing="0">Use the framed version only for browser</text>
+    <text x="128" y="863" font-size="15" fill="#5f666d" letter-spacing="0">and application icons.</text>
+
+    <rect x="560" y="560" width="448" height="352" rx="8" fill="#ffffff" stroke="#dedbd2" />
+    <text x="600" y="606" font-size="14" font-weight="700" fill="#666666" letter-spacing="0">CLEAR SPACE</text>
+    <rect x="690" y="650" width="188" height="188" fill="none" stroke="#0f766e" stroke-dasharray="7 7" />
+    <g transform="translate(720 680)" color="#171717"><use href="#guide-mark" /></g>
+    <line x1="690" y1="632" x2="720" y2="632" stroke="#0f766e" stroke-width="2" />
+    <line x1="690" y1="624" x2="690" y2="640" stroke="#0f766e" stroke-width="2" />
+    <line x1="720" y1="624" x2="720" y2="640" stroke="#0f766e" stroke-width="2" />
+    <text x="700" y="620" font-size="14" font-weight="700" fill="#0f766e" letter-spacing="0">x</text>
+    <text x="600" y="875" font-size="15" fill="#5f666d" letter-spacing="0">Keep at least one stem width around the mark.</text>
+
+    <rect x="1032" y="560" width="480" height="352" rx="8" fill="#ffffff" stroke="#dedbd2" />
+    <text x="1072" y="606" font-size="14" font-weight="700" fill="#666666" letter-spacing="0">CORE COLORS</text>
+    <rect x="1072" y="650" width="120" height="120" rx="6" fill="#171717" />
+    <rect x="1212" y="650" width="120" height="120" rx="6" fill="#f6f7f3" stroke="#dedbd2" />
+    <rect x="1352" y="650" width="120" height="120" rx="6" fill="#0f766e" />
+    <text x="1072" y="806" font-size="16" font-weight="650" letter-spacing="0">Ink</text>
+    <text x="1072" y="831" font-size="14" fill="#666666" letter-spacing="0">#171717</text>
+    <text x="1212" y="806" font-size="16" font-weight="650" letter-spacing="0">Paper</text>
+    <text x="1212" y="831" font-size="14" fill="#666666" letter-spacing="0">#F6F7F3</text>
+    <text x="1352" y="806" font-size="16" font-weight="650" letter-spacing="0">Signal</text>
+    <text x="1352" y="831" font-size="14" fill="#666666" letter-spacing="0">#0F766E</text>
+    <text x="1072" y="875" font-size="15" fill="#5f666d" letter-spacing="0">The master logo remains one color.</text>
+
+    <line x1="88" y1="958" x2="1512" y2="958" stroke="#dedbd2" />
+    <text x="88" y="999" font-size="14" fill="#666666" letter-spacing="0">The open transition represents sound becoming interpretable evidence.</text>
+    <text x="1512" y="999" text-anchor="end" font-size="14" font-weight="650" letter-spacing="0">NEURAHEAR.COM</text>
+  </g>
+</svg>

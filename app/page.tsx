@@ -78,8 +78,8 @@ export default function Home() {
     <div className="space-y-16">
       <section className="grid min-h-[calc(100vh-220px)] gap-10 lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] lg:items-center">
         <div className="max-w-3xl py-6">
-          <div className="eyebrow">The University of Hong Kong</div>
-          <h1>HK Audiology Group</h1>
+          <div className="eyebrow">HK Audiology Group / HKU</div>
+          <h1>NeuraHear</h1>
           <p className="mt-6 max-w-2xl text-lg text-neutral-700 md:text-xl">
             We build AI-enabled hearing-care research and digital assessment tools for speech-in-noise performance,
             everyday functioning, and clinical translation.

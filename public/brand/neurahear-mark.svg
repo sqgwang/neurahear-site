@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="14 14 100 100" role="img" aria-labelledby="mark-title mark-desc">
+  <title id="mark-title">NeuraHear mark</title>
+  <desc id="mark-desc">A quiet letter N with an open transition for sound becoming insight.</desc>
+  <defs>
+    <mask id="neurahear-mark-gap" maskUnits="userSpaceOnUse" x="0" y="0" width="128" height="128">
+      <rect width="128" height="128" fill="#ffffff" />
+      <rect x="52" y="47" width="30" height="12" rx="1.5" transform="rotate(-34 67 53)" fill="#000000" />
+    </mask>
+  </defs>
+  <path
+    d="M30 99V38c0-7 3-11 8-13 6-2 11 0 15 6l28 42c4 6 8 9 12 9 5 0 7-4 7-10V29"
+    fill="none"
+    stroke="#171717"
+    stroke-width="18"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    mask="url(#neurahear-mark-gap)"
+  />
+</svg>
