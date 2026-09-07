@@ -4,13 +4,14 @@
   <meta charset="utf-8" />
   <title>iDIN Intro</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet" href="css/styles.css?v=idin-20260611-upload-queue-1" />
+  <link rel="stylesheet" href="css/styles.css?v=idin-20260907-accessibility-1" />
+  <link rel="stylesheet" href="css/participant.css?v=idin-20260907-accessibility-1">
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">integrated Digit-in-Noise Test</div>
+    <div class="brand"><img src="/brand/neurahear-mark.svg" alt="NeuraHear">iDIN</div>
     <div class="lang-switch">      
-      <select id="uiLang">
+      <select id="uiLang" aria-label="Language" data-i18n-title="languageLabel">
         <option value="english">English</option>
         <option value="mandarin">普通话</option>
       </select>
@@ -35,8 +36,8 @@
     </footer>
   </main>
 
-  <script src="js/i18n.js?v=idin-20260611-upload-queue-1"></script>
-  <script src="js/app.js?v=idin-20260611-upload-queue-1"></script>
+  <script src="js/i18n.js?v=idin-20260907-accessibility-1"></script>
+  <script src="js/app.js?v=idin-20260907-accessibility-1"></script>
   <script>
     // wire up UI language and start button
     document.addEventListener('DOMContentLoaded', () => {

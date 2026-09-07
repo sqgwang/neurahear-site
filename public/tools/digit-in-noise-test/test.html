@@ -4,13 +4,14 @@
   <meta charset="utf-8" />
   <title>iDIN Test</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet" href="css/styles.css?v=idin-20260611-upload-queue-1" />
+  <link rel="stylesheet" href="css/styles.css?v=idin-20260907-accessibility-1" />
+  <link rel="stylesheet" href="css/participant.css?v=idin-20260907-accessibility-1">
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">integrated Digit-in-Noise Test</div>
+    <div class="brand"><img src="/brand/neurahear-mark.svg" alt="NeuraHear">iDIN</div>
     <div class="lang-switch">
-      <select id="uiLang">
+      <select id="uiLang" aria-label="Language" data-i18n-title="languageLabel">
         <option value="english">English</option>
         <option value="mandarin">普通话</option>
       </select>
@@ -64,6 +65,7 @@
             <path d="m14 9 4 4"></path>
             <path d="m18 9-4 4"></path>
           </svg>
+          <span data-i18n="backspace">Delete</span>
         </button>
         <button class="keypad-button" data-val="0">0</button>
         <button id="ok" class="keypad-button primary" data-i18n="ok">OK</button>
@@ -75,8 +77,8 @@
     </div>
   </main>
 
-  <script src="js/i18n.js?v=idin-20260611-upload-queue-1"></script>
-  <script src="js/app.js?v=idin-20260611-upload-queue-1"></script>
+  <script src="js/i18n.js?v=idin-20260907-accessibility-1"></script>
+  <script src="js/app.js?v=idin-20260907-accessibility-1"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       const sel = document.getElementById('uiLang');

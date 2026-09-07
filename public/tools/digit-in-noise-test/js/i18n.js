@@ -35,11 +35,12 @@ const translations = {
 };
 
 function setUILanguage(lang) {
+  document.documentElement.lang = lang === 'mandarin' ? 'zh-CN' : 'en';
   localStorage.setItem('uiLang', lang);
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.dataset.i18n;
     const text = (translations[lang] && translations[lang][key]) || (translations['english'][key]) || key;
-    el.textContent = text;
+    if (!el.hasAttribute('data-i18n-attr')) el.textContent = text;
   });
 }
 
@@ -218,6 +219,65 @@ Object.assign(translations.mandarin, {
   uploadLeaveWarning: "结果还没有保存到服务器。目前它保存在本浏览器中，但现在离开会增加之后重试的难度。仍然离开吗？"
 });
 
+Object.assign(translations.english, {
+  introTitle: 'Integrated digit-in-noise test',
+  introText: 'Listen to the numbers, then enter them on the keypad. Follow the order shown on screen. Each test condition starts with practice.',
+  calibTitle: 'Adjust the volume',
+  calibText: 'Put on your wired headphones and play the noise. Adjust it until you can hear it clearly and comfortably.',
+  noiseDown: 'Softer', noiseUp: 'Louder', fineAdjustment: 'Fine adjustment',
+  calibConfirm: 'Continue to practice', backspace: 'Delete',
+  practice: 'Practice', formal: 'Test', progressCount: '{i} / {N}',
+  forwardRule: 'Enter the numbers in the order you hear them.',
+  backwardRule: 'Enter the numbers in reverse order.',
+  readyPrompt: 'Press Play when you are ready.',
+  enterResponse: 'Enter the numbers, then press OK.',
+  preparingAudio: 'Preparing audio. Please wait.',
+  playingAudio: 'Listen to the numbers.',
+  deviceError: 'Sound is not ready. Check your headphones and browser sound permission, then press Play.',
+  playbackError: 'Playback failed. Press Play to try again.',
+  missingInfo: 'Participant information is missing. Returning to setup.',
+  loadError: 'Audio could not load. Check your connection, then press Play to retry.',
+  unknownCondition: 'Test condition unavailable: {condition}',
+  enterDigits: 'Please enter the numbers before pressing OK.',
+  playFirst: 'Press Play first, then enter the numbers.',
+  enterCount: 'Please enter {count} numbers.',
+  practiceRetry: 'The answer is {answer}. Listen again in 2 seconds.',
+  practiceComplete: 'Practice complete. The test starts in 2 seconds.',
+  nextPractice: 'Next practice starts in 1 second.',
+  allComplete: 'Test complete. Opening your results.',
+  nextCondition: '{label}. Practice starts in 2 seconds.',
+  nextTrial: 'Next numbers in 1 second.',
+  requiredPlaceholder: 'Required'
+});
+Object.assign(translations.mandarin, {
+  introTitle: '噪声下数字整合测试',
+  introText: '听完数字后，在数字键盘上输入答案。请按照页面提示的顺序作答。每种测试开始前都有练习。',
+  calibTitle: '调整音量',
+  calibText: '请戴好有线耳机，点击“播放噪声”，将音量调到清楚、舒适可听的程度。',
+  noiseDown: '轻一点', noiseUp: '响一点', fineAdjustment: '精细调整',
+  calibConfirm: '进入练习', backspace: '删除',
+  practice: '练习', formal: '正式测试', progressCount: '第 {i} / {N} 题',
+  forwardRule: '请按听到的顺序输入数字。',
+  backwardRule: '请把听到的数字倒过来输入。',
+  readyPrompt: '准备好后，请点击“播放”。',
+  enterResponse: '请输入数字，然后点击“确定”。',
+  preparingAudio: '正在准备声音，请稍等。', playingAudio: '正在播放，请听数字。',
+  deviceError: '声音尚未就绪。请检查耳机和浏览器声音权限，再点击“播放”。',
+  playbackError: '播放失败，请点击“播放”重试。',
+  missingInfo: '缺少参与者信息，正在返回填写页面。',
+  loadError: '声音加载失败。请检查网络，再点击“播放”重试。',
+  unknownCondition: '测试条件不可用：{condition}',
+  enterDigits: '请先输入数字，再点击“确定”。',
+  playFirst: '请先点击“播放”，听完后再输入数字。',
+  enterCount: '请输入 {count} 个数字。',
+  practiceRetry: '正确答案是 {answer}。2 秒后再听一次。',
+  practiceComplete: '练习完成，2 秒后开始正式测试。',
+  nextPractice: '1 秒后开始下一道练习。',
+  allComplete: '测试完成，正在打开结果。',
+  nextCondition: '{label}。2 秒后开始练习。',
+  nextTrial: '1 秒后播放下一组数字。', requiredPlaceholder: '必填'
+});
+
 // 2) 简单取词 + 占位符替换
 function t(key, vars) {
   const lang = localStorage.getItem('uiLang') || 'english';
@@ -322,11 +382,12 @@ translations.mandarin.fuzhouese = translations.mandarin.fuzhouese || "福州话"
   const _orig = window.setUILanguage;
   window.setUILanguage = function (lang) {
     _orig(lang);
-    const dict = (window.translations && (window.translations[lang] || window.translations.english)) || {};
+    const dict = translations[lang] || translations.english;
     document.querySelectorAll('[data-i18n-title]').forEach(el => {
       const key = el.getAttribute('data-i18n-title');
       const val = (dict && dict[key]) || key;
       el.setAttribute('title', val);
+      el.setAttribute('aria-label', val);
     });
   };
 })();

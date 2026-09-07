@@ -4,13 +4,14 @@
   <meta charset="utf-8" />
   <title>DIN Test Calibration</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet" href="css/styles.css?v=idin-20260611-upload-queue-1" />
+  <link rel="stylesheet" href="css/styles.css?v=idin-20260907-accessibility-1" />
+  <link rel="stylesheet" href="css/participant.css?v=idin-20260907-accessibility-1">
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">integrated Digit-in-Noise Test</div>
+    <div class="brand"><img src="/brand/neurahear-mark.svg" alt="NeuraHear">iDIN</div>
     <div class="lang-switch">
-      <select id="uiLang">
+      <select id="uiLang" aria-label="Language" data-i18n-title="languageLabel">
         <option value="english">English</option>
         <option value="mandarin">普通话</option>
       </select>
@@ -38,20 +39,25 @@
     <div class="form-row">
       <label for="noiseGain" data-i18n="noiseGainLabel">Noise level</label>
       <input type="range" id="noiseGain" min="0.05" max="2" step="0.01" value="1" />
+      <div class="volume-actions">
+        <button type="button" class="secondary" id="noiseDown" data-i18n="noiseDown">Softer</button>
+        <button type="button" class="secondary" id="noiseUp" data-i18n="noiseUp">Louder</button>
+      </div>
+      <details class="calibration-fine">
+        <summary data-i18n="fineAdjustment">Fine adjustment</summary>
       <div class="calibration-readout" aria-live="polite">
         <span id="gainValue">1.00x</span>
         <span id="gainDbValue">0.0 dB</span>
       </div>
       <div class="calibration-controls">
-        <button type="button" class="secondary small" id="noiseDown" data-i18n="noiseDown">-1 dB</button>
         <label class="numeric-field" for="noiseDbInput">
           <span data-i18n="noiseDbInput">Noise adjustment (dB)</span>
           <input type="number" id="noiseDbInput" min="-26" max="6" step="0.5" value="0">
         </label>
-        <button type="button" class="secondary small" id="noiseUp" data-i18n="noiseUp">+1 dB</button>
         <button type="button" class="secondary small" id="noiseReset" data-i18n="resetNoise">Reset</button>
       </div>
       <p class="note calibration-note" data-i18n="calibNumericHelp">The value is saved for the rest of this test and applied equally to speech and noise.</p>
+      </details>
     </div>
 
     <label class="calibration-confirmation" for="audibleConfirm">
@@ -68,8 +74,8 @@
     <div id="calibMsg" class="note inline-message" aria-live="polite"></div>
   </main>
 
-  <script src="js/i18n.js?v=idin-20260611-upload-queue-1"></script>
-  <script src="js/app.js?v=idin-20260611-upload-queue-1"></script>
+  <script src="js/i18n.js?v=idin-20260907-accessibility-1"></script>
+  <script src="js/app.js?v=idin-20260907-accessibility-1"></script>
   <script>
     // calibration wiring
     document.addEventListener('DOMContentLoaded', async () => {
@@ -80,7 +86,7 @@
 
       const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
       if (!userInfo || !userInfo.stimLang) {
-        alert('User info missing. Returning to start.');
+        alert(t('missingInfo'));
         location.href = 'index.html';
         return;
       }

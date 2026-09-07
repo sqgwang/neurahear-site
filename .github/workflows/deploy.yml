@@ -27,6 +27,9 @@ jobs:
 
       - name: Run lint
         run: npm run lint
+
+      - name: Check iDIN protocol
+        run: npm run test:idin
       
       - name: Build static site
         run: npm run build

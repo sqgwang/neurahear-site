@@ -8,15 +8,16 @@
     <title data-i18n="infoTitle">Participant Information</title>
 
     <!-- Shared styles for the iDIN pages. -->
-    <link rel="stylesheet" href="css/styles.css?v=idin-20260611-upload-queue-1">
+    <link rel="stylesheet" href="css/styles.css?v=idin-20260907-accessibility-1">
+  <link rel="stylesheet" href="css/participant.css?v=idin-20260907-accessibility-1">
   </head>
 
   <body>
     <!-- Top bar shared with the other iDIN pages. -->
     <header class="topbar">
-      <div class="brand">integrated Digit-in-Noise Test</div>
+    <div class="brand"><img src="/brand/neurahear-mark.svg" alt="NeuraHear">iDIN</div>
       <div class="lang-switch" style="margin-left:auto;">
-        <select id="uiLang">
+        <select id="uiLang" aria-label="Language" data-i18n-title="languageLabel">
           <option value="english">English</option>
           <option value="mandarin">普通话</option>
         </select>
@@ -31,11 +32,11 @@
             <span data-i18n="participantId">Participant ID</span>
             <span class="required" aria-hidden="true">*</span>
           </label>
-          <input id="pid" name="pid" type="text" placeholder="required" required autocomplete="off">
+          <input id="pid" name="pid" type="text" placeholder="Required" data-i18n="requiredPlaceholder" data-i18n-attr="placeholder" required autocomplete="off">
         </div>
 
         <div class="form-row">
-          <label>
+          <label for="gender">
             <span data-i18n="gender">Gender</span>
             <span class="required" aria-hidden="true">*</span>
           </label>
@@ -101,11 +102,11 @@
         <fieldset class="form-row setup-card">
           <legend data-i18n="chooseConditions">Select test conditions (check any)</legend>
           <div class="condition-grid">
-            <label class="condition-option"><input type="checkbox" name="testCond" value="2f"> <span>2-digit forward</span></label>
-            <label class="condition-option"><input type="checkbox" name="testCond" value="2b"> <span>2-digit backward</span></label>
-            <label class="condition-option"><input type="checkbox" name="testCond" value="3f" checked> <span>3-digit forward</span></label>
-            <label class="condition-option"><input type="checkbox" name="testCond" value="3b" checked> <span>3-digit backward</span></label>
-            <label class="condition-option"><input type="checkbox" name="testCond" value="5f"> <span>5-digit forward</span></label>
+            <label class="condition-option"><input type="checkbox" name="testCond" value="2f"> <span data-i18n="cond_2f">2-digit forward</span></label>
+            <label class="condition-option"><input type="checkbox" name="testCond" value="2b"> <span data-i18n="cond_2b">2-digit backward</span></label>
+            <label class="condition-option"><input type="checkbox" name="testCond" value="3f" checked> <span data-i18n="cond_3f">3-digit forward</span></label>
+            <label class="condition-option"><input type="checkbox" name="testCond" value="3b" checked> <span data-i18n="cond_3b">3-digit backward</span></label>
+            <label class="condition-option"><input type="checkbox" name="testCond" value="5f"> <span data-i18n="cond_5f">5-digit forward</span></label>
           </div>
           <p class="note" data-i18n="condHelp">You may select one or more conditions.</p>
           <label class="toggle-row">
@@ -126,8 +127,8 @@
       </form>
     </main>
 
-    <script src="js/i18n.js?v=idin-20260611-upload-queue-1"></script>
-    <script src="js/app.js?v=idin-20260611-upload-queue-1"></script>
+    <script src="js/i18n.js?v=idin-20260907-accessibility-1"></script>
+    <script src="js/app.js?v=idin-20260907-accessibility-1"></script>
 
     <script>
       // Language initialization.

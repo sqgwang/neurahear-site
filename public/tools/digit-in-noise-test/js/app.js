@@ -4,7 +4,7 @@
 // 重要：不要在此文件覆盖 setUILanguage（i18n.js 提供翻译功能）
 
 /* ========== CONFIG ========== */
-const APP_VERSION = 'iDIN-2026-06-upload-queue-1';
+const APP_VERSION = 'iDIN-2026-09-accessibility-1';
 const STEP_DB = 2;
 const START_SNR = 0;
 const SNR_MIN = -30;
@@ -65,16 +65,17 @@ async function resumeAudioContextForPlayback(timeoutMs = 2000) {
   }
 }
 
-function setStatusMessage(message, tone = '') {
+function setStatusMessage(key, tone = '', vars = {}) {
+  window.dinUI.statusMessage = { key, tone, vars };
   const status = document.getElementById('statusMsg');
   if (!status) return;
-  status.textContent = message;
+  status.textContent = t(key, vars);
   if (tone) status.dataset.tone = tone;
   else delete status.dataset.tone;
 }
 
-async function startAfterMessage(message, delayMs = 1200, tone = 'success') {
-  setStatusMessage(message, tone);
+async function startAfterMessage(message, delayMs = 1200, tone = 'success', vars = {}) {
+  setStatusMessage(message, tone, vars);
   setTestStage('saving');
   setInputLock(true);
   setPlayButtonEnabled(false);
@@ -83,7 +84,7 @@ async function startAfterMessage(message, delayMs = 1200, tone = 'success') {
     await startTrialPlay();
   } catch (e) {
     console.error('Auto-start failed', e);
-    setStatusMessage('Playback failed. Click Play to retry.', 'warning');
+    setStatusMessage('playbackError', 'warning');
     setTestStage('error');
     setInputLock(false);
     disableKeypad(true);
@@ -530,21 +531,25 @@ function updateProgressUI() {
   if (!currCond) return;
   const def = COND_DEFS[currCond] || { label: currCond, nDigits: 3 };
   const isFormal = session.phase && session.phase[currCond] === 'formal';
+  const title = document.getElementById('condTitle');
+  const rule = document.getElementById('condText');
+  if (title) title.textContent = t('cond_' + currCond);
+  if (rule) rule.textContent = t(def.dir === 'backward' ? 'backwardRule' : 'forwardRule');
   const progressEl = document.getElementById('progress');
   const phaseBadge = document.getElementById('phaseBadge');
   if (!progressEl) return;
   if (!isFormal) {
     const pidx = session.practiceIdx[currCond] != null ? session.practiceIdx[currCond] : 0;
-    progressEl.textContent = `${def.label} — Practice ${pidx + 1}/${N_PRACTICE}`;
+    progressEl.textContent = t('progressCount', { i: Math.min(pidx + 1, N_PRACTICE), N: N_PRACTICE });
     if (phaseBadge) {
-      phaseBadge.textContent = 'Practice';
+      phaseBadge.textContent = t('practice');
       phaseBadge.classList.remove('is-formal');
     }
   } else {
     const fidx = session.formalIdx[currCond] != null ? session.formalIdx[currCond] : 0;
-    progressEl.textContent = `${def.label} — Trial ${fidx + 1}/${N_FORMAL}`;
+    progressEl.textContent = t('progressCount', { i: Math.min(fidx + 1, N_FORMAL), N: N_FORMAL });
     if (phaseBadge) {
-      phaseBadge.textContent = 'Formal';
+      phaseBadge.textContent = t('formal');
       phaseBadge.classList.add('is-formal');
     }
   }
@@ -557,7 +562,7 @@ function showConditionIntro() {
 
   const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
   if (!userInfo || !userInfo.stimLang || !Array.isArray(userInfo.testConditions) || userInfo.testConditions.length === 0) {
-    if (status) status.textContent = 'Missing required info. Redirecting to Info page...';
+    if (status) status.textContent = t('missingInfo');
     location.href = 'info.html';
     return;
   }
@@ -608,16 +613,7 @@ function showConditionIntro() {
   updateProgressUI();
 
   // 4) Intro 提示文案 + 按钮状态
-  const inPractice = (session.phase[currCond] !== 'formal') && ((session.practiceIdx[currCond] || 0) < N_PRACTICE);
-  let intro;
-  if (inPractice) {
-    const pidx = session.practiceIdx[currCond] || 0;
-    intro = `${def.label} — Practice ${pidx + 1}/${N_PRACTICE}. Click Play to start.`;
-  } else {
-    const fidx = session.formalIdx[currCond] || 0;
-    intro = `${def.label} — Trial ${fidx + 1}/${N_FORMAL}. Click Play to start.`;
-  }
-  setStatusMessage(intro);
+  setStatusMessage('readyPrompt');
 
   // Play 按钮显示，Next Condition 隐藏（只有某些阶段在 submit 中才显示/跳转）
   setPlayButtonEnabled(true);
@@ -649,7 +645,7 @@ function clearInput() {
 async function startTrialPlay() {
   if (window.dinUI?.playbackActive) return;
   if (window.dinUI?.awaitingResponse) {
-    setStatusMessage('Please enter the digits you heard and press OK.');
+    setStatusMessage('enterResponse');
     setTestStage('responding');
     return;
   }
@@ -657,13 +653,13 @@ async function startTrialPlay() {
   window.dinUI.playbackActive = true;
   setTestStage('preparing');
   setInputLock(true);
-  setStatusMessage('Preparing audio...');
+  setStatusMessage('preparingAudio');
 
   try {
     await resumeAudioContextForPlayback();
   } catch(e) {
     console.warn('AudioContext resume failed', e);
-    setStatusMessage('Audio device is not ready. Click Play again and check browser sound permissions.', 'warning');
+    setStatusMessage('deviceError', 'warning');
     setTestStage('error');
     window.dinUI.playbackActive = false;
     window.dinUI.awaitingResponse = false;
@@ -679,7 +675,7 @@ async function startTrialPlay() {
     setInputLock(false);
     disableKeypad(true);
     setTestStage('error');
-    setStatusMessage('Missing user info. Returning to the start...', 'warning');
+    setStatusMessage('missingInfo', 'warning');
     location.href = 'index.html';
     return;
   }
@@ -700,13 +696,14 @@ async function startTrialPlay() {
     try {
       await loadLanguageAudio(userInfo.stimLang);
     } catch(e) {
-      setStatusMessage('Failed to load stimuli. Check the audio files and reload the page.', 'warning');
+      setStatusMessage('loadError', 'warning');
       setTestStage('error');
       console.error(e);
       window.dinUI.playbackActive = false;
       window.dinUI.awaitingResponse = false;
       setInputLock(false);
       disableKeypad(true);
+      setPlayButtonEnabled(true);
       return;
     }
   }
@@ -739,7 +736,7 @@ async function startTrialPlay() {
   const currCond = session.conditionOrder[session.currentCondIdx];
   const condDef = COND_DEFS[currCond];
   if (!condDef) {
-    setStatusMessage('Unknown condition: ' + currCond, 'warning');
+    setStatusMessage('unknownCondition', 'warning', { condition: currCond });
     setTestStage('error');
     window.dinUI.playbackActive = false;
     window.dinUI.awaitingResponse = false;
@@ -789,12 +786,12 @@ async function startTrialPlay() {
   // === 播放前：锁定输入（虚拟键盘禁用 + 实体键盘屏蔽），禁用 Play 避免重复点击
   setInputLock(true);
   setTestStage('playing');
-  setStatusMessage('Playing...');
+  setStatusMessage('playingAudio');
 
   try {
     const r = await renderMixedBufferAndPlay(digits, targetSNR, session.userInfo.stimLang, { noiseEnabled });
     session._lastEffectiveSNR = r.effectiveSNR;
-    setStatusMessage('Playback finished. Please type digits and press OK.');
+    setStatusMessage('enterResponse');
     // === 播放结束：解除锁定，允许输入与提交
     window.dinUI.playbackActive = false;
     window.dinUI.awaitingResponse = true;
@@ -803,7 +800,7 @@ async function startTrialPlay() {
     setPlayButtonEnabled(false);
   } catch (e) {
     console.error('Playback error', e);
-    setStatusMessage('Playback error. Click Play to retry.', 'warning');
+    setStatusMessage('playbackError', 'warning');
     setTestStage('error');
     window.dinUI.playbackActive = false;
     window.dinUI.awaitingResponse = false;
@@ -822,19 +819,19 @@ async function submitInput() {
   const input = getCurrentInput();
   if (input.length === 0) {
     setTestStage('responding');
-    setStatusMessage('Please enter the digits before pressing OK.', 'warning');
+    setStatusMessage('enterDigits', 'warning');
     return;
   }
   if (!window.dinUI?.awaitingResponse) {
     setTestStage('ready');
-    setStatusMessage('Click Play first, then enter the digits you heard.', 'warning');
+    setStatusMessage('playFirst', 'warning');
     return;
   }
 
   const expectedLen = getCurrentNDigits();
   if (input.length !== expectedLen) {
     setTestStage('responding');
-    setStatusMessage(`Please enter ${expectedLen} digit${expectedLen > 1 ? 's' : ''}.`, 'warning');
+    setStatusMessage('enterCount', 'warning', { count: expectedLen });
     return;
   }
 
@@ -852,6 +849,7 @@ async function submitInput() {
   const correct = (input === expectedResponse);
 
   const trialRec = {
+    uiVersion: 'idin-20260907-accessibility-1',
     participantId: (session.userInfo && session.userInfo.pid) || '',
     language: (session.userInfo && session.userInfo.stimLang) || '',
     condition: currCond,
@@ -885,7 +883,7 @@ async function submitInput() {
     const pSpec = (function(k){ const p1 = { digits: Array.from({length:k}, (_,i) => (i+1)%10 || 0), mustCorrect: true, noiseDb: null }; const sample2=[6,8,5,3,2].slice(0,k); const p2={digits:sample2,mustCorrect:true,noiseDb:null}; const sample3=[5,9,2,7,1].slice(0,k); const p3={digits:sample3,mustCorrect:false,noiseDb:5}; return [p1,p2,p3]; })(condDef.nDigits)[pIdx];
 
     if (pSpec && pSpec.mustCorrect && !correct) {
-      await startAfterMessage(`Incorrect. The correct answer is ${expectedResponse}. Replaying in 2 seconds.`, 2000, 'warning');
+      await startAfterMessage('practiceRetry', 2000, 'warning', { answer: expectedResponse });
       return;
     }
 
@@ -900,10 +898,10 @@ async function submitInput() {
       session._lastEffectiveSNR = null;
       updateProgressUI();
       localStorage.setItem('din_session', JSON.stringify(session));
-      await startAfterMessage('Practice completed. Formal trials will begin in 2 seconds.', 2000, 'success');
+      await startAfterMessage('practiceComplete', 2000, 'success');
       return;
     } else {
-      await startAfterMessage('Next practice trial will begin in 1 second.', 1000, 'success');
+      await startAfterMessage('nextPractice', 1000, 'success');
       return;
     }
   }
@@ -921,23 +919,22 @@ async function submitInput() {
     session.currentCondIdx++;
     if (session.currentCondIdx >= session.conditionOrder.length) {
       localStorage.setItem('din_session', JSON.stringify(session));
-      setStatusMessage('All conditions completed. Redirecting to results...', 'success');
+      setStatusMessage('allComplete', 'success');
       await sleep(1200);
       location.href = 'results.html';
       return;
     } else {
       const nextCond = session.conditionOrder[session.currentCondIdx];
-      const nextDef = COND_DEFS[nextCond] || { label: nextCond };
       session.phase[nextCond] = 'practice';
       session.practiceIdx[nextCond] = session.practiceIdx[nextCond] || 0;
       session.formalIdx[nextCond] = session.formalIdx[nextCond] || 0;
       localStorage.setItem('din_session', JSON.stringify(session));
       updateProgressUI();
-      await startAfterMessage(`Next condition: ${nextDef.label}. Practice will start in 2 seconds.`, 2000, 'success');
+      await startAfterMessage('nextCondition', 2000, 'success', { label: t('cond_' + nextCond) });
       return;
     }
   } else {
-    await startAfterMessage('Next trial will begin in 1 second.', 1000, 'success');
+    await startAfterMessage('nextTrial', 1000, 'success');
     return;
   }
 }
@@ -1073,6 +1070,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.addEventListener('uiLanguageChanged', () => {
     setTestStage(window.dinUI?.stage || 'ready');
+    updateProgressUI();
+    const message = window.dinUI.statusMessage;
+    if (message) setStatusMessage(message.key, message.tone, message.vars);
   });
 
   document.addEventListener('keydown', (e) => {

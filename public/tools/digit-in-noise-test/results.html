@@ -4,14 +4,15 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title data-i18n="resultsTitle2">Results</title>
-  <link rel="stylesheet" href="css/styles.css?v=idin-20260611-upload-queue-1" />
+  <link rel="stylesheet" href="css/styles.css?v=idin-20260907-accessibility-1" />
+  <link rel="stylesheet" href="css/participant.css?v=idin-20260907-accessibility-1">
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">integrated Digit-in-Noise Test</div>
+    <div class="brand"><img src="/brand/neurahear-mark.svg" alt="NeuraHear">iDIN</div>
     <div class="lang-switch" style="margin-left:auto;">
       <label for="uiLang" data-i18n="languageLabel">Language</label>
-      <select id="uiLang">
+      <select id="uiLang" aria-label="Language" data-i18n-title="languageLabel">
         <option value="english">English</option>
         <option value="mandarin">普通话</option>
       </select>
@@ -73,8 +74,8 @@
     </div>
   </main>
 
-  <script src="js/i18n.js?v=idin-20260611-upload-queue-1"></script>
-  <script src="js/app.js?v=idin-20260611-upload-queue-1"></script>
+  <script src="js/i18n.js?v=idin-20260907-accessibility-1"></script>
+  <script src="js/app.js?v=idin-20260907-accessibility-1"></script>
   <script>
     // —— 同域 API 辅助：不依赖 API_BASE，一律发到 /api/... ——
     function apiUrl(path) {
@@ -422,7 +423,7 @@
         const trials = Array.isArray(payload.trials) ? payload.trials : [];
         const headers = [
           'participantId','language','condition','nDigits','practice','trialIndexInCond','digitsPresented',
-          'presentedSNR','effectiveSNR','response','correct','rt_ms','timestamp'
+          'presentedSNR','effectiveSNR','response','correct','rt_ms','timestamp','uiVersion'
         ];
         const rows = [headers.join(',')].concat(
           trials.map(t => headers.map(h => JSON.stringify(t[h] ?? '')).join(','))

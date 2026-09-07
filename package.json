@@ -9,6 +9,7 @@
     "start": "next start",
     "serve": "node static-server.js",
     "lint": "eslint",
+    "test:idin": "node scripts/check-idin-protocol.mjs",
     "export": "next export"
   },
   "dependencies": {
