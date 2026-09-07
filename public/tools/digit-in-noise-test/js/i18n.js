@@ -278,6 +278,47 @@ Object.assign(translations.mandarin, {
   nextTrial: '1 秒后播放下一组数字。', requiredPlaceholder: '必填'
 });
 
+Object.assign(translations.english, {
+  guideReview: 'Review instructions', guideSkip: 'Skip tutorial',
+  guideStep: 'Step {step} of 3', guideNewCondition: 'Next part',
+  guideListenTitle: 'Listen first', guideTryTitle: 'Try it',
+  guideReadyTitle: 'Ready for practice',
+  guideListenText: 'You will hear {count} numbers. Wait until the sound finishes, then enter your answer.',
+  guideExampleLabel: 'For example, you hear:', guideHeard: 'Example numbers: {digits}',
+  guideSilent: 'This is a silent example. You will hear the numbers in practice.',
+  guideForward: 'Enter from first to last (same order).',
+  guideBackward: 'Enter from last to first (reverse order).',
+  guideReplay: 'Show again', guideNext: 'Try it', guideBack: 'Back',
+  guideStart: 'Start practice', guideReturn: 'Return to test',
+  guideTryHint: 'Tap the numbers, then OK. Delete corrects a mistake.',
+  guideYourAnswer: 'Your answer: {answer}', guideEmpty: 'empty',
+  guideAnswerLabel: 'You enter:',
+  guideIncomplete: 'Enter all {count} numbers, then tap OK.',
+  guideTryAgain: 'For this example, enter {answer}. Use Delete and try again.',
+  guideNotScored: 'This example is not scored. You can skip the tutorial at any time.',
+  guideReadyText: 'Next are 3 practice questions. Some numbers will be harder to hear in noise; give your best answer. Keep your headphones on and the volume unchanged.'
+});
+Object.assign(translations.mandarin, {
+  guideReview: '查看操作说明', guideSkip: '跳过教程',
+  guideStep: '第 {step} / 3 步', guideNewCondition: '下一部分',
+  guideListenTitle: '先听完，再作答', guideTryTitle: '试着点一次数字',
+  guideReadyTitle: '准备开始练习',
+  guideListenText: '每次会听到 {count} 个数字。请等声音播完，再输入答案。',
+  guideExampleLabel: '例如，您听到：', guideHeard: '示例数字：{digits}',
+  guideSilent: '这里是无声示例，进入练习后会播放声音。',
+  guideForward: '请按听到的顺序，从第一个到最后一个输入。',
+  guideBackward: '请倒过来，从最后一个到第一个输入。',
+  guideReplay: '再看一次', guideNext: '试一试', guideBack: '上一步',
+  guideStart: '开始练习', guideReturn: '返回测试',
+  guideTryHint: '点击数字，再点“确定”。点错了可以用“删除”修改。',
+  guideYourAnswer: '您的答案：{answer}', guideEmpty: '尚未输入',
+  guideAnswerLabel: '您应该输入：',
+  guideIncomplete: '请填满 {count} 个数字，再点“确定”。',
+  guideTryAgain: '这个示例应输入 {answer}。可以点“删除”后再试一次。',
+  guideNotScored: '这个示例不计分。您随时可以跳过教程。',
+  guideReadyText: '接下来有 3 道练习。噪声中有些数字可能听不清，请尽量作答。请戴好耳机，保持音量不变。'
+});
+
 // 2) 简单取词 + 占位符替换
 function t(key, vars) {
   const lang = localStorage.getItem('uiLang') || 'english';

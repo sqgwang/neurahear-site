@@ -47,29 +47,48 @@ async function runCondition(condition) {
     updateBoxesFromString = value => { answer = value; };
     setInputBoxes = () => {};
     localStorage.setItem('userInfo', JSON.stringify({
-      pid: 'LOCAL-PROTOCOL-CHECK', stimLang: 'mandarin', testConditions: [testCondition]
+      pid: 'LOCAL-PROTOCOL-CHECK', stimLang: 'mandarin',
+      testConditions: Array.isArray(testCondition) ? testCondition : [testCondition]
     }));
+    let guidanceOpen = false;
+    const offered = [];
+    window.dinTutorial = {
+      isOpen: () => guidanceOpen,
+      offer: () => { guidanceOpen = true; offered.push(window.getDinGuidanceContext().id); }
+    };
     showConditionIntro();
+    for (const condition of session.conditionOrder) {
+    const beforeGuide = JSON.stringify(session.trials);
+    const beforePlayback = playbackCount;
+    await startTrialPlay();
+    if (playbackCount !== beforePlayback) throw new Error('Trial played under tutorial');
+    if (canAcceptResponseInput()) throw new Error('Research input accepted under tutorial');
+    window.recordDinGuidance('skipped');
+    if (JSON.stringify(session.trials) !== beforeGuide) throw new Error('Tutorial changed research data');
+    if (!window.getDinGuidanceContext().seen) throw new Error('Skip not remembered in this session');
+    guidanceOpen = false;
     await startTrialPlay();
     answer = '';
+    const beforeEmpty = session.trials.length;
     await submitInput();
-    if (session.trials.length !== 0) throw new Error('Empty response was recorded');
-    const expected = () => COND_DEFS[testCondition].dir === 'backward'
+    if (session.trials.length !== beforeEmpty) throw new Error('Empty response was recorded');
+    const expected = () => COND_DEFS[condition].dir === 'backward'
       ? session.currentDigits.slice().reverse().join('') : session.currentDigits.join('');
-    answer = '0'.repeat(COND_DEFS[testCondition].nDigits);
+    answer = '0'.repeat(COND_DEFS[condition].nDigits);
     await submitInput();
-    if (session.practiceIdx[testCondition] !== 0) throw new Error('Incorrect practice advanced');
+    if (session.practiceIdx[condition] !== 0) throw new Error('Incorrect practice advanced');
     for (let i = 0; i < N_PRACTICE; i++) {
       answer = expected();
       await submitInput();
     }
-    if (session.phase[testCondition] !== 'formal') throw new Error('Formal phase not reached');
+    if (session.phase[condition] !== 'formal') throw new Error('Formal phase not reached');
     for (let i = 0; i < N_FORMAL; i++) {
-      answer = i % 2 === 0 ? expected() : '0'.repeat(COND_DEFS[testCondition].nDigits);
+      answer = i % 2 === 0 ? expected() : '0'.repeat(COND_DEFS[condition].nDigits);
       await submitInput();
     }
+    }
     return JSON.parse(JSON.stringify({
-      trials: session.trials, phase: session.phase[testCondition],
+      trials: session.trials, offered,
       playbackCount, destination: location.href, result: finalizeAndGetResults()
     }));
   })()`, context);
@@ -85,8 +104,18 @@ async function runCondition(condition) {
     assert.equal(result.playbackCount, 28);
     assert.deepEqual(Array.from(formal, trial => trial.presentedSNR), Array.from({ length: 24 }, (_, i) => i % 2 ? -2 : 0));
     assert.equal(result.result.condResults[condition].SRT, -1);
-    assert.ok(formal.every(trial => trial.uiVersion === 'idin-20260907-accessibility-1'));
+    assert.ok(formal.every(trial => trial.uiVersion === 'idin-20260907-guide-1'));
     assert.equal(formal.filter(trial => trial.correct).length, 12);
     console.log('PASS', condition, 'practice retry, response validation, 24 trials, SNR steps, SRT, UI version');
   }
+  const order = ['3b', '5f', '2b', '3f', '2f'];
+  const multiple = await runCondition(order);
+  assert.deepEqual(Array.from(multiple.offered), order);
+  assert.equal(multiple.destination, 'results.html');
+  assert.equal(multiple.playbackCount, 28 * order.length);
+  for (const condition of order) {
+    assert.equal(multiple.result.condResults[condition].SRT, -1);
+    assert.equal(multiple.result.condResults[condition].nFormalTrials, 24);
+  }
+  console.log('PASS mixed condition order, guidance gate, no tutorial trial records, unchanged per-condition SRT');
 })().catch(error => { console.error(error); process.exitCode = 1; });

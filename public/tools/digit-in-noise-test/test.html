@@ -4,8 +4,9 @@
   <meta charset="utf-8" />
   <title>iDIN Test</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet" href="css/styles.css?v=idin-20260907-accessibility-1" />
-  <link rel="stylesheet" href="css/participant.css?v=idin-20260907-accessibility-1">
+  <link rel="stylesheet" href="css/styles.css?v=idin-20260907-guide-1" />
+  <link rel="stylesheet" href="css/participant.css?v=idin-20260907-guide-1">
+  <link rel="stylesheet" href="css/tutorial.css?v=idin-20260907-guide-1">
 </head>
 <body>
   <header class="topbar">
@@ -74,11 +75,46 @@
 
     <div class="center">
       <button id="nextConditionBtn" style="display:none;" data-i18n="nextCond">Next Condition</button>
+      <button id="reviewTutorial" class="tutorial-link" type="button" data-i18n="guideReview">Review instructions</button>
     </div>
   </main>
 
-  <script src="js/i18n.js?v=idin-20260907-accessibility-1"></script>
-  <script src="js/app.js?v=idin-20260907-accessibility-1"></script>
+  <dialog id="dinTutorial" class="tutorial" aria-labelledby="guideTitle" aria-describedby="guideText">
+    <div class="guide-top">
+      <span id="guideStep"></span>
+      <button id="guideSkip" class="tutorial-link" type="button" data-i18n="guideSkip">Skip tutorial</button>
+    </div>
+    <h2 id="guideTitle" tabindex="-1"></h2>
+    <p id="guideText"></p>
+    <div class="guide-example">
+      <p id="guideExampleLabel"></p>
+      <div id="guideHeard" class="guide-digits" aria-label="Example"></div>
+      <button id="guideReplay" class="tutorial-link" type="button" data-i18n="guideReplay">Show again</button>
+    </div>
+    <div id="guideTry">
+      <div id="guideAnswer" class="guide-digits" role="group"></div>
+      <p id="guideFeedback" role="status" aria-live="polite"></p>
+      <div id="guideKeypad" class="guide-keypad">
+        <button type="button" data-digit="1">1</button><button type="button" data-digit="2">2</button><button type="button" data-digit="3">3</button>
+        <button type="button" data-digit="4">4</button><button type="button" data-digit="5">5</button><button type="button" data-digit="6">6</button>
+        <button type="button" data-digit="7">7</button><button type="button" data-digit="8">8</button><button type="button" data-digit="9">9</button>
+        <button type="button" id="guideDelete" data-i18n="backspace">Delete</button><button type="button" data-digit="0">0</button><button type="button" id="guideCheck" class="primary" data-i18n="ok">OK</button>
+      </div>
+    </div>
+    <div id="guideResult" class="guide-result">
+      <p data-i18n="guideAnswerLabel">You enter:</p>
+      <div id="guideExpected" class="guide-digits"></div>
+    </div>
+    <p id="guideNote"></p>
+    <div class="guide-actions">
+      <button id="guideBack" class="secondary" type="button" data-i18n="guideBack">Back</button>
+      <button id="guideNext" class="primary" type="button"></button>
+    </div>
+  </dialog>
+
+  <script src="js/i18n.js?v=idin-20260907-guide-1"></script>
+  <script src="js/app.js?v=idin-20260907-guide-1"></script>
+  <script src="js/tutorial.js?v=idin-20260907-guide-1"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       const sel = document.getElementById('uiLang');

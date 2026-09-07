@@ -4,7 +4,7 @@
 // 重要：不要在此文件覆盖 setUILanguage（i18n.js 提供翻译功能）
 
 /* ========== CONFIG ========== */
-const APP_VERSION = 'iDIN-2026-09-accessibility-1';
+const APP_VERSION = 'iDIN-2026-09-guide-1';
 const STEP_DB = 2;
 const START_SNR = 0;
 const SNR_MIN = -30;
@@ -309,6 +309,8 @@ const TEST_STAGE_FALLBACKS = {
 
 function setTestStage(stage) {
   window.dinUI.stage = stage;
+  const review = document.getElementById('reviewTutorial');
+  if (review) review.disabled = !['ready', 'error'].includes(stage);
   const badge = document.getElementById('testStateBadge');
   if (!badge) return;
   const key = TEST_STAGE_KEYS[stage] || TEST_STAGE_KEYS.ready;
@@ -318,7 +320,7 @@ function setTestStage(stage) {
 }
 
 function canAcceptResponseInput() {
-  return !!(window.dinUI?.awaitingResponse && !window.dinUI?.inputLocked && !window.dinUI?.playbackActive);
+  return !!(!window.dinTutorial?.isOpen() && window.dinUI?.awaitingResponse && !window.dinUI?.inputLocked && !window.dinUI?.playbackActive);
 }
 
 function setPlayButtonEnabled(enabled) {
@@ -623,7 +625,27 @@ function showConditionIntro() {
 
   // 持久化当前 session（以便刷新后仍能回到该状态）
   localStorage.setItem('din_session', JSON.stringify(session));
+  window.dinTutorial?.offer();
 }
+
+// Guidance is session-local and never adds responses to the research trials.
+window.getDinGuidanceContext = () => {
+  const condition = session.conditionOrder[session.currentCondIdx];
+  const definition = COND_DEFS[condition];
+  if (!definition) return null;
+  return {
+    ...definition, firstCondition: session.currentCondIdx === 0,
+    seen: !!session.guidance?.[condition],
+    started: session.trials.some(trial => trial.condition === condition)
+  };
+};
+window.recordDinGuidance = action => {
+  const condition = session.conditionOrder[session.currentCondIdx];
+  if (!COND_DEFS[condition]) return;
+  session.guidance ||= {};
+  session.guidance[condition] = { version: 'idin-20260907-guide-1', action, at: new Date().toISOString() };
+  localStorage.setItem('din_session', JSON.stringify(session));
+};
 
 /* ========== KEYPAD HELPERS ========== */
 function appendInput(v) {
@@ -643,6 +665,7 @@ function clearInput() {
 
 /* ========== TRIAL FLOW ========== */
 async function startTrialPlay() {
+  if (window.dinTutorial?.isOpen()) return;
   if (window.dinUI?.playbackActive) return;
   if (window.dinUI?.awaitingResponse) {
     setStatusMessage('enterResponse');
@@ -849,7 +872,7 @@ async function submitInput() {
   const correct = (input === expectedResponse);
 
   const trialRec = {
-    uiVersion: 'idin-20260907-accessibility-1',
+    uiVersion: 'idin-20260907-guide-1',
     participantId: (session.userInfo && session.userInfo.pid) || '',
     language: (session.userInfo && session.userInfo.stimLang) || '',
     condition: currCond,
@@ -930,7 +953,8 @@ async function submitInput() {
       session.formalIdx[nextCond] = session.formalIdx[nextCond] || 0;
       localStorage.setItem('din_session', JSON.stringify(session));
       updateProgressUI();
-      await startAfterMessage('nextCondition', 2000, 'success', { label: t('cond_' + nextCond) });
+      // A new rule must be acknowledged before another condition starts playing.
+      showConditionIntro();
       return;
     }
   } else {
@@ -1076,6 +1100,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.addEventListener('keydown', (e) => {
+    if (window.dinTutorial?.isOpen()) return;
     // 播放锁定中：屏蔽输入
     if (window.dinUI?.inputLocked) {
       if (/^\d$/.test(e.key) || e.key === 'Backspace' || e.key === 'Delete' || e.key === 'Enter') {
@@ -1089,6 +1114,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tag = (el.tagName || '').toLowerCase();
     const isTyping = (tag === 'input' || tag === 'textarea' || el.isContentEditable);
     if (isTyping) return;
+    if (tag === 'select' || (e.key === 'Enter' && ['button', 'a', 'summary'].includes(tag) && !el.closest('#keypad'))) return;
 
     // 数字键 0-9
     if (/^\d$/.test(e.key)) {
