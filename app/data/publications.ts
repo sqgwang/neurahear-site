@@ -5,12 +5,14 @@ export type Publication = {
   authors: string;
   venue: string;
   year: number;
-  citations: number;
+  citations: number | null;
   profiles: ProfileKey[];
   url?: string;
+  kind?: "preprint";
 };
 
-export const PUBLICATIONS_LAST_UPDATED = "September 4, 2026";
+export const PUBLICATIONS_LAST_UPDATED = "October 4, 2026";
+export const SCHOLAR_METRICS_LAST_UPDATED = "September 4, 2026";
 
 export const scholarProfiles: Array<{
   key: ProfileKey;
@@ -43,7 +45,7 @@ export const publicationSignals = [
     key: "ai",
     label: "AI-enabled hearing care",
     description: "AI, chatbots, speech foundation models, speech enhancement, and model-evaluation work.",
-    pattern: /(artificial intelligence|generative|chatgpt|chatbots|ai\b|machine learning|foundation model|neural|asr|speech enhancers|intelligibility prediction)/i,
+    pattern: /(artificial intelligence|generative|chatgpt|chatbots|ai\b|large language model|llm\b|machine learning|foundation model|neural|asr|speech enhancers|intelligibility prediction)/i,
   },
   {
     key: "assessment",
@@ -61,12 +63,40 @@ export const publicationSignals = [
 
 export const publications: Publication[] = [
   {
+    title: "Audiologist-Guided Multimodal AI for Pure-Tone Audiometry and Tympanometry Interpretation and Reporting",
+    authors: "X Wu, X Shen, C Mo, S Shao, J Wang, S Wang",
+    venue: "Journal of Medical Systems 50, 140",
+    year: 2026,
+    citations: null,
+    profiles: ["Shang", "Dicky"],
+    url: "https://doi.org/10.1007/s10916-026-02463-5",
+  },
+  {
+    title: "A bilingual AI audiologist built through rubric-guided playbook induction outperforms human audiologists in a blinded evaluation of simulated cases",
+    authors: "L Li, C Mo, H Yu, C Lu, S Wang, MB Fitzgerald, SX Wang",
+    venue: "arXiv preprint arXiv:2609.32220 (not peer reviewed)",
+    year: 2026,
+    citations: null,
+    profiles: ["Shang", "Dicky"],
+    url: "https://arxiv.org/abs/2609.32220",
+    kind: "preprint",
+  },
+  {
+    title: "Evaluating Large Language Models in Clinical Audiology (AUDIOLOGYBENCH): Benchmark Development and Validation Study",
+    authors: "L Li, C Mo, H Zhou, H Yu, C Lu, S Wang, VM Athreya, MB Fitzgerald, SX Wang",
+    venue: "Journal of Medical Internet Research 28, e94755",
+    year: 2026,
+    citations: null,
+    profiles: ["Shang", "Dicky"],
+    url: "https://doi.org/10.2196/94755",
+  },
+  {
     title: "From policy debate to empirical evidence: a proof-of-concept bibliometric and LLM-assisted abstract-level content analysis of OTC hearing aid research before and after FDA regulation",
     authors: "C Mo, V Manchaiah, JWA Wasmann, S Wang",
     venue: "International Journal of Audiology, 1-16",
     year: 2026,
     citations: 0,
-    profiles: ["Shang"],
+    profiles: ["Shang", "Dicky"],
     url: "https://doi.org/10.1080/14992027.2026.2720841",
   },
   {
@@ -201,6 +231,7 @@ export const publications: Publication[] = [
     citations: 1,
     profiles: ["Shang"],
     url: "https://osf.io/preprints/osf/r4ejx_v1",
+    kind: "preprint",
   },
   {
     title: "Integrated Digit-in-Noise Test: A Rapid Screening Tool for Hearing and Cognitive Function",
@@ -242,6 +273,8 @@ export const publications: Publication[] = [
     year: 2025,
     citations: 1,
     profiles: ["Dicky"],
+    url: "https://arxiv.org/abs/2506.02039",
+    kind: "preprint",
   },
   {
     title: "AECRN: A Unified Neural-Network for Improving Hearing Aid Speech Enhancement",
@@ -357,7 +390,7 @@ export function getPublicationStats(items: Publication[] = publications) {
   return {
     total: items.length,
     recentCount: items.filter((publication) => publication.year >= 2025).length,
-    citationTotal: items.reduce((sum, publication) => sum + publication.citations, 0),
+    citationTotal: items.reduce((sum, publication) => sum + (publication.citations ?? 0), 0),
   };
 }
 

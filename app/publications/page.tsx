@@ -1,5 +1,6 @@
 import {
   PUBLICATIONS_LAST_UPDATED,
+  SCHOLAR_METRICS_LAST_UPDATED,
   getProfilePublicationCounts,
   getPublicationSignalStats,
   getPublicationStats,
@@ -14,7 +15,7 @@ import { createPageMetadata } from "../data/site";
 export const metadata = createPageMetadata({
   title: "Publications",
   description:
-    "Scholar-indexed publications from HK Audiology Group across AI-enabled hearing care, digital assessment, speech-in-noise testing, and hearing-care systems.",
+    "Publications and clearly labelled preprints from HK Audiology Group across AI-enabled hearing care, digital assessment, speech-in-noise testing, and hearing-care systems.",
   path: "/publications/",
 });
 
@@ -51,11 +52,15 @@ export default function Publications() {
   return (
     <div className="space-y-12">
       <section className="max-w-4xl">
-        <div className="eyebrow">Updated from Google Scholar / {PUBLICATIONS_LAST_UPDATED}</div>
+        <div className="eyebrow">Publication record updated / {PUBLICATIONS_LAST_UPDATED}</div>
         <h1>Publications</h1>
         <p className="mt-5 max-w-3xl text-lg text-neutral-700">
-          A refreshed publication record combining Scholar-indexed work from Shangqiguo Wang and Changgeng Mo.
-          Citation counts are shown as they appeared on the linked profiles at update time.
+          Research outputs from Shangqiguo Wang and Changgeng Mo, checked against publisher records,
+          preprint repositories, and Google Scholar. Preprints are labelled separately.
+        </p>
+        <p className="mt-3 max-w-3xl text-sm text-neutral-500">
+          Google Scholar citation counts and profile totals are a snapshot from {SCHOLAR_METRICS_LAST_UPDATED}.
+          New entries without verified citation counts are excluded from the citation total.
         </p>
       </section>
 
@@ -70,7 +75,7 @@ export default function Publications() {
         </div>
         <div className="surface p-5">
           <div className="text-3xl font-semibold text-neutral-950">{stats.citationTotal}</div>
-          <div className="mt-1 text-sm text-neutral-500">Citations across listed entries</div>
+          <div className="mt-1 text-sm text-neutral-500">Recorded citations ({SCHOLAR_METRICS_LAST_UPDATED})</div>
         </div>
         <div className="surface p-5">
           <div className="text-3xl font-semibold text-neutral-950">{profileCounts.length}</div>
@@ -97,6 +102,11 @@ export default function Publications() {
                         {profileKey}
                       </span>
                     ))}
+                    {publication.kind === "preprint" && (
+                      <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">
+                        Preprint / not peer reviewed
+                      </span>
+                    )}
                   </div>
                   <h3 className="text-base leading-snug">
                     {publication.url ? (
@@ -189,13 +199,22 @@ export default function Publications() {
                               {profileKey === "Shang" ? "Shang" : "Dicky"}
                             </span>
                           ))}
-                          {publication.citations > 0 ? (
+                          {publication.kind === "preprint" && (
+                            <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">
+                              Preprint / not peer reviewed
+                            </span>
+                          )}
+                          {publication.citations == null ? (
+                            <span className="rounded-full border border-stone-200 bg-white px-2.5 py-1 text-xs font-semibold text-neutral-500">
+                              Citations not verified
+                            </span>
+                          ) : publication.citations > 0 ? (
                             <span className="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1 text-xs font-semibold text-neutral-600">
                               {publication.citations} citations
                             </span>
                           ) : (
                             <span className="rounded-full border border-stone-200 bg-white px-2.5 py-1 text-xs font-semibold text-neutral-500">
-                              New / no citations yet
+                              0 citations at snapshot date
                             </span>
                           )}
                         </div>

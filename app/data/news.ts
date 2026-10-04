@@ -14,6 +14,33 @@ export const RECENT_NEWS_MONTHS = 6;
 
 export const newsItems: NewsItem[] = [
   {
+    id: "multimodal-ai-audiometry-reporting",
+    date: "2026-10-01",
+    type: "Publication",
+    title: "Audiologist-guided multimodal AI for audiometry and tympanometry reporting",
+    summary:
+      "Published in Journal of Medical Systems: evaluation of AI-assisted audiometric image transcription, clinical interpretation, and reporting.",
+    href: "https://doi.org/10.1007/s10916-026-02463-5",
+  },
+  {
+    id: "bilingual-ai-audiologist-preprint",
+    date: "2026-09-26",
+    type: "Publication",
+    title: "Preprint: a bilingual AI audiologist evaluated in simulated consultations",
+    summary:
+      "An arXiv preprint describing rubric-guided consultation policies and a blinded evaluation using simulated cases. This work has not been peer reviewed.",
+    href: "https://arxiv.org/abs/2609.32220",
+  },
+  {
+    id: "audiologybench-jmir",
+    date: "2026-09-11",
+    type: "Publication",
+    title: "AUDIOLOGYBENCH published in Journal of Medical Internet Research",
+    summary:
+      "A benchmark development and validation study evaluating large language models on clinical audiology knowledge, research evidence, and multimodal cases.",
+    href: "https://doi.org/10.2196/94755",
+  },
+  {
     id: "wca-2026-seoul",
     date: "2026-05-24",
     dateLabel: "May 24-27, 2026",
