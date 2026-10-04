@@ -3,6 +3,18 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 const DIGITS = [...Array(10).keys()];
 const CHANCE_LEVEL = 1 / DIGITS.length;
 const DEFAULT_TARGET = 0.5;
+const VERSIONED_STIMULI = {
+  spanish_male: {
+    label: 'Spanish (male)', version: 'fir-20261005-v1',
+    manifestSha256: 'c4f95b4e62b8c2100ce56184b0cc72bde46a9a811e7750233d563ec15830d4b1',
+  },
+  spanish_female: {
+    label: 'Spanish (female)', version: 'fir-20261005-v1',
+    manifestSha256: 'eb55bbb58b4a64153a2b7c8b8733f399fe7480e93b8b878f20a542874d3982c8',
+  },
+};
+const audioCache = new Map();
+const audioLoads = new Map();
 
 const setupCard = document.getElementById('setupCard');
 const calibrationCard = document.getElementById('calibrationCard');
@@ -178,7 +190,28 @@ function clampNoiseGain(value) {
 }
 
 function calibrationStorageKey(lang) {
-  return `digitOptimizationNoiseGain:${lang}`;
+  const version = VERSIONED_STIMULI[lang]?.version;
+  return `digitOptimizationNoiseGain:${lang}${version ? `:${version}` : ''}`;
+}
+
+function stimulusLabel(lang) {
+  return VERSIONED_STIMULI[lang]?.label || lang.replaceAll('_', ' ');
+}
+
+function updateStimulusInfo() {
+  const material = VERSIONED_STIMULI[stimLangEl.value];
+  document.getElementById('stimulusInfo').textContent = material
+    ? `${material.label} | FIR ${material.version} | 44.1 kHz | 10 s masker | RMS 0.05 | No digit corrections applied`
+    : '';
+  participantIdEl.required = Boolean(material);
+  participantIdEl.placeholder = material ? 'Required for Spanish optimization' : 'optional';
+}
+
+async function verifyAudioHash(bytes, expected, name) {
+  if (!window.crypto?.subtle) throw new Error('Verified Spanish audio requires HTTPS or localhost.');
+  const hash = await window.crypto.subtle.digest('SHA-256', bytes);
+  const actual = Array.from(new Uint8Array(hash), n => n.toString(16).padStart(2, '0')).join('');
+  if (actual !== expected) throw new Error(`${name}: stimulus checksum mismatch. Reload before testing.`);
 }
 
 function getStoredCalibrationGain(lang) {
@@ -251,26 +284,64 @@ function scheduleAutoPlay(label = 'Auto-playing') {
 }
 
 async function loadAudio(lang) {
-  setSetupMessage(`Loading audio for ${lang} ...`);
-  const base = `../digit-in-noise-test/audio/${lang}`;
+  if (audioCache.has(lang)) {
+    buffers = audioCache.get(lang);
+    return buffers;
+  }
+  if (audioLoads.has(lang)) {
+    buffers = await audioLoads.get(lang);
+    return buffers;
+  }
+  const loading = loadAudioFiles(lang);
+  audioLoads.set(lang, loading);
+  try {
+    const loaded = await loading;
+    audioCache.set(lang, loaded);
+    buffers = loaded;
+    return loaded;
+  } finally {
+    audioLoads.delete(lang);
+  }
+}
+
+async function loadAudioFiles(lang) {
+  const label = stimulusLabel(lang);
+  setSetupMessage(`Loading audio for ${label} ...`);
+  const material = VERSIONED_STIMULI[lang];
+  const base = material ? `audio/${lang}/${material.version}` : `../digit-in-noise-test/audio/${lang}`;
+  let stimulus = null;
+  if (material) {
+    const response = await fetch(`${base}/manifest.json`);
+    if (!response.ok) throw new Error(`Cannot load stimulus manifest for ${label}`);
+    const bytes = await response.arrayBuffer();
+    await verifyAudioHash(bytes, material.manifestSha256, 'Manifest');
+    const manifest = JSON.parse(new TextDecoder().decode(bytes));
+    if (manifest.id !== lang || manifest.version !== material.version) throw new Error('Wrong stimulus version');
+    stimulus = { ...manifest, manifestSha256: material.manifestSha256 };
+  }
+
+  async function decodeFile(name) {
+    const response = await fetch(`${base}/${name}`);
+    if (!response.ok) throw new Error(`Cannot load ${name} for ${label}`);
+    const bytes = await response.arrayBuffer();
+    if (stimulus) {
+      const expected = stimulus.files.find(file => file.name === name);
+      if (!expected || bytes.byteLength !== expected.bytes) throw new Error(`${name}: incorrect audio size`);
+      await verifyAudioHash(bytes, expected.sha256, name);
+    }
+    return audioCtx.decodeAudioData(bytes.slice(0));
+  }
 
   const digitBuffers = [];
   for (let digit = 0; digit <= 9; digit++) {
-    setSetupMessage(`Loading ${lang} audio: digit ${digit} of 9 ...`);
-    const r = await fetch(`${base}/${digit}.wav`);
-    if (!r.ok) throw new Error(`Cannot load ${digit}.wav for ${lang}`);
-    const ab = await r.arrayBuffer();
-    digitBuffers.push(await audioCtx.decodeAudioData(ab.slice(0)));
+    setSetupMessage(`Loading ${label}: ${digit + 1} / 11 files ...`);
+    digitBuffers.push(await decodeFile(`${digit}.wav`));
   }
 
-  setSetupMessage(`Loading ${lang} masker noise ...`);
-  const noiseResp = await fetch(`${base}/noise.wav`);
-  if (!noiseResp.ok) throw new Error(`Cannot load noise.wav for ${lang}`);
-  const noiseAb = await noiseResp.arrayBuffer();
-  const noiseBuffer = await audioCtx.decodeAudioData(noiseAb.slice(0));
-
-  buffers = { lang, digitBuffers, noiseBuffer };
-  setSetupMessage(`Audio ready for ${lang}.`);
+  setSetupMessage(`Loading ${label}: 11 / 11 files (masker noise) ...`);
+  const noiseBuffer = await decodeFile('noise.wav');
+  setSetupMessage(`Audio ready for ${label}${material ? ' (checksums verified)' : ''}.`);
+  return { lang, digitBuffers, noiseBuffer, stimulus };
 }
 
 function stopCalibrationNoise() {
@@ -306,6 +377,7 @@ async function startCalibrationNoise() {
     src.start();
     calibrationNoiseSource = src;
     calibrationNoiseGainNode = gain;
+    calibrationConfirmBtn.disabled = false;
     setCalibrationMessage('Noise is playing. Adjust the slider until it is comfortable and clearly audible.');
   } finally {
     setButtonBusy(calibrationPlayBtn, false);
@@ -792,6 +864,7 @@ function downloadFile(filename, content, type) {
 function correctionPayload() {
   return {
     language: settingsSnapshot.lang,
+    stimulus: settingsSnapshot.stimulus || null,
     targetProbability: latestAnalysis.target,
     chanceLevel: latestAnalysis.chanceLevel,
     meanThresholdDbSnr: round(latestAnalysis.meanThreshold, 3),
@@ -828,7 +901,7 @@ function showResults() {
     analysis,
     settings: settingsSnapshot,
     title: 'Participant Optimization Results',
-    subtitle: 'Positive values increase digit level; negative values decrease it. These participant-level results are useful for QA; final correction levels should come from pooled group data.',
+    subtitle: `${stimulusLabel(settingsSnapshot.lang)}${settingsSnapshot.stimulus ? ` | ${settingsSnapshot.stimulus.version}` : ''}. Participant-level results are for QA; final correction levels should come from pooled group data.`,
   });
 }
 
@@ -886,6 +959,12 @@ function readSetupSettings() {
   const autoPlayDelayMs = getAutoPlayDelayMs();
   const lang = stimLangEl.value;
 
+  if (VERSIONED_STIMULI[lang] && !participantIdEl.value.trim()) {
+    setSetupMessage('Enter a participant ID for Spanish optimization.', true);
+    participantIdEl.focus();
+    return null;
+  }
+
   if (!snrs) {
     setSetupMessage('Invalid SNR list. Example: -2,-4,-6,-8,-10,-12,-14,-16,-18,-20', true);
     return;
@@ -927,7 +1006,7 @@ async function openCalibration() {
   pendingSettings = readSetupSettings();
   if (!pendingSettings) return;
 
-  calibrationLang.textContent = pendingSettings.lang.replaceAll('_', ' ');
+  calibrationLang.textContent = stimulusLabel(pendingSettings.lang);
   const storedGain = getStoredCalibrationGain(pendingSettings.lang);
   updateCalibrationGain(storedGain ?? pendingSettings.noiseGain);
 
@@ -951,14 +1030,19 @@ async function openCalibration() {
     console.error(err);
     setCalibrationMessage(`Audio load failed: ${err.message || err}`, true);
     setButtonBusy(calibrationConfirmBtn, false);
+    calibrationConfirmBtn.disabled = true;
     setButtonBusy(calibrationPlayBtn, false);
   }
 }
 
 function beginExperiment(settings) {
+  if (!buffers || buffers.lang !== settings.lang) throw new Error('The selected stimulus is not loaded. Return to calibration.');
+  if (VERSIONED_STIMULI[settings.lang] && !buffers.stimulus) throw new Error('Verified stimulus information is missing.');
   stopCalibrationNoise();
   settingsSnapshot = {
     ...settings,
+    stimulus: buffers.stimulus || null,
+    audioContextSampleRateHz: audioCtx.sampleRate,
     startedAt: new Date().toISOString(),
   };
 
@@ -1024,10 +1108,33 @@ function normalizeImportedResponses(payload, sourceName) {
       correct,
       rep: row.rep ?? null,
       rtMs: row.rtMs ?? null,
-      participantId: participantKey,
+      participantId: row.participantId || participantKey,
       sourceFile: sourceName,
     };
   });
+}
+
+function validateGroupMaterials(settingsList) {
+  const identities = settingsList.map(settings => {
+    const lang = settings.lang || 'unknown';
+    const stimulus = settings.stimulus;
+    if (VERSIONED_STIMULI[lang] || stimulus) {
+      if (!stimulus || stimulus.id !== lang || !stimulus.version ||
+          !/^[a-f0-9]{64}$/.test(stimulus.manifestSha256 || '')) {
+        throw new Error('Missing or inconsistent stimulus provenance. Use full JSON exports from the same material version.');
+      }
+      if (VERSIONED_STIMULI[lang] && !settings.participantId) {
+        throw new Error('Spanish optimization exports must have a participant ID.');
+      }
+      return `${lang}:${stimulus.version}:${stimulus.manifestSha256}`;
+    }
+    if (lang === 'mixed') throw new Error('Previously pooled mixed-language data cannot produce language-specific corrections.');
+    return `${lang}:legacy`;
+  });
+  if (new Set(identities).size !== 1) {
+    throw new Error('Different languages, voices, or stimulus versions cannot be pooled. Analyze Spanish male and female separately.');
+  }
+  return { lang: settingsList[0].lang || 'unknown', stimulus: settingsList[0].stimulus || null };
 }
 
 async function analyzeGroupJsonFiles() {
@@ -1047,13 +1154,19 @@ async function analyzeGroupJsonFiles() {
 
   try {
     const imported = [];
-    const languages = new Set();
+    const importedSettings = [];
+    const seenExports = new Set();
     for (const file of files) {
       const text = await readFileAsText(file);
       const payload = JSON.parse(text);
-      if (payload.settings?.lang) languages.add(payload.settings.lang);
+      const canonical = JSON.stringify(payload);
+      if (seenExports.has(canonical)) throw new Error('The same JSON export was selected more than once.');
+      seenExports.add(canonical);
+      importedSettings.push(payload.settings || {});
       imported.push(...normalizeImportedResponses(payload, file.name));
     }
+
+    const groupMaterial = validateGroupMaterials(importedSettings);
 
     if (!imported.length) {
       throw new Error('No completed response rows found in the selected files');
@@ -1064,7 +1177,8 @@ async function analyzeGroupJsonFiles() {
     const groupSettings = {
       analysisLevel: 'group',
       participantId: 'group-analysis',
-      lang: languages.size === 1 ? Array.from(languages)[0] : 'mixed',
+      lang: groupMaterial.lang,
+      stimulus: groupMaterial.stimulus,
       preset: 'group-import',
       snrs,
       reps: null,
@@ -1086,7 +1200,7 @@ async function analyzeGroupJsonFiles() {
       analysis,
       settings: groupSettings,
       title: 'Group Optimization Results',
-      subtitle: `Positive values increase digit level; negative values decrease it. Pooled ${imported.length} trials from ${participants.length} participant/file IDs; use this group-level correction array for the integrated DIN materials.`,
+      subtitle: `${stimulusLabel(groupSettings.lang)}${groupSettings.stimulus ? ` | ${groupSettings.stimulus.version}` : ''}. Pooled ${imported.length} trials from ${participants.length} participant/file IDs. Positive corrections increase digit level; negative corrections decrease it.`,
     });
 
     const participantNote = participants.length < 20
@@ -1129,6 +1243,8 @@ groupJsonFilesEl.addEventListener('change', () => {
 
 preloadBtn.addEventListener('click', async () => {
   setButtonBusy(preloadBtn, true, 'Loading audio...');
+  startBtn.disabled = true;
+  stimLangEl.disabled = true;
   try {
     if (audioCtx.state !== 'running') await audioCtx.resume();
     await loadAudio(stimLangEl.value);
@@ -1137,6 +1253,8 @@ preloadBtn.addEventListener('click', async () => {
     setSetupMessage(`Audio preload failed: ${err.message || err}`, true);
   } finally {
     setButtonBusy(preloadBtn, false);
+    startBtn.disabled = false;
+    stimLangEl.disabled = false;
   }
 });
 
@@ -1165,6 +1283,7 @@ calibrationBackBtn.addEventListener('click', () => {
   stopCalibrationNoise();
   calibrationCard.classList.add('hidden');
   setupCard.classList.remove('hidden');
+  pendingSettings = null;
   setSetupMessage('Calibration cancelled. Adjust setup if needed.');
 });
 calibrationGainEl.addEventListener('input', (e) => {
@@ -1182,6 +1301,7 @@ calibrationConfirmBtn.addEventListener('click', async () => {
 
   try {
     stopCalibrationNoise();
+    if (!buffers || buffers.lang !== pendingSettings.lang) await loadAudio(pendingSettings.lang);
     rememberCalibrationGain(pendingSettings.lang, gain);
     noiseGainEl.value = gain.toFixed(2);
     const calibratedAt = new Date().toISOString();
@@ -1228,6 +1348,12 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
+function exportFilename(kind, extension) {
+  const id = String(settingsSnapshot.participantId || 'anonymous').replace(/[^a-zA-Z0-9_-]/g, '_');
+  const date = String(settingsSnapshot.startedAt || new Date().toISOString()).replace(/[^0-9TZ]/g, '');
+  return `digit-optimization-${settingsSnapshot.lang}-${id}-${date}-${kind}.${extension}`;
+}
+
 downloadCsvBtn.addEventListener('click', () => {
   const rows = responses.map(r => ({
     ...r,
@@ -1237,8 +1363,11 @@ downloadCsvBtn.addEventListener('click', () => {
     snrList: settingsSnapshot.snrs.join('|'),
     targetProbability: settingsSnapshot.targetProbability,
     calibratedNoiseGain: settingsSnapshot.noiseGain ?? r.noiseGain ?? null,
+    stimulusVersion: settingsSnapshot.stimulus?.version || null,
+    stimulusManifestSha256: settingsSnapshot.stimulus?.manifestSha256 || null,
+    stimulusVoice: settingsSnapshot.stimulus?.voice || null,
   }));
-  downloadFile('digit-optimization-raw.csv', toCsv(rows), 'text/csv;charset=utf-8');
+  downloadFile(exportFilename('raw', 'csv'), toCsv(rows), 'text/csv;charset=utf-8');
 });
 
 downloadJsonBtn.addEventListener('click', () => {
@@ -1250,7 +1379,7 @@ downloadJsonBtn.addEventListener('click', () => {
     analysis: latestAnalysis,
     exportedAt: new Date().toISOString(),
   };
-  downloadFile('digit-optimization-results.json', JSON.stringify(payload, null, 2), 'application/json;charset=utf-8');
+  downloadFile(exportFilename('results', 'json'), JSON.stringify(payload, null, 2), 'application/json;charset=utf-8');
 });
 
 downloadCorrectionsBtn.addEventListener('click', () => {
@@ -1281,4 +1410,9 @@ restartBtn.addEventListener('click', () => {
 
 window.addEventListener('pagehide', stopCalibrationNoise);
 
+stimLangEl.addEventListener('change', () => {
+  updateStimulusInfo();
+  setSetupMessage(audioCache.has(stimLangEl.value) ? `Audio ready for ${stimulusLabel(stimLangEl.value)}.` : '');
+});
+updateStimulusInfo();
 updateTrialCount();

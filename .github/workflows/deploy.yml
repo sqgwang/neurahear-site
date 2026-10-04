@@ -30,6 +30,9 @@ jobs:
 
       - name: Check iDIN protocol
         run: npm run test:idin
+
+      - name: Check digit optimization stimuli
+        run: npm run test:optimization
       
       - name: Build static site
         run: npm run build

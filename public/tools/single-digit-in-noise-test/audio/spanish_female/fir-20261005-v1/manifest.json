@@ -1,0 +1,143 @@
+{
+  "id": "spanish_female",
+  "label": "Spanish (female)",
+  "language": "Spanish",
+  "voice": "female",
+  "version": "fir-20261005-v1",
+  "use": "single-digit optimization; not a validated screening test",
+  "correctionsApplied": false,
+  "digitNormalization": "whole-file RMS 0.05, including existing silence",
+  "noise": {
+    "method": "Gaussian white noise shaped by voice-specific FIR",
+    "durationSeconds": 10,
+    "sampleRateHz": 44100,
+    "rms": 0.05,
+    "firOrder": 8192,
+    "seed": 2026100602,
+    "loopMethod": "circular FIR convolution",
+    "generatorSha256": "b81744642d36e6a1ac16c545997a473a150514c9fcd72a800dd80e45b80ab290"
+  },
+  "files": [
+    {
+      "name": "0.wav",
+      "sha256": "dc621194004c7bd666f380c655fd9d321e648f1a195094e74547f330baab017a",
+      "bytes": 139394,
+      "sampleRateHz": 44100,
+      "channels": 1,
+      "bits": 32,
+      "frames": 34819,
+      "durationSeconds": 0.789546485260771,
+      "rms": 0.05
+    },
+    {
+      "name": "1.wav",
+      "sha256": "03b8a0d8f13ada911d366a0f3f8919445f429c6941435ad8b26fb19243c55dc6",
+      "bytes": 139558,
+      "sampleRateHz": 44100,
+      "channels": 1,
+      "bits": 32,
+      "frames": 34860,
+      "durationSeconds": 0.7904761904761904,
+      "rms": 0.05
+    },
+    {
+      "name": "2.wav",
+      "sha256": "dc82863968e1838622a46bc4af59d92c779755ad61f3203c6d6df862273db7b4",
+      "bytes": 139558,
+      "sampleRateHz": 44100,
+      "channels": 1,
+      "bits": 32,
+      "frames": 34860,
+      "durationSeconds": 0.7904761904761904,
+      "rms": 0.05
+    },
+    {
+      "name": "3.wav",
+      "sha256": "1080251f7d5178a27c1a510353f76190345ef2f07296edcd37cb17781453b8f8",
+      "bytes": 140374,
+      "sampleRateHz": 44100,
+      "channels": 1,
+      "bits": 32,
+      "frames": 35064,
+      "durationSeconds": 0.7951020408163265,
+      "rms": 0.05
+    },
+    {
+      "name": "4.wav",
+      "sha256": "8683670876576fc770d705bac7e241a172e89f067dcd9853bc4e0d6a1655a490",
+      "bytes": 141190,
+      "sampleRateHz": 44100,
+      "channels": 1,
+      "bits": 32,
+      "frames": 35268,
+      "durationSeconds": 0.7997278911564626,
+      "rms": 0.05
+    },
+    {
+      "name": "5.wav",
+      "sha256": "8bac3bf292dd2ad6f0581b42bd3ea0998d3b7525cc681decd98b654b767f0ea7",
+      "bytes": 140862,
+      "sampleRateHz": 44100,
+      "channels": 1,
+      "bits": 32,
+      "frames": 35186,
+      "durationSeconds": 0.7978684807256236,
+      "rms": 0.05
+    },
+    {
+      "name": "6.wav",
+      "sha256": "f34efb1ef6a79678d583aa602630b386ae9c954db700813a773b34d09ffdac12",
+      "bytes": 140046,
+      "sampleRateHz": 44100,
+      "channels": 1,
+      "bits": 32,
+      "frames": 34982,
+      "durationSeconds": 0.7932426303854875,
+      "rms": 0.05
+    },
+    {
+      "name": "7.wav",
+      "sha256": "a9c84286d0a84ed33ead2a6f0477a004aedb2ae2b8d0b6edc88af89818c3b2b3",
+      "bytes": 140046,
+      "sampleRateHz": 44100,
+      "channels": 1,
+      "bits": 32,
+      "frames": 34982,
+      "durationSeconds": 0.7932426303854875,
+      "rms": 0.05
+    },
+    {
+      "name": "8.wav",
+      "sha256": "e02fc1ec310a5c38dc799dbd403cea505b34ec7ad4db5a64a64b573ae0768585",
+      "bytes": 140046,
+      "sampleRateHz": 44100,
+      "channels": 1,
+      "bits": 32,
+      "frames": 34982,
+      "durationSeconds": 0.7932426303854875,
+      "rms": 0.05
+    },
+    {
+      "name": "9.wav",
+      "sha256": "22cba43962fd8fc2b3606d4d608e909d5adff31bbfe5580d533a0d161892f3dd",
+      "bytes": 140050,
+      "sampleRateHz": 44100,
+      "channels": 1,
+      "bits": 32,
+      "frames": 34982,
+      "durationSeconds": 0.7932426303854875,
+      "rms": 0.05
+    },
+    {
+      "name": "noise.wav",
+      "sha256": "ec8f0f436d0735a9b381910ebbed956c4c979310dc34e64098bcf46ccbba538f",
+      "bytes": 1764044,
+      "sampleRateHz": 44100,
+      "channels": 1,
+      "bits": 32,
+      "frames": 441000,
+      "durationSeconds": 10.0,
+      "rms": 0.05
+    }
+  ]
+}
