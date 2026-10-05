@@ -21,10 +21,18 @@ function element(id) {
   });
   return elements.get(id);
 }
-for (const [id, value] of Object.entries({ stimLang: 'taiwanese', snrList: '-4,-8', reps: '1',
+for (const [id, value] of Object.entries({ stimLang: 'taiwanese', snrList: '-4,-8', roundNumber: '1', testEar: 'right', groupEarScope: 'auto',
   noiseGain: '1', targetPct: '50', autoPlayDelay: '800', participantId: '', trialOrder: 'random' })) element(id).value = value;
 let corrupt = false;
 const requests = [];
+const playedBuffers = [];
+function audioBuffer(channels, length, sampleRate) {
+  const data = Array.from({ length: channels }, () => new Float32Array(length));
+  return { length, sampleRate, numberOfChannels: channels,
+    getChannelData(channel) { return data[channel]; },
+    copyToChannel(source, channel) { data[channel].set(source); },
+  };
+}
 const context = vm.createContext({
   console, TextDecoder, Uint8Array, ArrayBuffer, Float32Array, performance, setTimeout, clearTimeout,
   crypto: webcrypto,
@@ -32,6 +40,13 @@ const context = vm.createContext({
   AudioContext: class {
     sampleRate = 48000;
     state = 'running';
+    destination = { maxChannelCount: 2, channelCount: 2 };
+    createBuffer = audioBuffer;
+    createBufferSource() {
+      return { connect() { return this; }, disconnect() {}, stop() {},
+        start() { playedBuffers.push(this.buffer); this.onended?.(); } };
+    }
+    createGain() { return { gain: { value: 1 }, connect() { return this; }, disconnect() {} }; }
     async decodeAudioData(bytes) { return { bytes: bytes.byteLength, sampleRate: 48000 }; }
   },
   document: { getElementById: element, addEventListener() {} },
@@ -100,10 +115,20 @@ assert.ok(requests.every(url => url.startsWith('audio/spanish_')));
 element('stimLang').value = 'spanish_female';
 assert.equal(run('readSetupSettings()'), null);
 element('participantId').value = 'P001';
+element('testEar').value = '';
+assert.equal(run('readSetupSettings()'), null);
+element('testEar').value = 'right';
+element('roundNumber').value = '0';
+assert.equal(run('readSetupSettings()'), null);
+element('roundNumber').value = '1';
 run('beginExperiment(readSetupSettings())');
 assert.equal(run('settingsSnapshot.stimulus.voice'), 'female');
 assert.equal(run('settingsSnapshot.audioContextSampleRateHz'), 48000);
 assert.equal(run('trialList.length'), 20);
+assert.equal(run('settingsSnapshot.reps'), 1);
+assert.equal(run('settingsSnapshot.ear'), 'right');
+assert.equal(run('settingsSnapshot.analysisLevel'), 'round');
+assert.match(run('settingsSnapshot.roundId'), /^[a-f0-9-]{36}$/);
 const settings = JSON.parse(run('JSON.stringify(settingsSnapshot)'));
 const male = { ...settings, lang: 'spanish_male', stimulus: JSON.parse(fs.readFileSync(`${root}/audio/spanish_male/fir-20261005-v1/manifest.json`)) };
 male.stimulus.manifestSha256 = run('VERSIONED_STIMULI.spanish_male.manifestSha256');
@@ -128,4 +153,128 @@ assert.notEqual(run(`calibrationStorageKey('spanish_male')`), run(`calibrationSt
 assert.equal(run(`calibrationStorageKey('mandarin')`), 'digitOptimizationNoiseGain:mandarin');
 assert.equal(run(`normalizeImportedResponses({settings:{participantId:'group-analysis'},responses:[{snr:-10,target:1,response:1,participantId:'P003'}]},'group.json')[0].participantId`), 'P003');
 assert.equal(run('buildTrials([-2,-4], 2, "random").length'), 40);
-console.log('PASS Taiwanese/Spanish-only choices, Spanish assets, PCM/RMS, hash verification, corruption rejection, versioned exports, separate pooling, legacy compatibility, trial count');
+assert.notEqual(run(`calibrationStorageKey('spanish_male', 'left')`), run(`calibrationStorageKey('spanish_male', 'right')`));
+
+element('designPreset').value = 'wang2023';
+element('designPreset').listeners.change();
+assert.equal(element('trialCount').textContent, '110 trials / round');
+assert.equal(run('readSetupSettings().reps'), 1);
+assert.equal(run('readSetupSettings().targetProbability'), .5);
+for (const mode of ['random', 'blocked']) {
+  const trials = JSON.parse(run(`JSON.stringify(buildTrials(parseSNRList(presets.wang2023.snrs), 1, '${mode}'))`));
+  assert.equal(trials.length, 110);
+  assert.equal(new Set(trials.map(trial => `${trial.snr}:${trial.digit}`)).size, 110);
+  if (mode === 'blocked') assert.deepEqual(trials.map(trial => trial.snr), trials.map(trial => trial.snr).sort((a, b) => b - a));
+}
+
+context.testSamples = new Float32Array([0, .1, -.2, .3]);
+for (const ear of ['left', 'right', 'both']) {
+  const out = run(`createEarBuffer(testSamples, 44100, '${ear}')`);
+  assert.equal(out.numberOfChannels, 2);
+  for (const channel of [0, 1]) {
+    const active = ear === 'both' || channel === (ear === 'left' ? 0 : 1);
+    assert.deepEqual(out.getChannelData(channel), active ? context.testSamples : new Float32Array(4));
+  }
+}
+assert.throws(() => run(`createEarBuffer(testSamples, 44100, 'invalid')`), /Select/);
+run('audioCtx.destination.maxChannelCount = 1');
+assert.throws(() => run('prepareStereoOutput()'), /Stereo output/);
+run('audioCtx.destination.maxChannelCount = 2');
+
+const signal = audioBuffer(1, 400, 1000);
+signal.getChannelData(0).fill(.05);
+const noise = audioBuffer(1, 2000, 1000);
+noise.getChannelData(0).fill(.025);
+context.testBuffers = { lang: 'taiwanese', stimulus: null, digitBuffers: Array(10).fill(signal), noiseBuffer: noise };
+run('buffers = testBuffers');
+for (const ear of ['left', 'right', 'both']) {
+  const result = await run(`renderAndPlaySingleDigit({digit: 0, snr: -8, noiseGain: 1, ear: '${ear}'})`);
+  assert.equal(result.effectiveSNR, -8);
+  assert.equal(result.limiterGain, 1);
+  const out = playedBuffers.at(-1);
+  assert.equal(out.length, 1400);
+  const activeChannel = ear === 'right' ? 1 : 0;
+  const active = out.getChannelData(activeChannel);
+  assert.ok(Math.abs(active[0] - .025) < 1e-8);
+  assert.ok(Math.abs(active[500] - (.025 + .025 * 10 ** (-8 / 20))) < 1e-8);
+  if (ear === 'both') assert.deepEqual(active, out.getChannelData(1));
+  else assert.ok(out.getChannelData(1 - activeChannel).every(value => value === 0));
+
+  context.calibrationSettings = { lang: 'taiwanese', ear };
+  run('pendingSettings = calibrationSettings');
+  element('calibrationGain').value = '1';
+  await run('startCalibrationNoise()');
+  const calibration = playedBuffers.at(-1);
+  assert.deepEqual(calibration.getChannelData(activeChannel), noise.getChannelData(0));
+  if (ear !== 'both') assert.ok(calibration.getChannelData(1 - activeChannel).every(value => value === 0));
+}
+run('calibrationPlayed = false');
+element('channelConfirmed').checked = true;
+element('channelConfirmed').listeners.change();
+assert.equal(element('calibrationConfirmBtn').disabled, true);
+run('calibrationPlayed = true');
+element('channelConfirmed').listeners.change();
+assert.equal(element('calibrationConfirmBtn').disabled, false);
+
+element('stimLang').value = 'taiwanese';
+element('snrList').value = '-8';
+run('beginExperiment(readSetupSettings())');
+const firstRoundId = run('settingsSnapshot.roundId');
+for (let i = 0; i < 10; i++) {
+  run('hasPlayedThisTrial = true; currentInput = String(trialList[trialIndex].digit); handleSubmit()');
+}
+const completed = JSON.parse(context.lastDownload.content);
+assert.equal(completed.nCompleted, 10);
+assert.equal(completed.schemaVersion, 2);
+assert.ok(completed.settings.completedAt);
+assert.ok(completed.responses.every(row => row.roundId === firstRoundId && row.ear === 'right' && row.participantId === 'P001'));
+assert.match(context.lastDownload.name, /right-round1/);
+assert.equal(element('downloadCorrections').disabled, true, 'Insufficient data must not offer placeholder zero corrections');
+element('nextRoundBtn').listeners.click();
+assert.equal(element('participantId').value, 'P001');
+assert.equal(element('roundNumber').value, '2');
+assert.equal(element('testEar').value, '');
+element('testEar').value = 'left';
+run('beginExperiment(readSetupSettings())');
+assert.notEqual(run('settingsSnapshot.roundId'), firstRoundId);
+element('restartBtn').listeners.click();
+assert.equal(element('participantId').value, '');
+assert.equal(element('roundNumber').value, '1');
+
+const secondRound = structuredClone(completed);
+secondRound.settings.roundId = 'second-round';
+secondRound.settings.roundNumber = 2;
+secondRound.settings.ear = 'left';
+secondRound.responses = secondRound.responses.map(row => ({ ...row, roundId: 'second-round', roundNumber: 2, ear: 'left' }));
+context.entries = [{ payload: completed, name: 'right.json' }, { payload: secondRound, name: 'left.json' }];
+let imported = run(`importGroupPayloads(entries, 'auto')`);
+assert.equal(imported.scope, 'monaural');
+assert.equal(imported.rows.length, 20);
+assert.equal(new Set(imported.rows.map(row => row.participantId)).size, 1);
+assert.equal(run(`importGroupPayloads(entries, 'left').rows.length`), 10);
+assert.equal(run(`importGroupPayloads(entries, 'left').excluded`), 10);
+
+const reexport = structuredClone(completed);
+reexport.exportedAt = 'different';
+context.entries = [{ payload: completed, name: 'original.json' }, { payload: reexport, name: 'copy.json' }];
+assert.throws(() => run(`importGroupPayloads(entries, 'auto')`), /more than once|Duplicate round/);
+const regrouped = { settings: { lang: 'taiwanese', analysisLevel: 'group' }, responses: imported.rows };
+context.entries = [{ payload: completed, name: 'original.json' }, { payload: regrouped, name: 'group.json' }];
+assert.throws(() => run(`importGroupPayloads(entries, 'auto')`), /Duplicate round/);
+context.entries = [{ payload: regrouped, name: 'group.json' }];
+assert.equal(run(`importGroupPayloads(entries, 'auto').rows.length`), 20);
+
+const bothRound = structuredClone(secondRound);
+bothRound.settings.roundId = 'both-round';
+bothRound.settings.ear = 'both';
+bothRound.responses = bothRound.responses.map(row => ({ ...row, roundId: 'both-round', ear: 'both' }));
+context.entries = [{ payload: completed, name: 'right.json' }, { payload: bothRound, name: 'both.json' }];
+assert.throws(() => run(`importGroupPayloads(entries, 'auto')`), /cannot be pooled together/);
+assert.equal(run(`importGroupPayloads(entries, 'both').rows.length`), 10);
+const legacy = { settings: { lang: 'taiwanese', participantId: 'P001' }, responses: [{ snr: -8, target: 1, response: 1 }] };
+context.entries = [{ payload: legacy, name: 'legacy.json' }];
+assert.equal(run(`importGroupPayloads(entries, 'auto').scope`), 'unknown');
+context.entries.push({ payload: completed, name: 'new.json' });
+assert.throws(() => run(`importGroupPayloads(entries, 'auto')`), /cannot be pooled together/);
+
+console.log('PASS language choices, Spanish hashes/RMS, one-round protocol, ear routing/calibration/SNR, automatic exports, continuation, duplicate protection, ear-filtered pooling and legacy compatibility');

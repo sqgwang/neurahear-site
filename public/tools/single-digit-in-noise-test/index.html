@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Digit Optimization Test</title>
-  <link rel="stylesheet" href="styles.css?v=20260506-noise-calibration" />
+  <link rel="stylesheet" href="styles.css?v=20261005-ear-rounds-v1" />
 </head>
 <body>
   <header class="topbar">
@@ -24,8 +24,8 @@
     <section class="card" id="setupCard">
       <div class="sectionHead">
         <div>
-          <h2>Setup</h2>
-          <p class="muted">Preset designs fill in the protocol parameters; edit any field to switch to Custom.</p>
+          <h2>Round setup</h2>
+          <p class="muted">One presentation per digit at each SNR.</p>
         </div>
         <div class="trialCount" id="trialCount">0 trials</div>
       </div>
@@ -33,7 +33,22 @@
       <div class="grid">
         <label>
           Participant ID
-          <input id="participantId" type="text" placeholder="optional" />
+          <input id="participantId" type="text" placeholder="Participant ID" required />
+        </label>
+
+        <label>
+          Test ear
+          <select id="testEar" required>
+            <option value="" selected>Select ear</option>
+            <option value="left">Left ear</option>
+            <option value="right">Right ear</option>
+            <option value="both">Both ears</option>
+          </select>
+        </label>
+
+        <label>
+          Round number
+          <input id="roundNumber" type="number" min="1" max="9999" step="1" value="1" />
         </label>
 
         <label>
@@ -58,11 +73,6 @@
         <label>
           SNR levels (dB)
           <input id="snrList" type="text" value="-4,-8,-12,-16,-20" />
-        </label>
-
-        <label>
-          Repetitions per digit at each SNR
-          <input id="reps" type="number" min="1" max="50" value="2" />
         </label>
 
         <label>
@@ -117,6 +127,17 @@
         </div>
         <div class="row">
           <input id="groupJsonFiles" type="file" accept="application/json,.json" multiple />
+          <label>
+            Ear selection
+            <select id="groupEarScope">
+              <option value="auto" selected>Match recording mode</option>
+              <option value="monaural">Single-ear (left + right)</option>
+              <option value="left">Left ear only</option>
+              <option value="right">Right ear only</option>
+              <option value="both">Both ears only</option>
+              <option value="unknown">Legacy / ear not recorded</option>
+            </select>
+          </label>
           <button id="analyzeGroupBtn" class="secondary">Analyze group JSON files</button>
         </div>
         <p id="groupMsg" class="note"></p>
@@ -154,11 +175,16 @@
         </label>
 
         <p id="calibrationMsg" class="note">Play the noise and adjust the level before starting the test.</p>
+        <p class="note">Stereo headphones required. Keep the L/R orientation correct and device mono audio off.</p>
+        <label class="check">
+          <input id="channelConfirmed" type="checkbox" disabled />
+          <span id="channelConfirmationLabel">I hear the noise in the selected ear(s).</span>
+        </label>
       </div>
 
       <div class="row">
         <button id="calibrationBackBtn" class="secondary">Back to setup</button>
-        <button id="calibrationConfirmBtn" class="primary">Use this level and start test</button>
+        <button id="calibrationConfirmBtn" class="primary" disabled>Use this level and start round</button>
       </div>
     </section>
 
@@ -169,6 +195,7 @@
       </div>
 
       <div class="meta">
+        <span id="roundContext"></span>
         <span id="currentSNR">SNR hidden</span>
         <span id="status">Press Play to hear one digit.</span>
       </div>
@@ -193,8 +220,13 @@
           <h2 id="resultsTitle">Optimization Results</h2>
           <p class="muted" id="resultsSubtitle">Positive correction values increase digit level; negative values decrease it.</p>
         </div>
-        <button id="restartBtn" class="primary">Run again</button>
+        <div class="row">
+          <button id="nextRoundBtn" class="primary">Next round</button>
+          <button id="restartBtn" class="secondary">New participant</button>
+        </div>
       </div>
+
+      <p id="saveStatus" class="note" role="status"></p>
 
       <div class="actions">
         <button id="downloadCsv" class="secondary">Download raw CSV</button>
@@ -223,6 +255,6 @@
     </section>
   </main>
 
-  <script src="app.js?v=20261005-spanish-fir-v1"></script>
+  <script src="app.js?v=20261005-ear-rounds-v1"></script>
 </body>
 </html>
