@@ -5,6 +5,11 @@ import vm from 'node:vm';
 import { createHash, webcrypto } from 'node:crypto';
 
 const root = 'public/tools/single-digit-in-noise-test';
+const html = fs.readFileSync(`${root}/index.html`, 'utf8');
+const languageSelect = html.match(/<select id="stimLang">([\s\S]*?)<\/select>/)[1];
+assert.deepEqual([...languageSelect.matchAll(/<option value="([^"]+)"/g)].map(match => match[1]),
+  ['taiwanese', 'spanish_male', 'spanish_female']);
+assert.match(languageSelect, /<option value="taiwanese" selected>/);
 const elements = new Map();
 function element(id) {
   if (!elements.has(id)) elements.set(id, {
@@ -16,7 +21,7 @@ function element(id) {
   });
   return elements.get(id);
 }
-for (const [id, value] of Object.entries({ stimLang: 'mandarin', snrList: '-4,-8', reps: '1',
+for (const [id, value] of Object.entries({ stimLang: 'taiwanese', snrList: '-4,-8', reps: '1',
   noiseGain: '1', targetPct: '50', autoPlayDelay: '800', participantId: '', trialOrder: 'random' })) element(id).value = value;
 let corrupt = false;
 const requests = [];
@@ -123,4 +128,4 @@ assert.notEqual(run(`calibrationStorageKey('spanish_male')`), run(`calibrationSt
 assert.equal(run(`calibrationStorageKey('mandarin')`), 'digitOptimizationNoiseGain:mandarin');
 assert.equal(run(`normalizeImportedResponses({settings:{participantId:'group-analysis'},responses:[{snr:-10,target:1,response:1,participantId:'P003'}]},'group.json')[0].participantId`), 'P003');
 assert.equal(run('buildTrials([-2,-4], 2, "random").length'), 40);
-console.log('PASS Spanish assets, PCM/RMS, hash verification, corruption rejection, versioned exports, separate pooling, legacy compatibility, trial count');
+console.log('PASS Taiwanese/Spanish-only choices, Spanish assets, PCM/RMS, hash verification, corruption rejection, versioned exports, separate pooling, legacy compatibility, trial count');
