@@ -95,6 +95,20 @@ let pendingSettings = null;
 let calibrationNoiseSource = null;
 let calibrationNoiseGainNode = null;
 let calibrationPlayed = false;
+let paused = false;
+let submitting = false;
+let phase = 'formal';
+let practiceTrials = [];
+let practiceResponses = [];
+let practiceIndex = 0;
+let resumeRecord = null;
+let lockedProfile = null;
+let profileInvalid = false;
+let archiveQueue = Promise.resolve();
+let archiveError = false;
+const pauseBtn = document.getElementById('pauseBtn');
+const formalStartBtn = document.getElementById('formalStartBtn');
+const checkpointStatus = document.getElementById('checkpointStatus');
 
 const presets = {
   quick: {
@@ -112,12 +126,22 @@ const presets = {
 };
 
 function parseSNRList(raw) {
-  const arr = String(raw)
-    .split(',')
-    .map(s => Number(s.trim()))
-    .filter(v => Number.isFinite(v));
-  if (!arr.length) return null;
-  return [...new Set(arr)];
+  return OptimizationProtocol.parseSnrs(raw);
+}
+
+function activeTrials() { return phase === 'practice' ? practiceTrials : trialList; }
+function activeIndex() { return phase === 'practice' ? practiceIndex : trialIndex; }
+function planAudio(settings) {
+  const plan = OptimizationProtocol.audioPlan(buffers.digitBuffers.map(mixToMono), mixToMono(buffers.noiseBuffer),
+    Math.max(...settings.snrs, ...(settings.practiceEnabled ? [0] : [])));
+  if (settings.audioPlan) {
+    if (!(settings.audioPlan.scale > 0 && settings.audioPlan.scale <= 1) || settings.audioPlan.engine !== plan.engine || settings.audioPlan.scale * plan.peakBoundAtUnitGain * 3 > .99 ||
+        settings.audioFingerprint !== buffers.fingerprint || settings.audioContextSampleRateHz !== audioCtx.sampleRate) {
+      throw new Error('Audio or output configuration changed. Download the interrupted round; do not resume it on this configuration.');
+    }
+    return settings.audioPlan;
+  }
+  return plan;
 }
 
 function round(value, places = 2) {
@@ -212,7 +236,7 @@ function clampNoiseGain(value) {
 
 function calibrationStorageKey(lang, ear = null) {
   const version = VERSIONED_STIMULI[lang]?.version;
-  return `digitOptimizationNoiseGain:${lang}${version ? `:${version}` : ''}${ear ? `:ear-${ear}` : ''}`;
+  return `digitOptimizationNoiseGain:${OptimizationProtocol.ENGINE}:${lang}${version ? `:${version}` : ''}${ear ? `:ear-${ear}` : ''}`;
 }
 
 function stimulusLabel(lang) {
@@ -228,10 +252,11 @@ function updateStimulusInfo() {
 }
 
 async function verifyAudioHash(bytes, expected, name) {
-  if (!window.crypto?.subtle) throw new Error('Verified Spanish audio requires HTTPS or localhost.');
+  if (!window.crypto?.subtle) throw new Error('Verified audio requires HTTPS or localhost.');
   const hash = await window.crypto.subtle.digest('SHA-256', bytes);
   const actual = Array.from(new Uint8Array(hash), n => n.toString(16).padStart(2, '0')).join('');
-  if (actual !== expected) throw new Error(`${name}: stimulus checksum mismatch. Reload before testing.`);
+  if (expected && actual !== expected) throw new Error(`${name}: stimulus checksum mismatch. Reload before testing.`);
+  return actual;
 }
 
 function getStoredCalibrationGain(lang, ear) {
@@ -256,7 +281,7 @@ function updateCalibrationGain(value) {
   calibrationGainEl.value = String(gain);
   calibrationGainValue.textContent = gain.toFixed(2);
   if (calibrationNoiseGainNode) {
-    calibrationNoiseGainNode.gain.value = gain;
+    calibrationNoiseGainNode.gain.value = gain * pendingSettings.audioPlan.scale;
   }
   return gain;
 }
@@ -268,12 +293,12 @@ function updateTrialCount() {
 }
 
 function updateTaskUI() {
-  const total = trialList.length;
-  const shownTrial = Math.min(trialIndex + 1, total);
-  progressEl.textContent = `Trial ${shownTrial} / ${total}`;
+  const total = activeTrials().length;
+  const shownTrial = Math.min(activeIndex() + 1, total);
+  progressEl.textContent = `${phase === 'practice' ? 'Practice' : 'Trial'} ${shownTrial} / ${total}`;
   document.getElementById('roundContext').textContent = `${settingsSnapshot.participantId} | Round ${settingsSnapshot.roundNumber} | ${EAR_LABELS[settingsSnapshot.ear]}`;
 
-  const trial = trialList[trialIndex];
+  const trial = activeTrials()[activeIndex()];
   currentSNREl.textContent = trial && settingsSnapshot.showSnr ? `SNR: ${trial.snr} dB` : 'SNR hidden';
   inputDisplay.textContent = currentInput;
 }
@@ -293,7 +318,7 @@ function clearAutoPlayTimer() {
 
 function scheduleAutoPlay(label = 'Auto-playing') {
   clearAutoPlayTimer();
-  if (!settingsSnapshot?.autoPlay || !trialList[trialIndex]) return;
+  if (paused || phase === 'ready' || !settingsSnapshot?.autoPlay || !activeTrials()[activeIndex()]) return;
 
   const delay = settingsSnapshot.autoPlayDelayMs;
   statusEl.textContent = `${label} in ${delay} ms...`;
@@ -330,6 +355,7 @@ async function loadAudioFiles(lang) {
   const material = VERSIONED_STIMULI[lang];
   const base = material ? `audio/${lang}/${material.version}` : `../digit-in-noise-test/audio/${lang}`;
   let stimulus = null;
+  const fingerprints = [];
   if (material) {
     const response = await fetch(`${base}/manifest.json`);
     if (!response.ok) throw new Error(`Cannot load stimulus manifest for ${label}`);
@@ -347,7 +373,9 @@ async function loadAudioFiles(lang) {
     if (stimulus) {
       const expected = stimulus.files.find(file => file.name === name);
       if (!expected || bytes.byteLength !== expected.bytes) throw new Error(`${name}: incorrect audio size`);
-      await verifyAudioHash(bytes, expected.sha256, name);
+      fingerprints.push({ name, sha256: await verifyAudioHash(bytes, expected.sha256, name) });
+    } else {
+      fingerprints.push({ name, sha256: await verifyAudioHash(bytes, null, name) });
     }
     return audioCtx.decodeAudioData(bytes.slice(0));
   }
@@ -361,7 +389,8 @@ async function loadAudioFiles(lang) {
   setSetupMessage(`Loading ${label}: 11 / 11 files (masker noise) ...`);
   const noiseBuffer = await decodeFile('noise.wav');
   setSetupMessage(`Audio ready for ${label}${material ? ' (checksums verified)' : ''}.`);
-  return { lang, digitBuffers, noiseBuffer, stimulus };
+  const fingerprint = await verifyAudioHash(new TextEncoder().encode(JSON.stringify(fingerprints)), null, 'Audio fingerprint');
+  return { lang, digitBuffers, noiseBuffer, stimulus, fingerprint };
 }
 
 function stopCalibrationNoise() {
@@ -394,7 +423,7 @@ async function startCalibrationNoise() {
     const gain = audioCtx.createGain();
     src.buffer = createEarBuffer(mixToMono(buffers.noiseBuffer), buffers.noiseBuffer.sampleRate, settings.ear);
     src.loop = true;
-    gain.gain.value = updateCalibrationGain(calibrationGainEl.value);
+    gain.gain.value = updateCalibrationGain(calibrationGainEl.value) * settings.audioPlan.scale;
     src.connect(gain).connect(audioCtx.destination);
     src.start();
     calibrationNoiseSource = src;
@@ -433,7 +462,8 @@ function buildTrials(snrs, repsPerDigit, orderMode) {
   return shuffle(list);
 }
 
-async function renderAndPlaySingleDigit({ digit, snr, noiseGain, ear }) {
+async function renderAndPlaySingleDigit({ digit, snr, noiseGain, ear, audioPlan }) {
+  if (!audioPlan || audioPlan.engine !== OptimizationProtocol.ENGINE || !(audioPlan.scale > 0 && audioPlan.scale <= 1) || snr > audioPlan.maxSnr || !Number.isFinite(noiseGain) || noiseGain < .05 || noiseGain > 3) throw new Error('Recalibration is required for this playback configuration.');
   prepareStereoOutput();
   const sr = buffers.digitBuffers[0].sampleRate;
   const prePad = Math.round(0.5 * sr);
@@ -470,15 +500,12 @@ async function renderAndPlaySingleDigit({ digit, snr, noiseGain, ear }) {
 
   let maxAbs = 0;
   for (let i = 0; i < mixed.length; i++) {
+    mixed[i] *= audioPlan.scale;
     const a = Math.abs(mixed[i]);
     if (a > maxAbs) maxAbs = a;
   }
 
-  let limiterGain = 1;
-  if (maxAbs > 0.99) {
-    limiterGain = 0.99 / maxAbs;
-    for (let i = 0; i < mixed.length; i++) mixed[i] *= limiterGain;
-  }
+  if (!Number.isFinite(maxAbs) || maxAbs > .99) throw new Error('Output headroom exceeded. Playback stopped; recalibration is required.');
 
   const out = createEarBuffer(mixed, sr, ear);
 
@@ -486,13 +513,15 @@ async function renderAndPlaySingleDigit({ digit, snr, noiseGain, ear }) {
     const src = audioCtx.createBufferSource();
     src.buffer = out;
     src.connect(audioCtx.destination);
-    src.onended = resolve;
+    src.onended = () => { src.disconnect(); resolve(); };
     src.start();
   });
 
   return {
     effectiveSNR: round(effectiveSNR, 2),
-    limiterGain: round(limiterGain, 4),
+    limiterGain: 1,
+    outputScale: audioPlan.scale,
+    effectiveNoiseGain: noiseGain * audioPlan.scale,
   };
 }
 
@@ -527,8 +556,8 @@ function prepareForNextTrial() {
 }
 
 async function handlePlay() {
-  if (isPlaying) return;
-  if (!trialList[trialIndex]) return;
+  if (isPlaying || paused || submitting || phase === 'ready') return;
+  if (!activeTrials()[activeIndex()]) return;
 
   if (!buffers || buffers.lang !== settingsSnapshot.lang) {
     statusEl.textContent = `Loading audio for ${settingsSnapshot.lang}...`;
@@ -546,21 +575,32 @@ async function handlePlay() {
     try { await audioCtx.resume(); } catch {}
   }
 
-  const trial = trialList[trialIndex];
+  const trial = activeTrials()[activeIndex()];
+  trial.presentations = (trial.presentations || 0) + 1;
+  await checkpointRound();
+  if (paused || document.hidden) {
+    isPlaying = false;
+    setButtonBusy(playBtn, false);
+    playBtn.disabled = true;
+    return;
+  }
   playedAt = performance.now();
   const playback = await renderAndPlaySingleDigit({
     digit: trial.digit,
     snr: trial.snr,
     noiseGain: settingsSnapshot.noiseGain,
     ear: settingsSnapshot.ear,
+    audioPlan: settingsSnapshot.audioPlan,
   });
   playedEndedAt = performance.now();
 
   trial.effectiveSNR = playback.effectiveSNR;
   trial.limiterGain = playback.limiterGain;
+  trial.outputScale = playback.outputScale;
+  trial.effectiveNoiseGain = playback.effectiveNoiseGain;
   hasPlayedThisTrial = true;
-  statusEl.textContent = 'Enter the digit you heard.';
-  setResponseDisabled(false);
+  statusEl.textContent = paused ? 'Paused. Resume when ready.' : 'Enter the digit you heard.';
+  setResponseDisabled(paused);
   isPlaying = false;
   setButtonBusy(playBtn, false);
   playBtn.disabled = true;
@@ -577,6 +617,9 @@ async function playCurrentTrial(isAuto = false) {
     playBtn.disabled = false;
     setResponseDisabled(true);
     isPlaying = false;
+    paused = true;
+    pauseBtn.textContent = 'Resume';
+    playBtn.disabled = true;
   }
 }
 
@@ -676,6 +719,7 @@ function fitDigitPsychometric(statsBySnr, snrsInOrder, target) {
     maxObserved,
     inRange,
     bracketsTarget,
+    boundaryHit: best.x0 <= minSnr - 8 || best.x0 >= maxSnr + 8 || best.slope <= .0051 || best.slope >= .454,
     points,
   };
 }
@@ -699,7 +743,7 @@ function analyzeOptimization(summary, snrsInOrder, target) {
       ? fit.threshold - meanThreshold
       : null;
     corrections[digit] = correction;
-    correctionsArray[digit] = correction == null ? 0 : round(correction, 2);
+    correctionsArray[digit] = correction == null ? null : round(correction, 2);
   }
 
   return {
@@ -710,10 +754,10 @@ function analyzeOptimization(summary, snrsInOrder, target) {
     corrections,
     correctionsArray,
     warnings: DIGITS
-      .filter(d => fits[d].ok && (!fits[d].inRange || !fits[d].bracketsTarget))
+      .filter(d => fits[d].ok && (!fits[d].inRange || !fits[d].bracketsTarget || fits[d].boundaryHit))
       .map(d => ({
         digit: d,
-        reason: !fits[d].bracketsTarget ? 'target_not_bracketed' : 'threshold_extrapolated',
+        reason: !fits[d].bracketsTarget ? 'target_not_bracketed' : !fits[d].inRange ? 'threshold_extrapolated' : 'fit_boundary',
       })),
   };
 }
@@ -795,6 +839,8 @@ function buildFitTable(analysis) {
     const fit = analysis.fits[d];
     const flag = !fit.ok
       ? fit.reason
+      : fit.boundaryHit
+        ? 'fit boundary'
       : fit.bracketsTarget && fit.inRange
         ? 'ok'
         : fit.bracketsTarget
@@ -913,12 +959,12 @@ function renderAnalysisResults({ summary, analysis, settings, title, subtitle })
   nextRoundBtn.classList[isRound ? 'remove' : 'add']('hidden');
   restartBtn.textContent = isRound ? 'New participant' : 'Back to setup';
   saveStatus.textContent = '';
-  const allDigitsFitted = DIGITS.every(digit => latestAnalysis.fits[digit].ok);
-  correctionsOutput.textContent = allDigitsFitted
+  const correctionIssues = OptimizationProtocol.correctionIssues(settings, analysis);
+  correctionsOutput.textContent = !correctionIssues.length
     ? JSON.stringify(latestAnalysis.correctionsArray, null, 2)
-    : 'Corrections are incomplete. More observations are needed before exporting correction levels.';
-  downloadCorrectionsBtn.disabled = !allDigitsFitted;
-  copyCorrectionsBtn.disabled = !allDigitsFitted;
+    : correctionIssues.join('\n');
+  downloadCorrectionsBtn.disabled = Boolean(correctionIssues.length);
+  copyCorrectionsBtn.disabled = Boolean(correctionIssues.length);
   correctionTable.innerHTML = buildCorrectionTable(latestAnalysis);
   fitTable.innerHTML = buildFitTable(latestAnalysis);
   snrDigitTable.innerHTML = buildSnrDigitTable(summary, settings.snrs);
@@ -943,8 +989,8 @@ function showResults() {
   });
 }
 
-function handleSubmit() {
-  if (!trialList[trialIndex] || isPlaying || settingsSnapshot?.analysisLevel !== 'round') return;
+async function handleSubmit() {
+  if (!activeTrials()[activeIndex()] || isPlaying || paused || submitting || phase === 'ready' || phase === 'complete' || settingsSnapshot?.analysisLevel !== 'round') return;
   if (!hasPlayedThisTrial) {
     statusEl.textContent = 'Please play the stimulus first.';
     return;
@@ -955,14 +1001,16 @@ function handleSubmit() {
   }
   clearAutoPlayTimer();
   hasPlayedThisTrial = false;
+  submitting = true;
+  setResponseDisabled(true);
 
-  const trial = trialList[trialIndex];
+  const trial = activeTrials()[activeIndex()];
   const guess = Number(currentInput);
   const correct = guess === trial.digit;
   const rtMs = playedEndedAt != null ? Math.max(0, performance.now() - playedEndedAt) : null;
 
-  responses.push({
-    trial: trialIndex + 1,
+  const responseRow = {
+    trial: activeIndex() + 1,
     participantId: settingsSnapshot.participantId,
     roundId: settingsSnapshot.roundId,
     roundNumber: settingsSnapshot.roundNumber,
@@ -975,24 +1023,45 @@ function handleSubmit() {
     correct,
     rep: trial.rep,
     limiterGain: trial.limiterGain ?? null,
+    outputScale: settingsSnapshot.audioPlan.scale,
+    effectiveNoiseGain: settingsSnapshot.noiseGain * settingsSnapshot.audioPlan.scale,
+    playbackAttempts: trial.presentations || 1,
+    interrupted: Boolean(trial.interrupted),
+    phase,
     rtMs: rtMs != null ? Math.round(rtMs) : null,
     playedAtMs: playedAt != null ? Math.round(playedAt) : null,
-  });
-
-  trialIndex += 1;
-
-  if (trialIndex >= trialList.length) {
-    settingsSnapshot.completedAt = new Date().toISOString();
-    showResults();
-    downloadResultsJson();
-    return;
-  }
-
-  prepareForNextTrial();
-  if (settingsSnapshot.autoPlay) {
-    scheduleAutoPlay('Next trial');
+  };
+  if (phase === 'practice') {
+    practiceResponses.push(responseRow);
+    practiceIndex++;
+    if (practiceIndex === practiceTrials.length) phase = 'ready';
   } else {
-    statusEl.textContent = 'Ready for the next trial.';
+    responses.push(responseRow);
+    trialIndex++;
+    if (trialIndex === trialList.length) {
+      phase = 'complete';
+      settingsSnapshot.completedAt = new Date().toISOString();
+    }
+  }
+  try {
+    await checkpointRound();
+    if (phase === 'complete') {
+      showResults();
+      await checkpointRound();
+      downloadResultsJson();
+    } else if (paused) {
+      statusEl.textContent = 'Paused. Resume when ready.';
+    } else if (phase === 'ready') {
+      showPracticeComplete();
+    } else {
+      prepareForNextTrial();
+      if (settingsSnapshot.autoPlay) scheduleAutoPlay('Next trial');
+      else statusEl.textContent = 'Ready for the next trial.';
+    }
+  } catch {
+    if (phase === 'complete') { showResults(); downloadResultsJson(); }
+  } finally {
+    submitting = false;
   }
 }
 
@@ -1004,6 +1073,11 @@ function readSetupSettings() {
   const targetPct = Number(targetPctEl.value);
   const autoPlayDelayMs = getAutoPlayDelayMs();
   const lang = stimLangEl.value;
+  if (profileInvalid) { setSetupMessage('Invalid study link. Return to researcher setup before testing.', true); return null; }
+  const minimumParticipants = Number(document.getElementById('minimumParticipants').value);
+  if (!Number.isInteger(minimumParticipants) || minimumParticipants < 2 || minimumParticipants > 200) {
+    setSetupMessage('Planned participants must be an integer from 2 to 200.', true); return null;
+  }
 
   if (!participantIdEl.value.trim()) {
     setSetupMessage('Enter a participant ID.', true);
@@ -1017,7 +1091,7 @@ function readSetupSettings() {
   }
 
   if (!snrs) {
-    setSetupMessage('Invalid SNR list. Example: -2,-4,-6,-8,-10,-12,-14,-16,-18,-20', true);
+    setSetupMessage('Invalid SNR list. Use unique comma-separated numbers from -40 to +10 dB, with no empty entries.', true);
     return;
   }
   if (!Number.isInteger(roundNumber) || roundNumber < 1 || roundNumber > 9999) {
@@ -1036,7 +1110,12 @@ function readSetupSettings() {
   const sortedSnrs = snrs.slice().sort((a, b) => b - a);
   return {
     analysisLevel: 'round',
-    protocolVersion: 'single-round-v1',
+    protocolVersion: 'single-round-v3',
+    audioEngine: OptimizationProtocol.ENGINE,
+    studyId: document.getElementById('studyId').value.trim() || null,
+    studyProfile: lockedProfile,
+    minimumParticipants,
+    practiceEnabled: document.getElementById('practiceEnabled').checked,
     participantId: participantIdEl.value.trim(),
     ear,
     roundNumber,
@@ -1057,8 +1136,9 @@ async function openCalibration() {
   stopCalibrationNoise();
   clearAutoPlayTimer();
   setSetupMessage('');
-  pendingSettings = readSetupSettings();
+  pendingSettings = resumeRecord ? structuredClone(resumeRecord.payload.settings) : readSetupSettings();
   if (!pendingSettings) return;
+  const openingSettings = pendingSettings;
 
   calibrationPlayed = false;
   channelConfirmedEl.checked = false;
@@ -1068,8 +1148,8 @@ async function openCalibration() {
   document.getElementById('channelConfirmationLabel').textContent = pendingSettings.ear === 'both'
     ? 'I hear the noise in both ears.'
     : `I hear the noise only in my ${pendingSettings.ear} ear; the other ear is silent.`;
-  const storedGain = getStoredCalibrationGain(pendingSettings.lang, pendingSettings.ear);
-  updateCalibrationGain(storedGain ?? pendingSettings.noiseGain);
+  calibrationGainEl.disabled = Boolean(resumeRecord);
+  updateCalibrationGain(resumeRecord ? pendingSettings.noiseGain : (getStoredCalibrationGain(pendingSettings.lang, pendingSettings.ear) ?? pendingSettings.noiseGain));
 
   setupCard.classList.add('hidden');
   resultsCard.classList.add('hidden');
@@ -1085,7 +1165,13 @@ async function openCalibration() {
     if (!buffers || buffers.lang !== pendingSettings.lang) {
       await loadAudio(pendingSettings.lang);
     }
-    setCalibrationMessage('Play the noise and adjust the masker level. This value will be fixed for the test.');
+    if (pendingSettings !== openingSettings) return;
+    pendingSettings.audioPlan = planAudio(pendingSettings);
+    pendingSettings.audioFingerprint = buffers.fingerprint;
+    await OptimizationArchive.list();
+    setCalibrationMessage(resumeRecord
+      ? 'Resuming with the saved masker gain. Keep the same headphones and device volume, and confirm the selected ear again.'
+      : 'Play the noise and adjust the masker level. This value will be fixed for the test.');
     setButtonBusy(calibrationConfirmBtn, false);
     calibrationConfirmBtn.disabled = true;
     setButtonBusy(calibrationPlayBtn, false);
@@ -1098,7 +1184,7 @@ async function openCalibration() {
   }
 }
 
-function beginExperiment(settings) {
+async function beginExperiment(settings) {
   if (!buffers || buffers.lang !== settings.lang) throw new Error('The selected stimulus is not loaded. Return to calibration.');
   if (VERSIONED_STIMULI[settings.lang] && !buffers.stimulus) throw new Error('Verified stimulus information is missing.');
   if (!Object.hasOwn(EAR_LABELS, settings.ear)) throw new Error('Select the ear for this round.');
@@ -1107,6 +1193,7 @@ function beginExperiment(settings) {
     ...settings,
     reps: 1,
     roundId: crypto.randomUUID(),
+    audioFingerprint: buffers.fingerprint,
     stimulus: buffers.stimulus || null,
     audioContextSampleRateHz: audioCtx.sampleRate,
     startedAt: new Date().toISOString(),
@@ -1121,6 +1208,15 @@ function beginExperiment(settings) {
   playedAt = null;
   playedEndedAt = null;
   latestAnalysis = null;
+  paused = false;
+  practiceIndex = 0;
+  practiceResponses = [];
+  practiceTrials = settings.practiceEnabled ? shuffle(DIGITS).slice(0, 3).map(digit => ({ digit, snr: 0, rep: 0 })) : [];
+  phase = practiceTrials.length ? 'practice' : 'formal';
+  pauseBtn.textContent = 'Pause';
+  formalStartBtn.classList.add('hidden');
+  formalStartBtn.disabled = false;
+  await checkpointRound();
 
   setupCard.classList.add('hidden');
   calibrationCard.classList.add('hidden');
@@ -1159,7 +1255,12 @@ function normalizeImportedResponses(payload, sourceName) {
       !Object.hasOwn(EAR_LABELS, settings.ear) || !Number.isInteger(settings.roundNumber) || settings.roundNumber < 1)) {
     throw new Error(`${sourceName}: incomplete round identity`);
   }
+  if (payload.schemaVersion >= 3 && settings.analysisLevel === 'round' &&
+      (!settings.completedAt || payload.nCompleted !== payload.nTrials || rawRows.length !== payload.nTrials)) {
+    throw new Error(`${sourceName}: incomplete round. Resume the local backup before group analysis.`);
+  }
   return rawRows.map((row, index) => {
+    if (row.phase && row.phase !== 'formal') throw new Error(`${sourceName}: practice data cannot enter formal analysis.`);
     const snr = Number(row.snr);
     const target = Number(row.target ?? row.digit);
     const response = Number(row.response);
@@ -1184,6 +1285,11 @@ function normalizeImportedResponses(payload, sourceName) {
       effectiveSNR: row.effectiveSNR ?? null,
       noiseGain: row.noiseGain ?? settings.noiseGain ?? null,
       limiterGain: row.limiterGain ?? null,
+      outputScale: row.outputScale ?? settings.audioPlan?.scale ?? null,
+      effectiveNoiseGain: row.effectiveNoiseGain ?? null,
+      interrupted: Boolean(row.interrupted),
+      playbackAttempts: row.playbackAttempts ?? null,
+      phase: row.phase || 'formal',
       target,
       response: Number.isFinite(response) ? response : null,
       correct,
@@ -1265,7 +1371,14 @@ function validateGroupMaterials(settingsList) {
   if (new Set(identities).size !== 1) {
     throw new Error('Different languages, voices, or stimulus versions cannot be pooled. Analyze Spanish male and female separately.');
   }
-  return { lang: settingsList[0].lang || 'unknown', stimulus: settingsList[0].stimulus || null };
+  const protocolKey = settings => settings.collectionProtocolKey || (settings.audioEngine
+    ? JSON.stringify([settings.audioEngine, settings.audioFingerprint, settings.studyId || null, settings.snrs, settings.trialOrder, Boolean(settings.practiceEnabled)])
+    : 'legacy');
+  const protocols = settingsList.map(protocolKey);
+  if (new Set(protocols).size !== 1) throw new Error('Different playback protocols, study IDs, audio fingerprints, or collection settings cannot be pooled. Analyze these datasets separately.');
+  return { lang: settingsList[0].lang || 'unknown', stimulus: settingsList[0].stimulus || null,
+    audioEngine: settingsList[0].audioEngine || null, audioFingerprint: settingsList[0].audioFingerprint || null,
+    studyId: settingsList[0].studyId || null, collectionProtocolKey: protocols[0] };
 }
 
 async function analyzeGroupJsonFiles() {
@@ -1277,6 +1390,10 @@ async function analyzeGroupJsonFiles() {
   }
 
   const targetPct = Number(targetPctEl.value);
+  const minimumParticipants = Number(document.getElementById('minimumParticipants').value);
+  if (!Number.isInteger(minimumParticipants) || minimumParticipants < 2 || minimumParticipants > 200) {
+    groupMsg.textContent = 'Planned participant count must be an integer from 2 to 200.'; return;
+  }
   if (!Number.isFinite(targetPct) || targetPct <= CHANCE_LEVEL * 100 || targetPct >= 100) {
     groupMsg.textContent = `Target must be greater than chance (${Math.round(CHANCE_LEVEL * 100)}%) and less than 100%.`;
     groupMsg.style.color = '#b91c1c';
@@ -1299,6 +1416,11 @@ async function analyzeGroupJsonFiles() {
       participantId: 'group-analysis',
       lang: groupMaterial.lang,
       stimulus: groupMaterial.stimulus,
+      audioEngine: groupMaterial.audioEngine,
+      audioFingerprint: groupMaterial.audioFingerprint,
+      studyId: groupMaterial.studyId,
+      collectionProtocolKey: groupMaterial.collectionProtocolKey,
+      minimumParticipants,
       preset: 'group-import',
       snrs,
       reps: null,
@@ -1317,6 +1439,7 @@ async function analyzeGroupJsonFiles() {
 
     responses = imported;
     trialList = [];
+    practiceResponses = [];
     const summary = summarize(responses, snrs);
     const analysis = analyzeOptimization(summary, snrs, groupSettings.targetProbability);
     renderAnalysisResults({
@@ -1327,8 +1450,8 @@ async function analyzeGroupJsonFiles() {
       subtitle: `${stimulusLabel(groupSettings.lang)}${groupSettings.stimulus ? ` | ${groupSettings.stimulus.version}` : ''} | ${scope}. ${imported.length} trials from ${participants.length} participant IDs; ${groupSettings.groupNRounds} identified rounds. ${excluded} trials excluded by ear selection. Legacy recordings may not have round IDs.`,
     });
 
-    const participantNote = participants.length < 20
-      ? ` Loaded ${participants.length}; final optimization usually targets about 20 normal-hearing listeners.`
+    const participantNote = participants.length < minimumParticipants
+      ? ` Loaded ${participants.length}; this analysis plan requires ${minimumParticipants} participant IDs.`
       : '';
     groupMsg.textContent = `Loaded ${files.length} JSON file(s), ${imported.length} responses; ${excluded} excluded by ear selection.${participantNote}`;
     groupMsg.style.color = '#5f666d';
@@ -1379,6 +1502,7 @@ preloadBtn.addEventListener('click', async () => {
     setButtonBusy(preloadBtn, false);
     startBtn.disabled = false;
     stimLangEl.disabled = false;
+    if (lockedProfile) setProfileLock(lockedProfile);
   }
 });
 
@@ -1408,6 +1532,7 @@ calibrationBackBtn.addEventListener('click', () => {
   calibrationCard.classList.add('hidden');
   setupCard.classList.remove('hidden');
   pendingSettings = null;
+  resumeRecord = null;
   setSetupMessage('Calibration cancelled. Adjust setup if needed.');
 });
 calibrationGainEl.addEventListener('input', (e) => {
@@ -1446,6 +1571,9 @@ calibrationConfirmBtn.addEventListener('click', async () => {
         ear: pendingSettings.ear,
         channelConfirmed: true,
         outputChannels: 2,
+        outputScale: pendingSettings.audioPlan.scale,
+        effectiveNoiseGain: gain * pendingSettings.audioPlan.scale,
+        audioEngine: OptimizationProtocol.ENGINE,
         calibratedAt,
         note: 'User-adjusted level for this ear and round; not a measured dBA calibration.',
       },
@@ -1454,7 +1582,8 @@ calibrationConfirmBtn.addEventListener('click', async () => {
     if (audioCtx.state !== 'running') {
       try { await audioCtx.resume(); } catch {}
     }
-    beginExperiment(calibratedSettings);
+    if (resumeRecord) await restoreExperiment(calibratedSettings);
+    else await beginExperiment(calibratedSettings);
   } catch (err) {
     console.error(err);
     setCalibrationMessage(`Could not start the test: ${err.message || err}`, true);
@@ -1472,7 +1601,7 @@ keypad.addEventListener('click', (e) => {
 });
 
 document.addEventListener('keydown', (e) => {
-  if (taskCard.classList.contains('hidden')) return;
+  if (taskCard.classList.contains('hidden') || paused || submitting || phase === 'ready') return;
   if (e.key >= '0' && e.key <= '9' && !submitBtn.disabled) {
     appendInput(e.key);
   } else if (e.key === 'Backspace' && !clearBtn.disabled) {
@@ -1512,20 +1641,239 @@ downloadCsvBtn.addEventListener('click', () => {
 
 function resultsPayload() {
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     settings: settingsSnapshot,
     nTrials: trialList.length || responses.length,
     nCompleted: responses.length,
     responses,
+    practiceResponses,
     analysis: latestAnalysis,
+    correctionExport: latestAnalysis ? (() => {
+      const issues = OptimizationProtocol.correctionIssues(settingsSnapshot, latestAnalysis);
+      return { eligible: issues.length === 0, issues };
+    })() : null,
     exportedAt: new Date().toISOString(),
   };
+}
+
+async function checkpointRound() {
+  const record = structuredClone({ id: settingsSnapshot.roundId, updatedAt: new Date().toISOString(),
+    completed: Boolean(settingsSnapshot.completedAt), payload: resultsPayload(),
+    trialList, trialIndex, practiceTrials, practiceIndex, phase });
+  archiveQueue = archiveQueue.catch(() => {}).then(() => OptimizationArchive.put(record));
+  try {
+    await archiveQueue;
+    archiveError = false;
+    checkpointStatus.textContent = `Local backup: ${responses.length} / ${trialList.length} formal responses.`;
+  } catch (error) {
+    archiveError = true;
+    paused = true;
+    clearAutoPlayTimer();
+    setResponseDisabled(true);
+    playBtn.disabled = true;
+    pauseBtn.textContent = 'Retry backup and resume';
+    checkpointStatus.textContent = 'Local backup failed. Keep this page open. Free browser storage, then retry.';
+    throw error;
+  }
+}
+
+function showPracticeComplete() {
+  clearAutoPlayTimer();
+  statusEl.textContent = `Practice complete: ${practiceResponses.filter(row => row.correct).length} / ${practiceResponses.length} correct. Take a break before the formal round.`;
+  setResponseDisabled(true);
+  playBtn.disabled = true;
+  formalStartBtn.classList.remove('hidden');
+}
+
+formalStartBtn.addEventListener('click', async () => {
+  if (phase !== 'ready' || paused || submitting) return;
+  phase = 'formal';
+  formalStartBtn.classList.add('hidden');
+  try {
+    await checkpointRound();
+    prepareForNextTrial();
+    if (settingsSnapshot.autoPlay) scheduleAutoPlay('First formal trial');
+  } catch { /* checkpointRound keeps the round paused until storage recovers. */ }
+});
+
+function pauseRound(interrupted = false) {
+  if (!settingsSnapshot || phase === 'complete') return;
+  paused = true;
+  clearAutoPlayTimer();
+  if (interrupted && isPlaying) {
+    const trial = activeTrials()[activeIndex()];
+    trial.interrupted = true;
+    trial.needsReplay = true;
+  }
+  setResponseDisabled(true);
+  playBtn.disabled = true;
+  formalStartBtn.disabled = true;
+  pauseBtn.textContent = 'Resume';
+  statusEl.textContent = isPlaying ? 'Audio will finish; the round is paused.' : 'Paused. Resume when ready.';
+}
+
+pauseBtn.addEventListener('click', async () => {
+  if (!paused) { pauseRound(); return; }
+  if (isPlaying || submitting) return;
+  try {
+    await checkpointRound();
+    paused = false;
+    pauseBtn.textContent = 'Pause';
+    formalStartBtn.disabled = false;
+    if (phase === 'complete') { showResults(); return; }
+    if (phase === 'ready') { showPracticeComplete(); return; }
+    const trial = activeTrials()[activeIndex()];
+    if (trial.needsReplay) {
+      trial.needsReplay = false;
+      prepareForNextTrial();
+      statusEl.textContent = 'Interrupted audio. Play this trial again; the interruption is recorded.';
+    } else if (hasPlayedThisTrial) {
+      setResponseDisabled(false);
+      statusEl.textContent = 'Enter the digit you heard.';
+    } else {
+      prepareForNextTrial();
+      if (settingsSnapshot.autoPlay) scheduleAutoPlay('Resuming');
+    }
+  } catch { /* Keep the recovery controls available. */ }
+});
+
+async function refreshArchive() {
+  const status = document.getElementById('archiveStatus');
+  try {
+    const records = (await OptimizationArchive.list()).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    document.getElementById('archiveList').innerHTML = records.length
+      ? '<table><thead><tr><th>Participant</th><th>Voice / ear</th><th>Round</th><th>Progress</th><th>Actions</th></tr></thead><tbody>' + records.map(record => {
+        const settings = record.payload.settings;
+        return `<tr><td>${escapeHtml(settings.participantId)}</td><td>${escapeHtml(stimulusLabel(settings.lang))} / ${escapeHtml(EAR_LABELS[settings.ear])}</td><td>${escapeHtml(settings.roundNumber)}</td><td>${record.completed ? 'Complete' : 'Interrupted'}: ${record.payload.nCompleted} / ${record.trialList.length}</td><td><button data-archive="download" data-id="${escapeHtml(record.id)}">Download JSON</button> ${record.completed ? '' : `<button data-archive="resume" data-id="${escapeHtml(record.id)}">Resume</button>`} <button data-archive="delete" data-id="${escapeHtml(record.id)}">Delete local copy</button></td></tr>`;
+      }).join('') + '</tbody></table>' : '';
+    status.textContent = `${records.length} locally backed-up round(s).`;
+  } catch {
+    status.textContent = 'Local archive unavailable. Browser storage is required before starting a round.';
+  }
+}
+
+function fillSetup(settings) {
+  participantIdEl.value = settings.participantId || '';
+  stimLangEl.value = settings.lang;
+  earEl.value = settings.ear || '';
+  roundNumberEl.value = String(settings.roundNumber || 1);
+  snrListEl.value = settings.snrs.join(',');
+  orderEl.value = settings.trialOrder;
+  targetPctEl.value = String(settings.targetProbability * 100);
+  document.getElementById('studyId').value = settings.studyId || '';
+  document.getElementById('minimumParticipants').value = String(settings.minimumParticipants || 20);
+  document.getElementById('practiceEnabled').checked = Boolean(settings.practiceEnabled);
+  autoPlayEl.checked = Boolean(settings.autoPlay);
+  autoPlayDelayEl.value = String(settings.autoPlayDelayMs || 800);
+  presetEl.value = 'custom';
+  updateStimulusInfo();
+  updateTrialCount();
+}
+
+document.getElementById('refreshArchive').addEventListener('click', refreshArchive);
+document.getElementById('archiveList').addEventListener('click', async event => {
+  const button = event.target.closest('button[data-archive]');
+  if (!button) return;
+  try {
+    const record = await OptimizationArchive.get(button.dataset.id);
+    if (!record) throw new Error('This local round is no longer available.');
+    if (button.dataset.archive === 'download') {
+      downloadFile(`digit-optimization-${record.id}.json`, JSON.stringify(record.payload, null, 2), 'application/json;charset=utf-8');
+    } else if (button.dataset.archive === 'delete') {
+      if (window.confirm('Delete this browser copy? Downloaded files will not be removed.')) await OptimizationArchive.remove(record.id);
+      await refreshArchive();
+    } else {
+      if (record.completed || record.payload.schemaVersion !== 3 || record.payload.settings.audioEngine !== OptimizationProtocol.ENGINE || record.trialIndex !== record.payload.responses.length) throw new Error('This recording cannot be resumed. Download its JSON instead.');
+      if (lockedProfile && !OptimizationProtocol.matchesProfile(lockedProfile, record.payload.settings)) throw new Error('This round uses a different study configuration. Return to researcher setup first.');
+      resumeRecord = record;
+      fillSetup(record.payload.settings);
+      await openCalibration();
+    }
+  } catch (error) { setSetupMessage(error.message, true); }
+});
+
+async function restoreExperiment(calibratedSettings) {
+  const saved = structuredClone(resumeRecord);
+  settingsSnapshot = structuredClone(saved.payload.settings);
+  settingsSnapshot.resumeEvents = [...(settingsSnapshot.resumeEvents || []), { at: new Date().toISOString(), completedTrials: saved.trialIndex, earConfirmed: calibratedSettings.calibration.channelConfirmed }];
+  trialList = saved.trialList;
+  trialIndex = saved.trialIndex;
+  responses = saved.payload.responses;
+  practiceTrials = saved.practiceTrials;
+  practiceIndex = saved.practiceIndex;
+  practiceResponses = saved.payload.practiceResponses || [];
+  phase = saved.phase;
+  const trial = activeTrials()[activeIndex()];
+  if (trial?.presentations) trial.interrupted = true;
+  isPlaying = false;
+  paused = false;
+  hasPlayedThisTrial = false;
+  latestAnalysis = null;
+  formalStartBtn.classList.add('hidden');
+  formalStartBtn.disabled = false;
+  pauseBtn.textContent = 'Pause';
+  await checkpointRound();
+  resumeRecord = null;
+  setupCard.classList.add('hidden');
+  calibrationCard.classList.add('hidden');
+  resultsCard.classList.add('hidden');
+  taskCard.classList.remove('hidden');
+  if (phase === 'ready') showPracticeComplete();
+  else {
+    prepareForNextTrial();
+    statusEl.textContent = trial?.interrupted ? 'Recovered round. Replay the interrupted trial; it will be flagged.' : 'Recovered round. Press Play when ready.';
+  }
+}
+
+const profileControls = ['studyId', 'stimLang', 'designPreset', 'snrList', 'trialOrder', 'targetPct', 'minimumParticipants', 'practiceEnabled', 'autoPlay', 'autoPlayDelay', 'showSnr'];
+function setProfileLock(profile) {
+  lockedProfile = profile;
+  profileControls.forEach(id => { document.getElementById(id).disabled = Boolean(profile); });
+  document.getElementById('unlockStudy').classList[profile ? 'remove' : 'add']('hidden');
+  document.getElementById('studyStatus').textContent = profile ? `Study ${profile.studyId}: configuration locked.` : 'Researcher setup';
+}
+document.getElementById('createStudyLink').addEventListener('click', () => {
+  try {
+    const profile = OptimizationProtocol.validateProfile({ version: 1, studyId: document.getElementById('studyId').value.trim(), lang: stimLangEl.value,
+      snrs: parseSNRList(snrListEl.value), trialOrder: orderEl.value, targetProbability: Number(targetPctEl.value) / 100,
+      minimumParticipants: Number(document.getElementById('minimumParticipants').value), practiceEnabled: document.getElementById('practiceEnabled').checked,
+      autoPlay: autoPlayEl.checked, autoPlayDelayMs: getAutoPlayDelayMs() });
+    const url = new URL(window.location.href);
+    url.search = '';
+    url.hash = '';
+    url.searchParams.set('study', btoa(JSON.stringify(profile)));
+    document.getElementById('studyLink').value = url.href;
+    document.getElementById('studyLinkLabel').classList.remove('hidden');
+    document.getElementById('studyStatus').textContent = 'Study link ready. Participant ID, round and ear remain selectable.';
+  } catch (error) { document.getElementById('studyStatus').textContent = `${error.message} Set a study ID and at least three SNR levels.`; }
+});
+document.getElementById('unlockStudy').addEventListener('click', () => {
+  profileInvalid = false;
+  setProfileLock(null);
+  const url = new URL(window.location.href);
+  url.searchParams.delete('study');
+  history.replaceState(null, '', url);
+});
+function loadStudyLink() {
+  const encoded = new URL(window.location.href).searchParams.get('study');
+  if (!encoded) return;
+  try {
+    const profile = OptimizationProtocol.validateProfile(JSON.parse(atob(encoded)));
+    fillSetup(profile);
+    showSnrEl.checked = false;
+    setProfileLock(profile);
+  } catch {
+    profileInvalid = true;
+    document.getElementById('unlockStudy').classList.remove('hidden');
+    document.getElementById('studyStatus').textContent = 'Invalid study link. No study settings were applied.';
+  }
 }
 
 function downloadResultsJson() {
   try {
     downloadFile(exportFilename('results', 'json'), JSON.stringify(resultsPayload(), null, 2), 'application/json;charset=utf-8');
-    saveStatus.textContent = 'JSON download requested. Check your Downloads folder; Download full JSON remains available. Results are not uploaded to a server.';
+    const backupNote = settingsSnapshot.analysisLevel === 'round' ? (archiveError ? 'Local backup failed. ' : 'Local browser backup available. ') : '';
+    saveStatus.textContent = `${backupNote}JSON download requested. Confirm it in Downloads. Results are not uploaded to a server.`;
     saveStatus.style.color = '#5f666d';
   } catch {
     saveStatus.textContent = 'Download could not start. Keep this page open and retry Download full JSON.';
@@ -1535,10 +1883,12 @@ function downloadResultsJson() {
 downloadJsonBtn.addEventListener('click', downloadResultsJson);
 
 downloadCorrectionsBtn.addEventListener('click', () => {
+  if (OptimizationProtocol.correctionIssues(settingsSnapshot, latestAnalysis).length) return;
   downloadFile(`${settingsSnapshot.lang}-corrections.json`, JSON.stringify(latestAnalysis.correctionsArray, null, 2), 'application/json;charset=utf-8');
 });
 
 copyCorrectionsBtn.addEventListener('click', async () => {
+  if (OptimizationProtocol.correctionIssues(settingsSnapshot, latestAnalysis).length) return;
   const text = JSON.stringify(latestAnalysis.correctionsArray);
   try {
     await navigator.clipboard.writeText(text);
@@ -1558,6 +1908,7 @@ function returnToSetup() {
   setupCard.classList.remove('hidden');
   setSetupMessage('');
   updateTrialCount();
+  refreshArchive();
 }
 
 nextRoundBtn.addEventListener('click', () => {
@@ -1582,6 +1933,9 @@ window.addEventListener('pagehide', () => {
   clearAutoPlayTimer();
   stopCalibrationNoise();
 });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && !taskCard.classList.contains('hidden')) pauseRound(true);
+});
 window.addEventListener('beforeunload', event => {
   if (settingsSnapshot?.analysisLevel === 'round' && responses.length && !settingsSnapshot.completedAt) {
     event.preventDefault();
@@ -1595,3 +1949,5 @@ stimLangEl.addEventListener('change', () => {
 });
 updateStimulusInfo();
 updateTrialCount();
+loadStudyLink();
+refreshArchive();

@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Digit Optimization Test</title>
-  <link rel="stylesheet" href="styles.css?v=20261005-ear-rounds-v1" />
+  <link rel="stylesheet" href="styles.css?v=20261008-research-v1" />
 </head>
 <body>
   <header class="topbar">
@@ -31,6 +31,7 @@
       </div>
 
       <div class="grid">
+        <label>Study ID<input id="studyId" type="text" placeholder="e.g. Spanish-2026" maxlength="60" /></label>
         <label>
           Participant ID
           <input id="participantId" type="text" placeholder="Participant ID" required />
@@ -84,9 +85,14 @@
         </label>
 
         <label>
-          Correction target (% correct)
-          <input id="targetPct" type="number" min="11" max="99" step="1" value="50" />
+          Correction target
+          <select id="targetPct">
+            <option value="50" selected>50% correct</option>
+            <option value="55">55% correct (curve midpoint)</option>
+          </select>
         </label>
+        <label>Planned participants per voice<input id="minimumParticipants" type="number" min="2" max="200" value="20" /></label>
+        <label class="check"><input id="practiceEnabled" type="checkbox" checked /><span>Three practice trials</span></label>
 
         <label>
           Initial masker gain
@@ -117,6 +123,20 @@
       </div>
 
       <p id="setupMsg" class="note"></p>
+      <div class="row">
+        <button id="createStudyLink" class="secondary">Create study link</button>
+        <button id="unlockStudy" class="secondary hidden">Return to researcher setup</button>
+      </div>
+      <p id="studyStatus" class="note" role="status"></p>
+      <label id="studyLinkLabel" class="hidden">Study link<input id="studyLink" type="url" readonly /></label>
+
+      <div class="groupPanel">
+        <h3>Local round archive</h3>
+        <p class="note">Stored on this browser only, not on the server. Use participant codes, not names. Keep downloaded JSON backups; clearing browser data removes this archive.</p>
+        <div id="archiveStatus" class="note" role="status"></div>
+        <div id="archiveList" class="tableWrap"></div>
+        <button id="refreshArchive" class="secondary">Refresh archive</button>
+      </div>
 
       <div class="groupPanel">
         <div>
@@ -202,7 +222,10 @@
 
       <div class="row">
         <button id="playBtn" class="primary">Play</button>
+        <button id="pauseBtn" class="secondary">Pause</button>
+        <button id="formalStartBtn" class="primary hidden">Start formal round</button>
       </div>
+      <p id="checkpointStatus" class="note" role="status"></p>
 
       <div class="display" id="inputDisplay" aria-live="polite"></div>
 
@@ -255,6 +278,8 @@
     </section>
   </main>
 
-  <script src="app.js?v=20261005-ear-rounds-v1"></script>
+  <script src="protocol.js?v=20261008-research-v1"></script>
+  <script src="archive.js?v=20261008-research-v1"></script>
+  <script src="app.js?v=20261008-research-v1"></script>
 </body>
 </html>

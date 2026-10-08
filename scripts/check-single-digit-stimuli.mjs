@@ -22,10 +22,12 @@ function element(id) {
   return elements.get(id);
 }
 for (const [id, value] of Object.entries({ stimLang: 'taiwanese', snrList: '-4,-8', roundNumber: '1', testEar: 'right', groupEarScope: 'auto',
-  noiseGain: '1', targetPct: '50', autoPlayDelay: '800', participantId: '', trialOrder: 'random' })) element(id).value = value;
+  noiseGain: '1', targetPct: '50', minimumParticipants: '20', autoPlayDelay: '800', participantId: '', trialOrder: 'random' })) element(id).value = value;
 let corrupt = false;
 const requests = [];
 const playedBuffers = [];
+const archiveRecords = new Map();
+let failArchive = false;
 function audioBuffer(channels, length, sampleRate) {
   const data = Array.from({ length: channels }, () => new Float32Array(length));
   return { length, sampleRate, numberOfChannels: channels,
@@ -34,7 +36,14 @@ function audioBuffer(channels, length, sampleRate) {
   };
 }
 const context = vm.createContext({
-  console, TextDecoder, Uint8Array, ArrayBuffer, Float32Array, performance, setTimeout, clearTimeout,
+  console, TextDecoder, TextEncoder, Uint8Array, ArrayBuffer, Float32Array, performance, setTimeout, clearTimeout, structuredClone, URL, btoa, atob,
+  location: { href: 'https://neurahear.com/tools/single-digit-in-noise-test/' },
+  history: { replaceState() {} },
+  OptimizationArchive: {
+    async put(record) { if (failArchive) throw new Error('quota'); archiveRecords.set(record.id, structuredClone(record)); },
+    async get(id) { return structuredClone(archiveRecords.get(id)); },
+    async list() { return [...archiveRecords.values()]; },
+  },
   crypto: webcrypto,
   addEventListener() {},
   AudioContext: class {
@@ -60,8 +69,10 @@ const context = vm.createContext({
   },
 });
 context.window = context;
+vm.runInContext(fs.readFileSync(`${root}/protocol.js`, 'utf8'), context);
 vm.runInContext(fs.readFileSync(`${root}/app.js`, 'utf8'), context);
 const run = code => vm.runInContext(code, context);
+context.unitPlan = { engine: run('OptimizationProtocol.ENGINE'), scale: 1, maxSnr: 0 };
 
 for (const voice of ['male', 'female']) {
   const folder = `${root}/audio/spanish_${voice}/fir-20261005-v1`;
@@ -121,7 +132,7 @@ element('testEar').value = 'right';
 element('roundNumber').value = '0';
 assert.equal(run('readSetupSettings()'), null);
 element('roundNumber').value = '1';
-run('beginExperiment(readSetupSettings())');
+await run('beginExperiment({...readSetupSettings(), audioPlan: unitPlan})');
 assert.equal(run('settingsSnapshot.stimulus.voice'), 'female');
 assert.equal(run('settingsSnapshot.audioContextSampleRateHz'), 48000);
 assert.equal(run('trialList.length'), 20);
@@ -150,7 +161,7 @@ await element('downloadJson').listeners.click();
 assert.ok(context.lastDownload.name.includes('spanish_female-P001-'));
 assert.equal(JSON.parse(context.lastDownload.content).settings.stimulus.manifestSha256, settings.stimulus.manifestSha256);
 assert.notEqual(run(`calibrationStorageKey('spanish_male')`), run(`calibrationStorageKey('spanish_female')`));
-assert.equal(run(`calibrationStorageKey('mandarin')`), 'digitOptimizationNoiseGain:mandarin');
+assert.match(run(`calibrationStorageKey('mandarin')`), /fixed-noise-headroom-v1:mandarin/);
 assert.equal(run(`normalizeImportedResponses({settings:{participantId:'group-analysis'},responses:[{snr:-10,target:1,response:1,participantId:'P003'}]},'group.json')[0].participantId`), 'P003');
 assert.equal(run('buildTrials([-2,-4], 2, "random").length'), 40);
 assert.notEqual(run(`calibrationStorageKey('spanish_male', 'left')`), run(`calibrationStorageKey('spanish_male', 'right')`));
@@ -185,10 +196,10 @@ const signal = audioBuffer(1, 400, 1000);
 signal.getChannelData(0).fill(.05);
 const noise = audioBuffer(1, 2000, 1000);
 noise.getChannelData(0).fill(.025);
-context.testBuffers = { lang: 'taiwanese', stimulus: null, digitBuffers: Array(10).fill(signal), noiseBuffer: noise };
+context.testBuffers = { lang: 'taiwanese', stimulus: null, fingerprint: 'unit-fingerprint', digitBuffers: Array(10).fill(signal), noiseBuffer: noise };
 run('buffers = testBuffers');
 for (const ear of ['left', 'right', 'both']) {
-  const result = await run(`renderAndPlaySingleDigit({digit: 0, snr: -8, noiseGain: 1, ear: '${ear}'})`);
+  const result = await run(`renderAndPlaySingleDigit({digit: 0, snr: -8, noiseGain: 1, ear: '${ear}', audioPlan: unitPlan})`);
   assert.equal(result.effectiveSNR, -8);
   assert.equal(result.limiterGain, 1);
   const out = playedBuffers.at(-1);
@@ -200,7 +211,7 @@ for (const ear of ['left', 'right', 'both']) {
   if (ear === 'both') assert.deepEqual(active, out.getChannelData(1));
   else assert.ok(out.getChannelData(1 - activeChannel).every(value => value === 0));
 
-  context.calibrationSettings = { lang: 'taiwanese', ear };
+  context.calibrationSettings = { lang: 'taiwanese', ear, audioPlan: context.unitPlan };
   run('pendingSettings = calibrationSettings');
   element('calibrationGain').value = '1';
   await run('startCalibrationNoise()');
@@ -218,14 +229,16 @@ assert.equal(element('calibrationConfirmBtn').disabled, false);
 
 element('stimLang').value = 'taiwanese';
 element('snrList').value = '-8';
-run('beginExperiment(readSetupSettings())');
+await run('beginExperiment({...readSetupSettings(), audioPlan: unitPlan})');
 const firstRoundId = run('settingsSnapshot.roundId');
 for (let i = 0; i < 10; i++) {
-  run('hasPlayedThisTrial = true; currentInput = String(trialList[trialIndex].digit); handleSubmit()');
+  await run('hasPlayedThisTrial = true; currentInput = String(trialList[trialIndex].digit); handleSubmit()');
 }
 const completed = JSON.parse(context.lastDownload.content);
 assert.equal(completed.nCompleted, 10);
-assert.equal(completed.schemaVersion, 2);
+assert.equal(completed.schemaVersion, 3);
+assert.equal(completed.correctionExport.eligible, false);
+assert.ok(completed.analysis.correctionsArray.every(value => value === null));
 assert.ok(completed.settings.completedAt);
 assert.ok(completed.responses.every(row => row.roundId === firstRoundId && row.ear === 'right' && row.participantId === 'P001'));
 assert.match(context.lastDownload.name, /right-round1/);
@@ -235,7 +248,7 @@ assert.equal(element('participantId').value, 'P001');
 assert.equal(element('roundNumber').value, '2');
 assert.equal(element('testEar').value, '');
 element('testEar').value = 'left';
-run('beginExperiment(readSetupSettings())');
+await run('beginExperiment({...readSetupSettings(), audioPlan: unitPlan})');
 assert.notEqual(run('settingsSnapshot.roundId'), firstRoundId);
 element('restartBtn').listeners.click();
 assert.equal(element('participantId').value, '');
@@ -275,6 +288,66 @@ const legacy = { settings: { lang: 'taiwanese', participantId: 'P001' }, respons
 context.entries = [{ payload: legacy, name: 'legacy.json' }];
 assert.equal(run(`importGroupPayloads(entries, 'auto').scope`), 'unknown');
 context.entries.push({ payload: completed, name: 'new.json' });
-assert.throws(() => run(`importGroupPayloads(entries, 'auto')`), /cannot be pooled together/);
+assert.throws(() => run(`importGroupPayloads(entries, 'auto')`), /cannot be pooled/);
 
-console.log('PASS language choices, Spanish hashes/RMS, one-round protocol, ear routing/calibration/SNR, automatic exports, continuation, duplicate protection, ear-filtered pooling and legacy compatibility');
+for (const invalid of ['', ' ', '-2,', ',0', '-2,,0', '-2,typo,0', 'Infinity', '-41', '11', '-2,-2', '0x10']) {
+  context.rawSnrs = invalid;
+  assert.equal(run('parseSNRList(rawSnrs)'), null, invalid);
+}
+assert.equal(run(`parseSNRList('-2, -4.5, +0, -40, 10').length`), 5);
+
+context.noisy = new Float32Array([.95, -.8, .4, -.2]);
+context.sharp = [new Float32Array([.9, .01, -.05, .1])];
+const boundedPlan = run('OptimizationProtocol.audioPlan(sharp, noisy, 0)');
+assert.ok(boundedPlan.scale > 0 && boundedPlan.scale < 1);
+assert.ok(boundedPlan.scale * boundedPlan.peakBoundAtUnitGain * 3 <= .900001);
+
+run("responses = buildTrials(parseSNRList(presets.wang2023.snrs),1,'blocked').map(t => ({snr:t.snr,target:t.digit,response:t.digit,correct:true})); settingsSnapshot={analysisLevel:'round',lang:'taiwanese',participantId:'QA',ear:'right',roundNumber:1,snrs:parseSNRList(presets.wang2023.snrs),targetProbability:.5}; showResults()");
+assert.equal(element('downloadCorrections').disabled, true, 'All-correct/extrapolated data must not export corrections');
+assert.ok(run('OptimizationProtocol.correctionIssues({analysisLevel:"group",groupNParticipants:20}, latestAnalysis).length') > 0);
+run(`window.goodAnalysis = {fits: Object.fromEntries(DIGITS.map(d=>[d,{ok:true,threshold:-12,inRange:true,bracketsTarget:true,boundaryHit:false}]))}`);
+assert.equal(run('OptimizationProtocol.correctionIssues({analysisLevel:"group",groupNParticipants:20}, goodAnalysis).length'), 0);
+assert.ok(run('OptimizationProtocol.correctionIssues({analysisLevel:"group",groupNParticipants:19}, goodAnalysis).length') > 0);
+
+element('participantId').value = 'P-PRACTICE';
+element('testEar').value = 'right';
+element('practiceEnabled').checked = true;
+await run('beginExperiment({...readSetupSettings(), audioPlan: unitPlan})');
+assert.equal(run('phase'), 'practice');
+for (let i=0;i<3;i++) await run('hasPlayedThisTrial=true; currentInput=String(practiceTrials[practiceIndex].digit); handleSubmit()');
+assert.equal(run('responses.length'), 0);
+assert.equal(run('practiceResponses.length'), 3);
+assert.equal(run('phase'), 'ready');
+await element('formalStartBtn').listeners.click();
+assert.equal(run('phase'), 'formal');
+await run('hasPlayedThisTrial=true; currentInput=String(trialList[trialIndex].digit); handleSubmit()');
+const interruptedId = run('settingsSnapshot.roundId');
+assert.equal(archiveRecords.get(interruptedId).payload.nCompleted, 1);
+const saved = structuredClone(archiveRecords.get(interruptedId));
+context.savedRound = saved;
+run('resumeRecord = savedRound');
+failArchive = true;
+await assert.rejects(run('restoreExperiment({calibration:{channelConfirmed:true}})'), /quota/);
+assert.equal(run('resumeRecord.payload.settings.roundId'), interruptedId, 'Failed restore must retain the original recoverable round');
+failArchive = false;
+await run('restoreExperiment({calibration:{channelConfirmed:true}})');
+assert.equal(run('settingsSnapshot.roundId'), interruptedId);
+assert.equal(run('trialIndex'), 1);
+assert.equal(run('responses.length'), 1);
+assert.equal(run('settingsSnapshot.resumeEvents.length'), 1);
+assert.deepEqual(JSON.parse(run('JSON.stringify(trialList)')), saved.trialList);
+failArchive = true;
+await assert.rejects(run('checkpointRound()'), /quota/);
+assert.equal(run('paused'), true);
+failArchive = false;
+await element('pauseBtn').listeners.click();
+assert.equal(run('paused'), false);
+
+const profile = {version:1, studyId:'SPANISH-2026',lang:'spanish_male',snrs:[-2,-4,-6],trialOrder:'blocked',targetProbability:.5,minimumParticipants:20,practiceEnabled:true,autoPlay:true,autoPlayDelayMs:800};
+context.profile = profile;
+assert.equal(run('OptimizationProtocol.validateProfile(profile).studyId'), 'SPANISH-2026');
+assert.equal(run('OptimizationProtocol.validateProfile({...profile, participantId:"private"}).participantId'), undefined);
+assert.equal(run('OptimizationProtocol.matchesProfile(profile, {...profile})'), true);
+assert.equal(run('OptimizationProtocol.matchesProfile(profile, {...profile, lang:"spanish_female"})'), false);
+assert.throws(() => run('OptimizationProtocol.validateProfile({...profile,snrs:[-2,-2,-6]})'), /Invalid/);
+console.log('PASS stimuli/provenance, single-round routing, strict SNRs, fixed headroom, correction gates, archive failure/recovery, isolated practice and study profiles');

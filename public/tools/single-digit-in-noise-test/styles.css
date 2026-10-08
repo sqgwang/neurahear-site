@@ -136,7 +136,14 @@ h3 { margin-top: 28px; margin-bottom: 12px; font-size: 18px; }
 #roundContext { flex-basis: 100%; color: var(--text); }
 #status { min-height: 44px; flex-basis: 100%; }
 #saveStatus { line-height: 1.5; }
+#archiveList { max-height: 360px; margin-bottom: 12px; }
+#archiveList td { text-align: left; }
+#archiveList button { margin: 3px; font-size: 13px; }
+#studyLink { font-size: 13px; }
+#checkpointStatus { line-height: 1.5; }
+#playBtn { min-width: 136px; }
 #nextRoundBtn, #restartBtn { white-space: nowrap; }
+.container:has(#taskCard:not(.hidden)) .hero { display: none; }
 
 .grid {
   display: grid;
@@ -384,4 +391,10 @@ small {
   .rangeLabel {
     grid-template-columns: 1fr;
   }
+
+  .container:has(#taskCard:not(.hidden)) { padding-top: 16px; }
+  #taskCard .taskHeader { flex-direction: row; align-items: center; }
+  #taskCard .meta { gap: 8px; }
+  #status { min-height: 64px; }
+  #checkpointStatus { min-height: 42px; }
 }
