@@ -189,8 +189,8 @@ function validateCommunityResult(rec) {
   }
   if (
     !rec.screening
-    || rec.screening.protocolId !== 'mandarin-2f-community-screening-v1'
-    || rec.screening.stimulusLanguage !== 'mandarin'
+    || !['mandarin', 'cantonese', 'ningboese', 'hangzhouese', 'min', 'fuzhouese'].includes(rec.screening.stimulusLanguage)
+    || rec.screening.protocolId !== `${rec.screening.stimulusLanguage}-2f-community-screening-v1`
     || Number(rec.screening.nDigits) !== 2
   ) {
     return 'invalid screening protocol';
@@ -202,8 +202,18 @@ function validateCommunityResult(rec) {
   if (!Number.isFinite(Number(rec.screening.srtDbSnr))) {
     return 'invalid SRT';
   }
-  if (!['pass', 'refer'].includes(rec.screening.outcome)) {
+  const isMandarin = rec.screening.stimulusLanguage === 'mandarin';
+  if (!(isMandarin ? ['pass', 'refer'] : ['unclassified']).includes(rec.screening.outcome)) {
     return 'invalid outcome';
+  }
+  if (!isMandarin && rec.screening.referralCutoffDbSnr !== null) {
+    return 'no referral cutoff configured for this language';
+  }
+  if (
+    (rec.userInfo?.stimulusLanguage && rec.userInfo.stimulusLanguage !== rec.screening.stimulusLanguage)
+    || (rec.calibration?.stimulusLanguage && rec.calibration.stimulusLanguage !== rec.screening.stimulusLanguage)
+  ) {
+    return 'inconsistent stimulus language';
   }
   return '';
 }

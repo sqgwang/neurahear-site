@@ -10,6 +10,7 @@
     "serve": "node static-server.js",
     "lint": "eslint",
     "test:idin": "node scripts/check-idin-protocol.mjs && node scripts/check-idin-tutorial.mjs",
+    "test:community": "node scripts/check-community-screening.mjs",
     "test:optimization": "node scripts/check-single-digit-stimuli.mjs",
     "export": "next export"
   },

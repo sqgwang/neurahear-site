@@ -4,14 +4,15 @@ This public-facing workflow is intentionally separate from the research iDIN.
 
 ## Fixed protocol
 
-- Mandarin stimuli
+- Mandarin, Cantonese, Ningboese, Hangzhouese, Southern Min (`min`), and Fuzhouese stimuli; Taiwanese is not offered
 - Two-digit forward recall
 - Three practice items: one quiet familiarization item followed by two items in noise
 - 24 formal adaptive items
 - One-up one-down adaptive rule with a 2 dB step
 - Sequence-level SNR using the existing RMS normalization and digit correction levels
 - SRT calculated from the last 20 formal effective SNR values
-- Provisional referral recommendation at SRT >= -8.0 dB SNR
+- Mandarin only: provisional referral recommendation at SRT >= -8.0 dB SNR
+- Other languages: SRT with `unclassified` outcome and a null cutoff, pending language-specific validation
 
 The Mandarin development study found that two-digit sequences retained useful
 psychometric properties while reducing test time and cognitive demand, making
@@ -20,6 +21,19 @@ SNR boundary is provisional and must not be described as a validated diagnostic
 cutoff. The participant result page states that prospective community
 validation is still required, that this is screening rather than diagnosis, and
 that binaural DIN may not identify unilateral or asymmetric hearing loss.
+
+Each language keeps its own existing digits, noise, and correction levels.
+The setup selector is independent of the interface language. Returning to setup
+discards pending/decoded audio and calibration readiness; continuing requires a
+new calibration. An in-flight load cannot overwrite the next language's audio.
+Language is fixed for a session and recorded in participant, protocol, and
+calibration metadata. Protocol IDs are `<language>-2f-community-screening-v1`;
+the original Mandarin ID and result schema remain unchanged. No historical
+records are rewritten. The staff dashboard supports language filtering.
+
+Deploy the backward-compatible backend validator before publishing this client.
+Run `npm run test:community` for language, protocol, legacy-record, audio-race,
+and dashboard export regression checks. These tests never send results to a server.
 
 The calibration page provides the only explicit start action. After the
 participant selects Start practice, a large three-second countdown precedes the
@@ -49,6 +63,6 @@ browser playback error.
 - The staff dashboard is `admin.html`. Authentication is shared with the
   existing protected backend, but the result API and files are separate.
 
-The audio files are read from the existing Mandarin iDIN asset directory to
+The audio files are read from the selected language's existing iDIN asset directory to
 avoid maintaining duplicate stimuli. Audio sharing does not merge participant
 sessions or result data.

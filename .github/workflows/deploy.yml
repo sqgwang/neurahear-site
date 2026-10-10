@@ -31,6 +31,9 @@ jobs:
       - name: Check iDIN protocol
         run: npm run test:idin
 
+      - name: Check community screening
+        run: npm run test:community
+
       - name: Check digit optimization stimuli
         run: npm run test:optimization
       

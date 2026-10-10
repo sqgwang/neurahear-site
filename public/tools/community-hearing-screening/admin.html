@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#0b6259">
   <title>Community Screening Dashboard | NeuraHear</title>
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=community-screening-20260723-1">
-  <link rel="stylesheet" href="admin.css?v=community-screening-20260723-1">
+  <link rel="stylesheet" href="styles.css?v=community-screening-20261010-1">
+  <link rel="stylesheet" href="admin.css?v=community-screening-20261010-1">
 </head>
 <body>
   <header class="topbar">
@@ -65,11 +65,24 @@
             <input id="searchInput" type="search" placeholder="Search participant code">
           </label>
           <label>
+            <span>Test language</span>
+            <select id="languageFilter">
+              <option value="">All languages</option>
+              <option value="mandarin">Mandarin</option>
+              <option value="cantonese">Cantonese</option>
+              <option value="ningboese">Ningboese</option>
+              <option value="hangzhouese">Hangzhouese</option>
+              <option value="min">Southern Min</option>
+              <option value="fuzhouese">Fuzhouese</option>
+            </select>
+          </label>
+          <label>
             <span>Outcome</span>
             <select id="outcomeFilter">
               <option value="">All outcomes</option>
               <option value="pass">Within range</option>
               <option value="refer">Further assessment</option>
+              <option value="unclassified">Not classified</option>
             </select>
           </label>
           <label>
@@ -92,6 +105,7 @@
                 <th>Date</th>
                 <th>Participant</th>
                 <th>Age</th>
+                <th>Language</th>
                 <th>SRT</th>
                 <th>Outcome</th>
                 <th>QC</th>
@@ -119,6 +133,6 @@
     <div id="detailContent" class="dialog-content"></div>
   </dialog>
 
-  <script src="admin.js?v=community-screening-20260723-1"></script>
+  <script src="admin.js?v=community-screening-20261010-1"></script>
 </body>
 </html>

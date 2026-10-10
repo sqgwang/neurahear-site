@@ -35,6 +35,7 @@
   }
 
   function formatNumber(value, places = 1) {
+    if (value == null || value === "") return "—";
     const number = Number(value);
     return Number.isFinite(number) ? number.toFixed(places) : "—";
   }
@@ -83,6 +84,18 @@
 
   function outcome(record) {
     return screening(record).outcome || "unknown";
+  }
+
+  function language(record) {
+    return screening(record).stimulusLanguage || userInfo(record).stimulusLanguage || "mandarin";
+  }
+
+  function languageLabel(record) {
+    const labels = {
+      mandarin: "Mandarin", cantonese: "Cantonese", ningboese: "Ningboese",
+      hangzhouese: "Hangzhouese", min: "Southern Min", fuzhouese: "Fuzhouese"
+    };
+    return labels[language(record)] || language(record);
   }
 
   function isComplete(record) {
@@ -136,7 +149,9 @@
   function applyFilters() {
     const outcomeValue = $("outcomeFilter").value;
     const completion = $("completionFilter").value;
+    const languageValue = $("languageFilter").value;
     state.filteredRecords = state.records.filter((record) => {
+      if (languageValue && language(record) !== languageValue) return false;
       if (outcomeValue && outcome(record) !== outcomeValue) return false;
       if (completion === "complete" && !isComplete(record)) return false;
       if (completion === "incomplete" && isComplete(record)) return false;
@@ -166,7 +181,7 @@
 
     $("recordRows").innerHTML = records.map((record) => {
       const recordOutcome = outcome(record);
-      const outcomeText = recordOutcome === "pass" ? "Within range" : recordOutcome === "refer" ? "Further assessment" : "Unknown";
+      const outcomeText = recordOutcome === "pass" ? "Within range" : recordOutcome === "refer" ? "Further assessment" : recordOutcome === "unclassified" ? "Not classified" : "Unknown";
       const complete = isComplete(record);
       const deleteButton = state.user?.role === "admin"
         ? `<button type="button" data-action="delete" data-id="${escapeHtml(record._id)}">Delete</button>`
@@ -176,6 +191,7 @@
           <td>${escapeHtml(formatDate(record.createdAt))}</td>
           <td><strong>${escapeHtml(participantCode(record))}</strong></td>
           <td>${escapeHtml(userInfo(record).age ?? "—")}</td>
+          <td>${escapeHtml(languageLabel(record))}</td>
           <td>${escapeHtml(formatNumber(srt(record)))} dB</td>
           <td><span class="outcome-badge ${escapeHtml(recordOutcome)}">${escapeHtml(outcomeText)}</span></td>
           <td><span class="qc-badge ${complete ? "complete" : "flag"}">${complete ? "Complete" : "Check"}</span></td>
@@ -262,9 +278,10 @@
         <div><span>Participant code</span><strong>${escapeHtml(participantCode(record))}</strong></div>
         <div><span>Age</span><strong>${escapeHtml(info.age ?? "—")}</strong></div>
         <div><span>Gender</span><strong>${escapeHtml(info.gender || "—")}</strong></div>
+        <div><span>Test language</span><strong>${escapeHtml(languageLabel(record))}</strong></div>
         <div><span>SRT</span><strong>${escapeHtml(formatNumber(screen.srtDbSnr))} dB SNR</strong></div>
         <div><span>Outcome</span><strong>${escapeHtml(screen.outcome || "—")}</strong></div>
-        <div><span>Cutoff</span><strong>${escapeHtml(formatNumber(screen.referralCutoffDbSnr))} dB SNR</strong></div>
+        <div><span>Cutoff</span><strong>${screen.referralCutoffDbSnr == null ? "Not configured" : `${escapeHtml(formatNumber(screen.referralCutoffDbSnr))} dB SNR`}</strong></div>
         <div><span>Formal trials</span><strong>${escapeHtml(screen.completedFormalTrials ?? formalTrials.length)} / ${escapeHtml(screen.formalTrialCount ?? 24)}</strong></div>
         <div><span>Calibration</span><strong>${escapeHtml(formatNumber(calibration.fixedGainDb))} dB</strong></div>
         <div><span>Upload attempts</span><strong>${escapeHtml(upload.attemptCount ?? "—")}</strong></div>
@@ -341,6 +358,7 @@
     $("reloadButton").addEventListener("click", loadRecords);
     $("outcomeFilter").addEventListener("change", applyFilters);
     $("completionFilter").addEventListener("change", applyFilters);
+    $("languageFilter").addEventListener("change", applyFilters);
     $("searchInput").addEventListener("keydown", (event) => {
       if (event.key === "Enter") loadRecords();
     });

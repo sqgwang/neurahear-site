@@ -2,12 +2,8 @@
   "use strict";
 
   const CONFIG = Object.freeze({
-    appVersion: "community-screening-2026.07.29-5",
+    appVersion: "community-screening-2026.10.10-1",
     schemaVersion: "community-hearing-screening-result-v1",
-    protocolId: "mandarin-2f-community-screening-v1",
-    protocolLabel: "Mandarin 2-digit forward community hearing screening",
-    stimulusLanguage: "mandarin",
-    audioBase: "/tools/digit-in-noise-test/audio/mandarin",
     nDigits: 2,
     practiceCount: 3,
     formalCount: 24,
@@ -25,6 +21,29 @@
     nextTrialDelayMs: 900
   });
 
+  const LANGUAGES = Object.freeze({
+    mandarin: { "zh-CN": "普通话", en: "Mandarin" },
+    cantonese: { "zh-CN": "粤语", en: "Cantonese" },
+    ningboese: { "zh-CN": "宁波话", en: "Ningboese" },
+    hangzhouese: { "zh-CN": "杭州话", en: "Hangzhouese" },
+    min: { "zh-CN": "闽南语", en: "Southern Min" },
+    fuzhouese: { "zh-CN": "福州话", en: "Fuzhouese" }
+  });
+
+  function currentProtocol() {
+    const language = state.session?.userInfo.stimulusLanguage || state.stimulusLanguage;
+    if (!Object.hasOwn(LANGUAGES, language)) throw new Error("Unsupported test language");
+    const isMandarin = language === "mandarin";
+    return {
+      stimulusLanguage: language,
+      protocolId: `${language}-2f-community-screening-v1`,
+      protocolLabel: `${LANGUAGES[language].en} 2-digit forward community hearing screening`,
+      audioBase: `/tools/digit-in-noise-test/audio/${language}`,
+      referralCutoffDbSnr: isMandarin ? CONFIG.referralCutoffDbSnr : null,
+      referralCriterion: isMandarin ? CONFIG.referralCriterion : "No language-specific community referral cutoff configured"
+    };
+  }
+
   const STORAGE = Object.freeze({
     uiLanguage: "nh.communityScreening.uiLanguage",
     activeSession: "nh.communityScreening.activeSession",
@@ -37,22 +56,20 @@
       brandSubtitle: "社区听力筛查",
       languageLabel: "界面语言",
       staffDashboard: "工作人员后台",
-      screeningPartner: "联合筛查合作单位",
-      screeningPartnerName: "中国听力语言康复研究中心",
       stepWelcome: "准备",
       stepCalibration: "校准",
       stepScreening: "筛查",
       stepResult: "结果",
-      welcomeEyebrow: "约 5 分钟 · 普通话",
+      welcomeEyebrow: "约 5 分钟 · 中文及方言",
       welcomeTitle: "在背景噪声中聆听数字，快速了解你的听力",
-      welcomeIntro: "你会听到两个被噪声包围的普通话数字。每次播放后，按顺序输入听到的数字；系统会自动调节难度。",
+      welcomeIntro: "选择你最熟悉的测试语言。你会听到噪声中的两个数字，每次播放后按顺序输入；系统会自动调节难度。",
       tutorialEyebrow: "三步看懂",
       tutorialTitle: "测试时只需要做三件事",
       tutorialIntro: "全程约 5 分钟，完成后立即显示筛查结果。",
       tutorialStepOneTitle: "戴好双耳耳机",
       tutorialStepOneBody: "坐在安静环境中，保持设备音量不变。",
       tutorialStepTwoTitle: "听两个数字",
-      tutorialStepTwoBody: "噪声中会依次播放两个普通话数字。",
+      tutorialStepTwoBody: "噪声中会依次播放两个数字，使用你选择的语言。",
       tutorialStepThreeTitle: "按顺序输入",
       tutorialStepThreeBody: "先点第一个数字，再点第二个数字，然后确认。",
       tutorialTryEyebrow: "试一下",
@@ -73,6 +90,7 @@
       male: "男性",
       other: "其他",
       stimulusLanguage: "测试语言",
+      languageNotice: "新增方言版本显示测试数值，暂不自动判断是否通过。",
       mandarin: "普通话",
       beforeStart: "开始前请确认",
       checkHeadphones: "我已戴好可同时覆盖双耳的耳机或耳塞。",
@@ -133,6 +151,10 @@
       passMessage: "你在背景噪声中辨认普通话数字的表现未达到本筛查的暂定转介界值。",
       referTitle: "建议安排进一步听力评估",
       referMessage: "你在背景噪声中辨认普通话数字的结果达到本筛查的暂定转介界值。",
+      unclassifiedTitle: "测试完成，请由专业人员解读",
+      unclassifiedMessage: "本次已测得你辨认噪声中数字的表现。所选语言尚未设置社区筛查界值，因此不自动判断是否通过。",
+      unclassifiedNextStep: "请将结果交给听力专业人员，结合你的听力情况解读。如有听力疑虑，请安排进一步听力评估。",
+      unclassifiedLimit: "不同语言的结果不能直接套用同一界值。此双耳测试也不能排除单侧、不对称或其他类型的听力问题。",
       srtLabel: "言语接收阈值（SRT）",
       nextSteps: "下一步",
       passNextStep: "如你仍觉得听声或理解说话有困难、出现耳鸣或两耳差异，仍建议咨询听力专业人员。即使没有疑虑，也可定期重做筛查。",
@@ -147,28 +169,26 @@
       backToTools: "返回工具列表",
       newScreening: "开始新的筛查",
       leaveWarning: "本次筛查记录尚未安全保存。确定离开吗？",
-      protocolFooter: "普通话两位数字社区听力筛查协议 · 转介界值待验证"
+      protocolFooter: "两位数字社区听力筛查 · 各语言界值须分别验证"
     },
     en: {
       brandSubtitle: "Community Hearing Screening",
       languageLabel: "Interface language",
       staffDashboard: "Staff dashboard",
-      screeningPartner: "Screening partner",
-      screeningPartnerName: "中国听力语言康复研究中心",
       stepWelcome: "Prepare",
       stepCalibration: "Calibrate",
       stepScreening: "Screen",
       stepResult: "Result",
-      welcomeEyebrow: "About 5 minutes · Mandarin",
+      welcomeEyebrow: "About 5 minutes · Chinese languages",
       welcomeTitle: "Listen for digits in background noise and check your hearing",
-      welcomeIntro: "You will hear two Mandarin digits in noise. Enter the digits in the same order after each presentation; the test adjusts the difficulty automatically.",
+      welcomeIntro: "Choose the test language you know best. You will hear two digits in noise. Enter them in the same order after each presentation; the test adjusts the difficulty automatically.",
       tutorialEyebrow: "Three simple steps",
       tutorialTitle: "You only need to do three things",
       tutorialIntro: "The screening takes about 5 minutes and shows the result immediately.",
       tutorialStepOneTitle: "Wear headphones",
       tutorialStepOneBody: "Sit somewhere quiet and keep the device volume unchanged.",
       tutorialStepTwoTitle: "Listen for two digits",
-      tutorialStepTwoBody: "Two Mandarin digits will play in background noise.",
+      tutorialStepTwoBody: "Two digits will play in background noise, in your chosen language.",
       tutorialStepThreeTitle: "Enter them in order",
       tutorialStepThreeBody: "Tap the first digit, then the second digit, and confirm.",
       tutorialTryEyebrow: "Try it",
@@ -189,6 +209,7 @@
       male: "Male",
       other: "Other",
       stimulusLanguage: "Test language",
+      languageNotice: "New language versions report a score without an automated pass or referral decision.",
       mandarin: "Mandarin",
       beforeStart: "Before you begin",
       checkHeadphones: "I am wearing headphones or earphones on both ears.",
@@ -249,6 +270,10 @@
       passMessage: "Your recognition of Mandarin digits in background noise did not reach this screen's provisional referral cutoff.",
       referTitle: "A further hearing assessment is recommended",
       referMessage: "Your recognition of Mandarin digits in background noise reached this screen's provisional referral cutoff.",
+      unclassifiedTitle: "Test complete; professional interpretation needed",
+      unclassifiedMessage: "Your digit-in-noise score is available. No community referral cutoff is configured for this language, so no automated pass or referral decision is made.",
+      unclassifiedNextStep: "Ask a hearing professional to interpret this score alongside your hearing concerns. Arrange a further hearing assessment if you have concerns.",
+      unclassifiedLimit: "A cutoff for one language cannot be applied directly to another. This binaural test cannot rule out unilateral, asymmetric, or other hearing problems.",
       srtLabel: "Speech reception threshold (SRT)",
       nextSteps: "Next step",
       passNextStep: "If you still notice difficulty hearing or understanding speech, tinnitus, or a difference between ears, speak with a hearing professional. Otherwise, consider repeating a hearing screen regularly.",
@@ -263,7 +288,7 @@
       backToTools: "Back to tools",
       newScreening: "Start a new screening",
       leaveWarning: "This screening record has not been saved securely. Leave anyway?",
-      protocolFooter: "Mandarin 2-digit community hearing screening protocol · cutoff under validation"
+      protocolFooter: "2-digit community hearing screening · language-specific cutoffs require validation"
     }
   };
 
@@ -276,6 +301,8 @@
   const storedUiLanguage = localStorage.getItem(STORAGE.uiLanguage);
   const state = {
     uiLanguage: storedUiLanguage === "en" ? "en" : "zh-CN",
+    stimulusLanguage: "mandarin",
+    audioLoadGeneration: 0,
     currentScreen: "welcome",
     audioContext: null,
     audioData: null,
@@ -342,7 +369,7 @@
     document.documentElement.lang = state.uiLanguage;
     document.title = state.uiLanguage === "en"
       ? "Community Hearing Screening | NeuraHear"
-      : "普通话社区听力筛查 | NeuraHear";
+      : "社区听力筛查 | NeuraHear";
     document.querySelectorAll("[data-i18n]").forEach((element) => {
       element.textContent = t(element.dataset.i18n);
     });
@@ -399,6 +426,15 @@
   }
 
   function renderDynamicText() {
+    const language = currentProtocol().stimulusLanguage;
+    document.querySelectorAll("[data-stimulus-language]").forEach((element) => {
+      element.textContent = `${t("stimulusLanguage")}${state.uiLanguage === "en" ? ": " : "："}${LANGUAGES[language][state.uiLanguage]}`;
+    });
+    $("languageNotice").hidden = language === "mandarin";
+    const loadStatus = $("audioLoadPanel").dataset.state;
+    const loadTextKey = loadStatus === "ready" ? "audioReady" : loadStatus === "error" ? "audioFailed" : "audioLoading";
+    $("audioLoadTitle").textContent = t(loadTextKey);
+    $("audioLoadDetail").textContent = t(`${loadTextKey}Detail`);
     renderTutorialDemo();
     renderCalibrationControls();
     renderTestHeader();
@@ -542,6 +578,12 @@
     if (state.audioData) return state.audioData;
     if (state.audioLoadPromise) return state.audioLoadPromise;
 
+    const generation = ++state.audioLoadGeneration;
+    const { audioBase, stimulusLanguage } = currentProtocol();
+    const checkCurrentLoad = () => {
+      if (generation !== state.audioLoadGeneration) throw new Error("Audio selection changed");
+    };
+
     const total = 11;
     let loaded = 0;
     $("audioLoadTitle").textContent = t("audioLoading");
@@ -550,21 +592,24 @@
     $("toggleNoiseButton").disabled = true;
 
     state.audioLoadPromise = (async () => {
-      const correctionsResponse = await fetch(`${CONFIG.audioBase}/corrections.json`, { cache: "force-cache" });
+      const correctionsResponse = await fetch(`${audioBase}/corrections.json`, { cache: "force-cache" });
       if (!correctionsResponse.ok) throw new Error("Correction levels could not be loaded");
       const corrections = await correctionsResponse.json();
-      if (!Array.isArray(corrections) || corrections.length !== 10) {
+      checkCurrentLoad();
+      if (!Array.isArray(corrections) || corrections.length !== 10 || !corrections.every(Number.isFinite)) {
         throw new Error("Correction levels are invalid");
       }
 
       const digitTasks = Array.from({ length: 10 }, (_, digit) => (
-        fetchAndDecode(`${CONFIG.audioBase}/${digit}.wav`).then((buffer) => {
+        fetchAndDecode(`${audioBase}/${digit}.wav`).then((buffer) => {
+          checkCurrentLoad();
           loaded += 1;
           updateAudioLoadUi(loaded, total, "loading");
           return normalizeBuffer(buffer, CONFIG.normalizationRms);
         })
       ));
-      const noiseTask = fetchAndDecode(`${CONFIG.audioBase}/noise.wav`).then((buffer) => {
+      const noiseTask = fetchAndDecode(`${audioBase}/noise.wav`).then((buffer) => {
+        checkCurrentLoad();
         loaded += 1;
         updateAudioLoadUi(loaded, total, "loading");
         return normalizeBuffer(buffer, CONFIG.normalizationRms);
@@ -577,8 +622,10 @@
       const targetSampleRate = digitBuffers[0].sampleRate;
       const alignedDigits = await Promise.all(digitBuffers.map((buffer) => resampleBuffer(buffer, targetSampleRate)));
       const alignedNoise = await resampleBuffer(noiseBuffer, targetSampleRate);
+      checkCurrentLoad();
 
       state.audioData = {
+        stimulusLanguage,
         digitBuffers: alignedDigits,
         noiseBuffer: alignedNoise,
         corrections: corrections.map((value) => readNumber(value, 0)),
@@ -595,6 +642,7 @@
     try {
       return await state.audioLoadPromise;
     } catch (error) {
+      if (generation !== state.audioLoadGeneration) throw error;
       console.error("Community screening audio load failed", error);
       state.audioLoadPromise = null;
       updateAudioLoadUi(loaded, total, "error");
@@ -615,8 +663,10 @@
   }
 
   async function startNoise() {
+    const session = state.session;
     await resumeAudioContext();
     await ensureAudioLoaded();
+    if (state.currentScreen !== "calibration" || state.session !== session) return;
     stopNoise();
     const context = createAudioContext();
     const source = context.createBufferSource();
@@ -1163,6 +1213,7 @@
   }
 
   function buildResultPayload(result) {
+    const protocol = currentProtocol();
     const calibration = state.session.calibration || {};
     const formalTrials = state.session.trials.filter((trial) => trial.phase === "formal");
     return {
@@ -1171,9 +1222,9 @@
       participantId: state.session.userInfo.participantCode,
       userInfo: clone(state.session.userInfo),
       screening: {
-        protocolId: CONFIG.protocolId,
-        protocolLabel: CONFIG.protocolLabel,
-        stimulusLanguage: CONFIG.stimulusLanguage,
+        protocolId: protocol.protocolId,
+        protocolLabel: protocol.protocolLabel,
+        stimulusLanguage: protocol.stimulusLanguage,
         condition: "2f",
         nDigits: CONFIG.nDigits,
         formalTrialCount: CONFIG.formalCount,
@@ -1184,9 +1235,9 @@
         srtWindow: CONFIG.srtWindow,
         srtDbSnr: result.srtDbSnr,
         outcome: result.outcome,
-        referralCutoffDbSnr: CONFIG.referralCutoffDbSnr,
-        referralRule: "refer when SRT is greater than or equal to cutoff",
-        referralCriterion: CONFIG.referralCriterion
+        referralCutoffDbSnr: protocol.referralCutoffDbSnr,
+        referralRule: protocol.referralCutoffDbSnr === null ? "not classified" : "refer when SRT is greater than or equal to cutoff",
+        referralCriterion: protocol.referralCriterion
       },
       calibration: clone(calibration),
       trials: clone(state.session.trials),
@@ -1221,7 +1272,8 @@
       .filter((value) => Number.isFinite(value));
     const scoringWindow = effectiveSnrs.slice(-CONFIG.srtWindow);
     const srtDbSnr = round(average(scoringWindow), 2);
-    const outcome = srtDbSnr >= CONFIG.referralCutoffDbSnr ? "refer" : "pass";
+    const cutoff = currentProtocol().referralCutoffDbSnr;
+    const outcome = cutoff === null ? "unclassified" : srtDbSnr >= cutoff ? "refer" : "pass";
     const result = {
       srtDbSnr,
       outcome,
@@ -1238,10 +1290,12 @@
   }
 
   function renderOutcome(result) {
+    const outcome = result.outcome;
     $("outcomePanel").dataset.outcome = result.outcome;
-    $("outcomeTitle").textContent = t(result.outcome === "pass" ? "passTitle" : "referTitle");
-    $("outcomeMessage").textContent = t(result.outcome === "pass" ? "passMessage" : "referMessage");
-    $("nextStepMessage").textContent = t(result.outcome === "pass" ? "passNextStep" : "referNextStep");
+    $("outcomeTitle").textContent = t(`${outcome}Title`);
+    $("outcomeMessage").textContent = t(`${outcome}Message`);
+    $("nextStepMessage").textContent = t(`${outcome}NextStep`);
+    $("resultLimit").textContent = t(outcome === "unclassified" ? "unclassifiedLimit" : "resultLimit");
     $("srtValue").textContent = Number.isFinite(result.srtDbSnr) ? result.srtDbSnr.toFixed(1) : "—";
   }
 
@@ -1260,7 +1314,7 @@
     state.session.calibration = {
       type: "participant-set-comfortable-noise-level",
       workflowVersion: "community-calibration-v1",
-      stimulusLanguage: CONFIG.stimulusLanguage,
+      stimulusLanguage: currentProtocol().stimulusLanguage,
       fixedGain: round(fixedGainLinear(), 6),
       fixedGainDb: state.fixedGainDb,
       confirmed: state.calibrationConfirmed,
@@ -1309,13 +1363,13 @@
     setInlineMessage($("setupMessage"), "");
     state.session = {
       sessionId: createSessionId(),
-      protocolId: CONFIG.protocolId,
+      protocolId: currentProtocol().protocolId,
       startedAt: new Date().toISOString(),
       userInfo: {
         participantCode,
         age,
         gender: $("participantGender").value || "",
-        stimulusLanguage: CONFIG.stimulusLanguage,
+        stimulusLanguage: state.stimulusLanguage,
         uiLanguageAtStart: state.uiLanguage,
         readiness,
         readinessConfirmedAt: new Date().toISOString()
@@ -1355,7 +1409,25 @@
     $("tutorialConfirmButton").addEventListener("click", submitTutorialDemo);
 
     $("setupForm").addEventListener("submit", handleSetupSubmit);
-    $("backToSetup").addEventListener("click", () => showScreen("welcome"));
+    $("stimulusLanguage").value = state.stimulusLanguage;
+    $("stimulusLanguage").addEventListener("change", () => {
+      if (state.currentScreen !== "welcome") return;
+      const language = $("stimulusLanguage").value;
+      if (!Object.hasOwn(LANGUAGES, language)) return;
+      state.stimulusLanguage = language;
+      renderDynamicText();
+    });
+    $("backToSetup").addEventListener("click", () => {
+      stopNoise();
+      // Invalidate pending loads before a different language can be selected.
+      state.audioLoadGeneration += 1;
+      state.audioLoadPromise = null;
+      state.audioData = null;
+      state.session = null;
+      state.noisePlayed = false;
+      state.calibrationConfirmed = false;
+      showScreen("welcome");
+    });
 
     $("toggleNoiseButton").addEventListener("click", async () => {
       setInlineMessage($("calibrationMessage"), "");
